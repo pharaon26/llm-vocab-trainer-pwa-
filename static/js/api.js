@@ -109,5 +109,7 @@ export const deleteDraft = (id) => student.request(`/me/drafts/${id}`, { method:
 export const myCards = () => student.request("/me/cards");
 export const updateMyCard = (id, body) => student.request(`/me/cards/${id}`, { method: "PUT", body });
 export const deleteMyCard = (id) => student.request(`/me/cards/${id}`, { method: "DELETE" });
+export const limits = () => student.request("/me/limits");
+export const extract = (text, domain) => student.request("/me/extract", { method: "POST", body: { text, domain } });
 export const nextTask = () => student.request("/session/next");
 export const answer = (payload) => student.request("/session/answer", { method: "POST", body: payload });

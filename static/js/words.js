@@ -21,6 +21,7 @@ export async function showDictionary() {
         drafts,
         myCards,
         onAdd: () => showAddTerm(),
+        onAddFromText: () => showExtract(),
         onOpenDraft: (draft) => showDraft(draft),
         onDeleteDraft: async (draft) => {
           if (window.confirm(`Удалить черновик «${draft.term}»?`)) {
@@ -174,4 +175,73 @@ async function showCardEditor(card, extra = {}) {
   } catch (error) {
     failure(error, () => showCardEditor(card, extra));
   }
+}
+
+async function showExtract(state = {}) {
+  try {
+    const [domains, limits] = await Promise.all([api.domains(), api.limits()]);
+    show(
+      pageViews.extractView({
+        domains,
+        limits,
+        ...state,
+        onCancel: showDictionary,
+        onSubmit: async (text, domain) => {
+          show(views.loadingView("Ищем термины в тексте… Это может занять до минуты."));
+          try {
+            const result = await api.extract(text, domain);
+            showCandidates(result.candidates, domain, text);
+          } catch (error) {
+            if (error.status === 401) {
+              unauthorized();
+            } else {
+              showExtract({ text, domain, error: error.message });
+            }
+          }
+        },
+      }),
+    );
+  } catch (error) {
+    failure(error, () => showExtract(state));
+  }
+}
+
+function showCandidates(candidates, domain, text) {
+  show(
+    pageViews.candidatesView({
+      candidates,
+      domain,
+      onBack: () => showExtract({ text, domain }),
+      onCreate: (terms) => createDrafts(terms, domain),
+    }),
+  );
+}
+
+async function createDrafts(terms, domain) {
+  const outcome = { created: 0, existing: 0, failed: [] };
+  for (const [index, term] of terms.entries()) {
+    show(views.loadingView(`Создаю черновик ${index + 1} из ${terms.length}: ${term}…`));
+    try {
+      const result = await api.createDraft(term, domain);
+      if (result.duplicate) {
+        outcome.existing += 1;
+      } else {
+        outcome.created += 1;
+      }
+    } catch (error) {
+      if (error.status === 401) {
+        unauthorized();
+        return;
+      }
+      outcome.failed.push(`${term}: ${error.message}`);
+    }
+  }
+  const lines = [`Создано черновиков: ${outcome.created}.`];
+  if (outcome.existing) {
+    lines.push(`Уже были в словаре: ${outcome.existing}.`);
+  }
+  if (outcome.failed.length) {
+    lines.push(`Не удалось: ${outcome.failed.join("; ")}.`);
+  }
+  show(views.messageView("Черновики готовы", `${lines.join(" ")} Просмотрите и подтвердите их в словаре.`, "К словарю", showDictionary));
 }

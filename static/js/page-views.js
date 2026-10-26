@@ -254,7 +254,7 @@ const WORD_FIELDS = [
   ["contrast_term", "Контрастный термин", "text", "необязательно"],
 ];
 
-export function dictionaryView({ entries, drafts, myCards, onAdd, onOpenDraft, onDeleteDraft, onEditCard, onDeleteCard }) {
+export function dictionaryView({ entries, drafts, myCards, onAdd, onAddFromText, onOpenDraft, onDeleteDraft, onEditCard, onDeleteCard }) {
   const list = el("ul", { className: "list" });
   const empty = el("p", { hidden: true }, "Ничего не найдено.");
   const items = entries.map((entry) => ({
@@ -343,7 +343,12 @@ export function dictionaryView({ entries, drafts, myCards, onAdd, onOpenDraft, o
     "section",
     { className: "card" },
     el("h2", {}, "Словарь"),
-    el("div", { className: "toolbar" }, el("button", { type: "button", className: "primary", onclick: onAdd }, "Добавить термин")),
+    el(
+      "div",
+      { className: "toolbar" },
+      el("button", { type: "button", className: "primary", onclick: onAdd }, "Добавить термин"),
+      el("button", { type: "button", onclick: onAddFromText }, "Добавить из текста"),
+    ),
     drafts.length > 0 && [
       el("h3", {}, "Черновики"),
       el("p", { className: "meta" }, "Черновик попадает в повторения только после вашей проверки и подтверждения."),
@@ -489,5 +494,103 @@ export function draftEditorView({ draft, domains, mode = "draft", error = "", no
       el("button", { type: "button", className: "secondary", onclick: onCancel }, "Назад"),
     ),
     mode === "draft" && el("button", { type: "button", className: "link", onclick: onDelete }, "Удалить черновик"),
+  );
+}
+
+export function extractView({ domains, limits, text = "", domain = "", error = "", onSubmit, onCancel }) {
+  const area = el("textarea", { id: "source-text", rows: 10, placeholder: "Вставьте фрагмент документации или статьи на английском" });
+  area.value = text;
+  const select = el("select", { id: "source-domain" }, domains.map((item) => el("option", { value: item.name }, item.name)));
+  if (domain) {
+    select.value = domain;
+  }
+  const counter = el("span", { className: "meta" });
+  const submit = el("button", { type: "submit", className: "primary" }, "Найти термины");
+  const refresh = () => {
+    const length = area.value.trim().length;
+    counter.textContent = `${length} / ${limits.extract_max_chars}`;
+    counter.className = length > limits.extract_max_chars ? "meta over" : "meta";
+    submit.disabled = length === 0 || length > limits.extract_max_chars || limits.llm_calls_left <= 0;
+  };
+  area.addEventListener("input", refresh);
+  refresh();
+
+  return el(
+    "form",
+    {
+      className: "card",
+      onsubmit: (event) => {
+        event.preventDefault();
+        onSubmit(area.value.trim(), select.value);
+      },
+    },
+    el("h2", {}, "Добавить из текста"),
+    el(
+      "p",
+      { className: "banner warn", role: "note" },
+      "Не вставляйте конфиденциальные данные: текст отправляется во внешнюю языковую модель (GigaChat). Текст не сохраняется в приложении.",
+    ),
+    el("label", { for: "source-text" }, "Фрагмент текста"),
+    area,
+    counter,
+    el("label", { for: "source-domain" }, "Область"),
+    select,
+    el(
+      "p",
+      { className: "meta" },
+      `Модель предложит до ${limits.extract_max_terms} профессиональных терминов из текста. Для каждого отмеченного будет создан черновик. Обращений к модели сегодня осталось: ${limits.llm_calls_left} из ${limits.daily_llm_limit}.`,
+    ),
+    error && el("p", { className: "banner error", role: "alert" }, error),
+    el("div", { className: "actions" }, submit, el("button", { type: "button", className: "secondary", onclick: onCancel }, "Отмена")),
+  );
+}
+
+export function candidatesView({ candidates, domain, onCreate, onBack }) {
+  const boxes = candidates.map((candidate) => {
+    const box = el("input", { type: "checkbox", value: candidate.term });
+    box.checked = !candidate.exists && !candidate.has_draft;
+    box.disabled = candidate.exists || candidate.has_draft;
+    return box;
+  });
+  const create = el("button", { type: "button", className: "primary" }, "");
+  const refresh = () => {
+    const count = boxes.filter((box) => box.checked).length;
+    create.textContent = `Создать черновики (${count})`;
+    create.disabled = count === 0;
+  };
+  boxes.forEach((box) => box.addEventListener("change", refresh));
+  create.addEventListener("click", () => onCreate(boxes.filter((box) => box.checked).map((box) => box.value)));
+  refresh();
+
+  return el(
+    "section",
+    { className: "card" },
+    el("h2", {}, "Найденные термины"),
+    el("p", { className: "meta" }, `Область: ${domain}. Отметьте термины, которые хотите учить.`),
+    candidates.length
+      ? el(
+          "ul",
+          { className: "list" },
+          candidates.map((candidate, index) =>
+            el(
+              "li",
+              { className: "row" },
+              el(
+                "label",
+                { className: "deck-option" },
+                boxes[index],
+                el(
+                  "span",
+                  {},
+                  el("strong", {}, candidate.term),
+                  candidate.exists && el("span", { className: "badge" }, candidate.personal ? "уже в моих словах" : "уже есть в общих"),
+                  candidate.has_draft && el("span", { className: "badge" }, "черновик уже создан"),
+                ),
+              ),
+            ),
+          ),
+        )
+      : el("p", {}, "Подходящих терминов в тексте не нашлось."),
+    el("div", { className: "actions" }, candidates.length ? create : null, el("button", { type: "button", className: "secondary", onclick: onBack }, "Назад")),
   );
 }

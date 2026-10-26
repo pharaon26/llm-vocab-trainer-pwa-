@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.deps import current_user, get_today
+from app.config import draft_config
 from app.api.session import get_llm_provider
 from app.db import get_db
 from app.dictionary.base import DictionaryProvider
@@ -20,9 +21,13 @@ from app.schemas.drafts import (
     DraftUpdateIn,
     DuplicateDeck,
     DuplicateOut,
+    ExtractIn,
+    ExtractOut,
+    LimitsOut,
     PersonalCardOut,
 )
 from app.services import drafts as drafts_service
+from app.services import extract as extract_service
 from app.services.visibility import selected_deck_ids
 
 router = APIRouter(prefix="/me", tags=["personal cards"])
@@ -159,3 +164,33 @@ def update_card(card_id: int, data: CardCreate, user: User = Depends(current_use
 @router.delete("/cards/{card_id}", status_code=204)
 def delete_card(card_id: int, user: User = Depends(current_user), db: Session = Depends(get_db)):
     drafts_service.delete_personal_card(db, own_card(db, user, card_id))
+
+
+@router.get("/limits", response_model=LimitsOut)
+def limits(user: User = Depends(current_user), db: Session = Depends(get_db), today: date = Depends(get_today)):
+    return LimitsOut(
+        extract_max_chars=draft_config.extract_max_chars,
+        extract_max_terms=draft_config.extract_max_terms,
+        daily_llm_limit=draft_config.daily_llm_limit,
+        llm_calls_left=drafts_service.llm_calls_left(db, user, today),
+    )
+
+
+@router.post("/extract", response_model=ExtractOut)
+def extract(
+    data: ExtractIn,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+    today: date = Depends(get_today),
+    provider: LLMProvider | None = Depends(get_llm_provider),
+):
+    try:
+        return extract_service.extract_terms(db, user, data.text, data.domain, today, provider)
+    except extract_service.TextTooLong:
+        raise HTTPException(422, f"Text is too long: at most {draft_config.extract_max_chars} characters")
+    except drafts_service.UnknownDomain:
+        raise HTTPException(422, "Unknown domain")
+    except extract_service.LimitReached:
+        raise HTTPException(429, "Daily limit of model requests is reached")
+    except extract_service.ModelUnavailable:
+        raise HTTPException(503, "The model is unavailable, try again later")

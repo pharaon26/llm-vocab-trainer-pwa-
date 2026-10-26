@@ -33,6 +33,8 @@ class FakeProvider(LLMProvider):
     def _auto(self, user: str) -> dict:
         if "<dictionary>" in user:
             return self._draft(user)
+        if "<text>" in user:
+            return self._extract(user)
         card = json.loads(re.search(r"<card>\s*(.*?)\s*</card>", user, re.DOTALL).group(1))
         task_type = TaskType(re.search(r"Task type: (\w+)", user).group(1))
         if "<student_answer>" in user:
@@ -101,3 +103,11 @@ class FakeProvider(LLMProvider):
             "general_definition_fits": True,
             "examples": [] if len(known.get("examples") or []) >= 2 else [f"We discussed the {term} yesterday.", f"The {term} was important."],
         }
+
+    def _extract(self, user: str) -> dict:
+        text = re.search(r"<text>\n(.*?)\n</text>", user, re.DOTALL).group(1)
+        terms: list[str] = []
+        for word in re.findall(r"[A-Za-z][A-Za-z-]{6,}", text):
+            if word.lower() not in (t.lower() for t in terms):
+                terms.append(word)
+        return {"terms": terms[:5]}

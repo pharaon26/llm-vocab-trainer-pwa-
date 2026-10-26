@@ -542,3 +542,8 @@ select {
   border: 1px solid var(--border);
   border-radius: 8px;
 }
+
+.meta.over {
+  color: var(--bad);
+  font-weight: 600;
+}

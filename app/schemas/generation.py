@@ -1,6 +1,5 @@
-from typing import Annotated
-
 import re
+from typing import Annotated, Any
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator
 
@@ -33,3 +32,7 @@ class DraftSuggestion(BaseModel):
     definition_en: str | None = None
     general_definition_fits: bool = True
     examples: list[str] = []
+
+
+class ExtractedTerms(BaseModel):
+    terms: list[Any] = []

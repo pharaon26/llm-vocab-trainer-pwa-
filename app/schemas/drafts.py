@@ -71,3 +71,27 @@ class PersonalCardOut(BaseModel):
     contrast_term: str | None
     audio_url: str | None
     sources: dict[str, str]
+
+
+class ExtractIn(BaseModel):
+    text: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
+    domain: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=50)]
+
+
+class ExtractCandidate(BaseModel):
+    term: str
+    exists: bool
+    personal: bool
+    has_draft: bool
+
+
+class ExtractOut(BaseModel):
+    candidates: list[ExtractCandidate]
+    llm_calls_left: int
+
+
+class LimitsOut(BaseModel):
+    extract_max_chars: int
+    extract_max_terms: int
+    daily_llm_limit: int
+    llm_calls_left: int
