@@ -174,19 +174,35 @@ DRAFT_RULES = """Rules:
 
 DRAFT_FORMAT = (
     "Response format (strict JSON, no other text):\n"
-    '{"translation_ru": "<string>", "collocations": ["<string>"], "common_mistakes": ["<string>"], '
-    '"contrast_term": null, "transcription": null, "part_of_speech": null, "definition_en": null, '
-    '"general_definition_fits": true, "examples": []}'
+    '{"translation_ru": "<string>", "collocations": ["<string>", "<string>"], "common_mistakes": ["<string>"], '
+    '"contrast_term": "<string or null>", "transcription": "<string or null>", "part_of_speech": "<string or null>", '
+    '"definition_en": "<string or null>", "general_definition_fits": <true or false>, '
+    '"examples": ["<string>", "<string>"]}'
 )
+
+
+def required_fields(term: str, known: dict) -> list[str]:
+    lines = []
+    if not known.get("definition_en"):
+        lines.append('"definition_en": a one-sentence professional definition (the dictionary has none)')
+    if not known.get("part_of_speech"):
+        lines.append('"part_of_speech": for example noun, verb or adjective (the dictionary has none)')
+    if not known.get("transcription"):
+        lines.append('"transcription": IPA between slashes (the dictionary has none)')
+    if len(known.get("examples") or []) < 2:
+        lines.append(f'"examples": 2 or 3 natural sentences, each containing the exact words "{term}" (the dictionary has too few)')
+    return lines
 
 
 def build_draft_prompt(term: str, domain: str, known: dict) -> tuple[str, str]:
     known_json = json.dumps(known, ensure_ascii=False, indent=2)
+    required = required_fields(term, known)
+    must = "You MUST fill these fields in your answer, they must not be null or empty:\n" + "\n".join(f"- {line}" for line in required) + "\n\n" if required else ""
     user = (
         f"Term: {term}\n"
         f"Domain: {domain}\n\n"
         f"Dictionary data that is already known (may be empty):\n<dictionary>\n{known_json}\n</dictionary>\n\n"
-        f"{DRAFT_RULES}\n\n{DRAFT_FORMAT}"
+        f"{must}{DRAFT_RULES}\n\n{DRAFT_FORMAT}"
     )
     return DRAFT_SYSTEM_PROMPT, user
 

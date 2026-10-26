@@ -40,6 +40,7 @@ OPTIONAL = ("contrast_term",)
 
 NOTICE_DICTIONARY_DOWN = "Внешний словарь недоступен: поля предложены моделью, проверьте их особенно внимательно."
 NOTICE_NOT_FOUND = "В словаре слово не найдено: поля предложены моделью."
+NOTICE_PHRASE = "Внешний словарь понимает только отдельные слова: поля словосочетания предложены моделью, проверьте их."
 NOTICE_NO_LLM = "Модель не настроена: недостающие поля заполните вручную."
 NOTICE_LIMIT = "Дневной лимит обращений к модели исчерпан: недостающие поля заполните вручную."
 NOTICE_LLM_DOWN = "Модель сейчас недоступна: недостающие поля заполните вручную."
@@ -234,7 +235,10 @@ def create_draft(
 
     data, sources, notices = _empty_fields(), {}, []
     audio_url = None
-    if dictionary is not None:
+    entry = None
+    if " " in term:
+        notices.append(NOTICE_PHRASE)
+    elif dictionary is not None:
         try:
             entry = dictionary.lookup(term)
         except DictionaryUnavailable as exc:

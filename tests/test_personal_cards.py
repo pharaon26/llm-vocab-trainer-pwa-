@@ -21,6 +21,11 @@ JITTER = DictionaryEntry(
     audio_url="https://audio.test/jitter.mp3",
 )
 
+JITTER_FULL = DictionaryEntry(
+    transcription="/x/", part_of_speech="noun", definition="Variation in delay.",
+    examples=["Jitter hurts calls.", "Measure the jitter."],
+)
+
 SUGGESTION = {
     "translation_ru": "задержка",
     "collocations": ["low jitter", "network jitter", "reduce jitter"],
@@ -485,3 +490,32 @@ def test_personal_words_come_first_among_new_terms(client, db, student_headers, 
     card_id = client.post(f"/me/drafts/{draft['id']}/confirm", headers=student_headers).json()["id"]
     first = client.get("/session/next", headers=student_headers).json()
     assert first["task"]["card_id"] == card_id and first["remaining"] == 5
+
+
+def test_phrases_skip_the_dictionary_and_say_why(client, student_headers, cards, dictionary, llm):
+    dictionary.provider = FakeDictionary({"packet loss": JITTER})
+    llm.provider = FakeProvider([llm_reply(
+        collocations=["high packet loss", "reduce packet loss"], definition_en="Share of packets that never arrive.",
+        transcription="/x/", part_of_speech="noun", examples=["Packet loss hurts calls.", "We measured packet loss."])])
+    draft = draft_of(create(client, student_headers, "packet loss"))
+    assert dictionary.provider.calls == []
+    assert any("только отдельные слова" in n for n in draft["notices"])
+    assert draft["sources"]["definition_en"] == "llm" and draft["missing"] == []
+
+
+def test_prompt_demands_the_fields_the_dictionary_could_not_give(client, student_headers, cards, dictionary, llm):
+    dictionary.provider = FakeDictionary()
+    llm.provider = FakeProvider([llm_reply()])
+    create(client, student_headers, "jitter")
+    user = llm.provider.calls[0][1]
+    assert "You MUST fill these fields" in user
+    for field in ('"definition_en"', '"part_of_speech"', '"transcription"', '"examples"'):
+        assert field in user.split("You MUST fill")[1].split("Rules:")[0]
+    assert 'exact words "jitter"' in user
+
+
+def test_prompt_demands_only_what_is_missing(client, student_headers, cards, dictionary, llm):
+    dictionary.provider = FakeDictionary({"jitter": JITTER_FULL})
+    llm.provider = FakeProvider([llm_reply()])
+    create(client, student_headers, "jitter")
+    assert "You MUST fill" not in llm.provider.calls[0][1]
