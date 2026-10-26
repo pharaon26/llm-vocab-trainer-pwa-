@@ -3,7 +3,7 @@ import json
 import pytest
 
 from app.models import Card
-from app.seed import CARDS_FILE, load_cards
+from app.seed import CARDS_FILE, load_cards, update_cards
 
 @pytest.fixture
 def client(client, teacher_headers):
@@ -97,3 +97,25 @@ def test_seed_is_idempotent(db):
     assert load_cards(db) == (0, total)
     assert db.query(Card).count() == total
     assert 20 <= total <= 30
+
+
+def test_update_cards_restores_changed_cards_and_resets_verified(db):
+    load_cards(db)
+    db.query(Card).update({Card.verified: True})
+    changed = db.query(Card).filter_by(term="encryption").one()
+    changed.translation_ru = "что-то другое"
+    db.commit()
+
+    assert update_cards(db) == 1
+    db.refresh(changed)
+    assert changed.translation_ru == "шифрование"
+    assert changed.verified is False
+    assert db.query(Card).filter_by(verified=True).count() == db.query(Card).count() - 1
+
+
+def test_update_cards_without_changes_does_nothing(db):
+    load_cards(db)
+    db.query(Card).update({Card.verified: True})
+    db.commit()
+    assert update_cards(db) == 0
+    assert db.query(Card).filter_by(verified=False).count() == 0

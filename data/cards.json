@@ -40,7 +40,7 @@
     ],
     "common_mistakes": [
       "Using threat as a synonym of vulnerability.",
-      "Using the verb 'make a threat' instead of 'pose a threat'."
+      "Using 'make a threat' (to threaten someone) instead of 'pose a threat' (to be a danger)."
     ],
     "contrast_term": "vulnerability",
     "domain": "Information security"
@@ -86,7 +86,7 @@
     ],
     "common_mistakes": [
       "Using authorization to mean logging in with a password.",
-      "Writing 'authorisation' in an American-English text without consistency."
+      "Confusing authorization (what you may do) with authentication (who you are)."
     ],
     "contrast_term": "authentication",
     "domain": "Information security"
@@ -104,7 +104,7 @@
       "data encryption"
     ],
     "examples": [
-      "All passwords are stored using strong encryption.",
+      "All customer data on the server is protected with strong encryption.",
       "End-to-end encryption prevents the provider from reading messages."
     ],
     "common_mistakes": [
@@ -124,7 +124,7 @@
       "password hashing",
       "hashing algorithm",
       "salted hashing",
-      "hashing function"
+      "secure hashing"
     ],
     "examples": [
       "Password hashing makes stolen databases much less useful to attackers.",
@@ -247,7 +247,7 @@
     ],
     "common_mistakes": [
       "Using the plural 'malwares': the word is uncountable.",
-      "Using malware as a synonym of virus only."
+      "Treating malware and virus as synonyms: a virus is only one type of malware."
     ],
     "contrast_term": "virus",
     "domain": "Information security"
@@ -357,7 +357,7 @@
       "backup copy"
     ],
     "examples": [
-      "The database is saved to a daily backup at night.",
+      "The system creates a daily backup of the database at night.",
       "After the failure, the admin restored the system from a backup."
     ],
     "common_mistakes": [
@@ -376,7 +376,7 @@
     "collocations": [
       "built-in redundancy",
       "provide redundancy",
-      "redundancy of servers",
+      "server redundancy",
       "network redundancy"
     ],
     "examples": [
@@ -464,12 +464,12 @@
     "transcription": "/ˈendpɔɪnt/",
     "part_of_speech": "noun",
     "definition_en": "A specific URL or address through which a client communicates with an API or service.",
-    "translation_ru": "конечная точка",
+    "translation_ru": "эндпоинт, конечная точка",
     "collocations": [
       "API endpoint",
       "call an endpoint",
       "secure an endpoint",
-      "endpoint returns"
+      "expose an endpoint"
     ],
     "examples": [
       "The /cards endpoint returns a list of cards in JSON format.",
@@ -499,8 +499,9 @@
       "Secrets must never be committed to a public repository."
     ],
     "common_mistakes": [
-      "Writing 'repositary' or 'repository' with the wrong stress.",
-      "Confusing repository with a single branch."
+      "Writing 'repositary' instead of 'repository'.",
+      "Confusing repository with a single branch.",
+      "Stressing the first syllable: the stress falls on '-po-'."
     ],
     "contrast_term": "branch",
     "domain": "IT"
