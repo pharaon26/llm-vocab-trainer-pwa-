@@ -1,0 +1,554 @@
+[
+  {
+    "term": "vulnerability",
+    "transcription": "/ˌvʌlnərəˈbɪləti/",
+    "part_of_speech": "noun",
+    "definition_en": "A weakness in a system, application or process that can be exploited by an attacker.",
+    "translation_ru": "уязвимость",
+    "collocations": [
+      "critical vulnerability",
+      "exploit a vulnerability",
+      "patch a vulnerability",
+      "vulnerability scan"
+    ],
+    "examples": [
+      "The team found a critical vulnerability in the login form.",
+      "Attackers exploited a known vulnerability in the web server."
+    ],
+    "common_mistakes": [
+      "Confusing vulnerability with threat: a vulnerability is a weakness, not the danger itself.",
+      "Writing 'vulnerabilty' or 'vunerability'."
+    ],
+    "contrast_term": "threat",
+    "domain": "Information security"
+  },
+  {
+    "term": "threat",
+    "transcription": "/θret/",
+    "part_of_speech": "noun",
+    "definition_en": "A potential event or actor that can cause harm to a system by exploiting a vulnerability.",
+    "translation_ru": "угроза",
+    "collocations": [
+      "security threat",
+      "pose a threat",
+      "detect a threat",
+      "threat model"
+    ],
+    "examples": [
+      "Ransomware is a serious threat to hospitals.",
+      "The report lists the main threats to our cloud infrastructure."
+    ],
+    "common_mistakes": [
+      "Using threat as a synonym of vulnerability.",
+      "Using the verb 'make a threat' instead of 'pose a threat'."
+    ],
+    "contrast_term": "vulnerability",
+    "domain": "Information security"
+  },
+  {
+    "term": "authentication",
+    "transcription": "/ɔːˌθentɪˈkeɪʃn/",
+    "part_of_speech": "noun",
+    "definition_en": "The process of verifying that a user or system is who they claim to be.",
+    "translation_ru": "аутентификация",
+    "collocations": [
+      "two-factor authentication",
+      "authentication token",
+      "fail authentication",
+      "authentication mechanism"
+    ],
+    "examples": [
+      "Two-factor authentication protects the account even if the password leaks.",
+      "The server rejects requests that fail authentication."
+    ],
+    "common_mistakes": [
+      "Confusing authentication (who are you) with authorization (what may you do).",
+      "Writing 'autentication'."
+    ],
+    "contrast_term": "authorization",
+    "domain": "Information security"
+  },
+  {
+    "term": "authorization",
+    "transcription": "/ˌɔːθəraɪˈzeɪʃn/",
+    "part_of_speech": "noun",
+    "definition_en": "The process of deciding what an authenticated user is allowed to access or do.",
+    "translation_ru": "авторизация",
+    "collocations": [
+      "role-based authorization",
+      "grant authorization",
+      "authorization check",
+      "lack authorization"
+    ],
+    "examples": [
+      "Authorization determines whether the user can delete the file.",
+      "The API returns 403 when the authorization check fails."
+    ],
+    "common_mistakes": [
+      "Using authorization to mean logging in with a password.",
+      "Writing 'authorisation' in an American-English text without consistency."
+    ],
+    "contrast_term": "authentication",
+    "domain": "Information security"
+  },
+  {
+    "term": "encryption",
+    "transcription": "/ɪnˈkrɪpʃn/",
+    "part_of_speech": "noun",
+    "definition_en": "The process of converting data into a coded form so that only authorized parties can read it.",
+    "translation_ru": "шифрование",
+    "collocations": [
+      "end-to-end encryption",
+      "encryption key",
+      "strong encryption",
+      "data encryption"
+    ],
+    "examples": [
+      "All passwords are stored using strong encryption.",
+      "End-to-end encryption prevents the provider from reading messages."
+    ],
+    "common_mistakes": [
+      "Confusing encryption with hashing: encrypted data can be decrypted, a hash cannot.",
+      "Writing 'encription'."
+    ],
+    "contrast_term": "hashing",
+    "domain": "Information security"
+  },
+  {
+    "term": "hashing",
+    "transcription": "/ˈhæʃɪŋ/",
+    "part_of_speech": "noun",
+    "definition_en": "The process of turning data into a fixed-length value with a one-way function.",
+    "translation_ru": "хеширование",
+    "collocations": [
+      "password hashing",
+      "hashing algorithm",
+      "salted hashing",
+      "hashing function"
+    ],
+    "examples": [
+      "Password hashing makes stolen databases much less useful to attackers.",
+      "The system compares the hash of the input with the stored hash."
+    ],
+    "common_mistakes": [
+      "Saying that a hash can be decrypted.",
+      "Using hashing and encryption as synonyms."
+    ],
+    "contrast_term": "encryption",
+    "domain": "Information security"
+  },
+  {
+    "term": "patch",
+    "transcription": "/pætʃ/",
+    "part_of_speech": "noun",
+    "definition_en": "A small software update that fixes a bug or a security vulnerability.",
+    "translation_ru": "патч, исправление",
+    "collocations": [
+      "security patch",
+      "apply a patch",
+      "release a patch",
+      "patch management"
+    ],
+    "examples": [
+      "The vendor released a patch for the vulnerability within a week.",
+      "Administrators must apply the patch before Friday."
+    ],
+    "common_mistakes": [
+      "Using 'make a patch' instead of 'release a patch' or 'apply a patch'.",
+      "Confusing a patch with a full version upgrade."
+    ],
+    "contrast_term": "upgrade",
+    "domain": "IT"
+  },
+  {
+    "term": "deployment",
+    "transcription": "/dɪˈplɔɪmənt/",
+    "part_of_speech": "noun",
+    "definition_en": "The process of putting a new version of software into a working environment.",
+    "translation_ru": "развертывание",
+    "collocations": [
+      "automated deployment",
+      "deployment pipeline",
+      "production deployment",
+      "deployment failure"
+    ],
+    "examples": [
+      "The deployment to production takes about ten minutes.",
+      "A failed deployment triggered an automatic rollback."
+    ],
+    "common_mistakes": [
+      "Writing 'deploying' as a noun instead of 'deployment'.",
+      "Confusing deployment with development."
+    ],
+    "contrast_term": "release",
+    "domain": "IT"
+  },
+  {
+    "term": "rollback",
+    "transcription": "/ˈrəʊlbæk/",
+    "part_of_speech": "noun",
+    "definition_en": "The action of returning a system or database to a previous stable state.",
+    "translation_ru": "откат",
+    "collocations": [
+      "perform a rollback",
+      "automatic rollback",
+      "rollback plan",
+      "trigger a rollback"
+    ],
+    "examples": [
+      "The team performed a rollback after the update broke the login page.",
+      "Every deployment needs a clear rollback plan."
+    ],
+    "common_mistakes": [
+      "Using the noun form 'rollback' as a verb: the verb is 'roll back'.",
+      "Confusing rollback with backup."
+    ],
+    "contrast_term": "backup",
+    "domain": "IT"
+  },
+  {
+    "term": "firewall",
+    "transcription": "/ˈfaɪəwɔːl/",
+    "part_of_speech": "noun",
+    "definition_en": "A system that filters network traffic according to security rules.",
+    "translation_ru": "межсетевой экран, файрвол",
+    "collocations": [
+      "configure a firewall",
+      "firewall rule",
+      "block at the firewall",
+      "network firewall"
+    ],
+    "examples": [
+      "The firewall blocks all incoming connections except port 443.",
+      "A misconfigured firewall rule exposed the database."
+    ],
+    "common_mistakes": [
+      "Thinking that a firewall protects against viruses on the computer.",
+      "Writing 'fire wall' as two words."
+    ],
+    "contrast_term": "antivirus",
+    "domain": "Information security"
+  },
+  {
+    "term": "malware",
+    "transcription": "/ˈmælweə(r)/",
+    "part_of_speech": "noun",
+    "definition_en": "Software designed to damage a system or steal data without the owner's knowledge.",
+    "translation_ru": "вредоносное программное обеспечение",
+    "collocations": [
+      "detect malware",
+      "spread malware",
+      "malware attack",
+      "malware infection"
+    ],
+    "examples": [
+      "The email attachment contained malware.",
+      "Antivirus tools detect most known malware."
+    ],
+    "common_mistakes": [
+      "Using the plural 'malwares': the word is uncountable.",
+      "Using malware as a synonym of virus only."
+    ],
+    "contrast_term": "virus",
+    "domain": "Information security"
+  },
+  {
+    "term": "phishing",
+    "transcription": "/ˈfɪʃɪŋ/",
+    "part_of_speech": "noun",
+    "definition_en": "A type of fraud in which attackers pretend to be a trusted party to trick people into revealing sensitive information.",
+    "translation_ru": "фишинг",
+    "collocations": [
+      "phishing email",
+      "phishing attack",
+      "fall victim to phishing",
+      "phishing link"
+    ],
+    "examples": [
+      "Employees received a phishing email that imitated the IT department.",
+      "Never click a link from a suspicious message: it may be phishing."
+    ],
+    "common_mistakes": [
+      "Writing 'fishing' instead of 'phishing'.",
+      "Confusing phishing with spoofing in general."
+    ],
+    "contrast_term": "spoofing",
+    "domain": "Information security"
+  },
+  {
+    "term": "exploit",
+    "transcription": "/ˈeksplɔɪt/",
+    "part_of_speech": "noun",
+    "definition_en": "A piece of code or a technique that takes advantage of a vulnerability.",
+    "translation_ru": "эксплойт",
+    "collocations": [
+      "public exploit",
+      "develop an exploit",
+      "exploit code",
+      "zero-day exploit"
+    ],
+    "examples": [
+      "A public exploit for the bug appeared a day after the announcement.",
+      "The attacker used a zero-day exploit to gain access."
+    ],
+    "common_mistakes": [
+      "Confusing the exploit with the vulnerability it uses.",
+      "Stressing the verb form /ɪkˈsplɔɪt/ when using the noun."
+    ],
+    "contrast_term": "vulnerability",
+    "domain": "Information security"
+  },
+  {
+    "term": "breach",
+    "transcription": "/briːtʃ/",
+    "part_of_speech": "noun",
+    "definition_en": "An incident in which protected data or systems are accessed without permission.",
+    "translation_ru": "нарушение безопасности, утечка",
+    "collocations": [
+      "data breach",
+      "security breach",
+      "suffer a breach",
+      "breach notification"
+    ],
+    "examples": [
+      "The company reported a data breach affecting two million users.",
+      "Quick detection limited the impact of the breach."
+    ],
+    "common_mistakes": [
+      "Writing 'breech' instead of 'breach'.",
+      "Using breach for any ordinary software failure."
+    ],
+    "contrast_term": "attack",
+    "domain": "Information security"
+  },
+  {
+    "term": "credential",
+    "transcription": "/krəˈdenʃl/",
+    "part_of_speech": "noun",
+    "definition_en": "A piece of information, such as a username and password, used to prove identity.",
+    "translation_ru": "учетные данные",
+    "collocations": [
+      "steal credentials",
+      "login credentials",
+      "credential leak",
+      "valid credentials"
+    ],
+    "examples": [
+      "Attackers tried stolen credentials on many other websites.",
+      "Never store credentials in the source code."
+    ],
+    "common_mistakes": [
+      "Using the singular 'credential' where the plural 'credentials' is normal.",
+      "Confusing credentials with a certificate."
+    ],
+    "contrast_term": "certificate",
+    "domain": "Information security"
+  },
+  {
+    "term": "backup",
+    "transcription": "/ˈbækʌp/",
+    "part_of_speech": "noun",
+    "definition_en": "A copy of data stored separately so that it can be restored after loss or damage.",
+    "translation_ru": "резервная копия",
+    "collocations": [
+      "daily backup",
+      "restore from a backup",
+      "create a backup",
+      "backup copy"
+    ],
+    "examples": [
+      "The database is saved to a daily backup at night.",
+      "After the failure, the admin restored the system from a backup."
+    ],
+    "common_mistakes": [
+      "Using the verb phrase 'back up' as one word: 'we backup the files'.",
+      "Confusing backup with redundancy."
+    ],
+    "contrast_term": "redundancy",
+    "domain": "IT"
+  },
+  {
+    "term": "redundancy",
+    "transcription": "/rɪˈdʌndənsi/",
+    "part_of_speech": "noun",
+    "definition_en": "The inclusion of extra components or copies so that a system keeps working when one part fails.",
+    "translation_ru": "избыточность, резервирование",
+    "collocations": [
+      "built-in redundancy",
+      "provide redundancy",
+      "redundancy of servers",
+      "network redundancy"
+    ],
+    "examples": [
+      "Server redundancy keeps the website available during a hardware failure.",
+      "The design provides redundancy at every network layer."
+    ],
+    "common_mistakes": [
+      "Using redundancy only in the negative sense of unnecessary repetition.",
+      "Confusing redundancy with backup."
+    ],
+    "contrast_term": "backup",
+    "domain": "IT"
+  },
+  {
+    "term": "latency",
+    "transcription": "/ˈleɪtənsi/",
+    "part_of_speech": "noun",
+    "definition_en": "The delay between sending a request and receiving the beginning of the response.",
+    "translation_ru": "задержка",
+    "collocations": [
+      "low latency",
+      "network latency",
+      "reduce latency",
+      "high latency"
+    ],
+    "examples": [
+      "High latency made the video call hard to follow.",
+      "A cache helps to reduce latency for frequent requests."
+    ],
+    "common_mistakes": [
+      "Confusing latency with throughput.",
+      "Writing 'latancy'."
+    ],
+    "contrast_term": "throughput",
+    "domain": "IT"
+  },
+  {
+    "term": "throughput",
+    "transcription": "/ˈθruːpʊt/",
+    "part_of_speech": "noun",
+    "definition_en": "The amount of data or number of requests a system can process in a given period of time.",
+    "translation_ru": "пропускная способность",
+    "collocations": [
+      "high throughput",
+      "network throughput",
+      "measure throughput",
+      "increase throughput"
+    ],
+    "examples": [
+      "The new server doubled the throughput of the API.",
+      "Throughput is measured in requests per second."
+    ],
+    "common_mistakes": [
+      "Confusing throughput with latency.",
+      "Writing 'througput'."
+    ],
+    "contrast_term": "latency",
+    "domain": "IT"
+  },
+  {
+    "term": "scalability",
+    "transcription": "/ˌskeɪləˈbɪləti/",
+    "part_of_speech": "noun",
+    "definition_en": "The ability of a system to handle a growing amount of work by adding resources.",
+    "translation_ru": "масштабируемость",
+    "collocations": [
+      "horizontal scalability",
+      "ensure scalability",
+      "scalability issue",
+      "scalability of the architecture"
+    ],
+    "examples": [
+      "Scalability was the main reason for choosing a cloud provider.",
+      "The architecture has serious scalability issues under heavy load."
+    ],
+    "common_mistakes": [
+      "Confusing scalability with performance.",
+      "Writing 'scalibility'."
+    ],
+    "contrast_term": "performance",
+    "domain": "IT"
+  },
+  {
+    "term": "endpoint",
+    "transcription": "/ˈendpɔɪnt/",
+    "part_of_speech": "noun",
+    "definition_en": "A specific URL or address through which a client communicates with an API or service.",
+    "translation_ru": "конечная точка",
+    "collocations": [
+      "API endpoint",
+      "call an endpoint",
+      "secure an endpoint",
+      "endpoint returns"
+    ],
+    "examples": [
+      "The /cards endpoint returns a list of cards in JSON format.",
+      "Every public endpoint must check user authorization."
+    ],
+    "common_mistakes": [
+      "Using endpoint to mean the whole server.",
+      "Writing 'end point' as two words."
+    ],
+    "contrast_term": "server",
+    "domain": "IT"
+  },
+  {
+    "term": "repository",
+    "transcription": "/rɪˈpɒzətri/",
+    "part_of_speech": "noun",
+    "definition_en": "A storage location for source code and its change history, usually managed by a version control system.",
+    "translation_ru": "репозиторий",
+    "collocations": [
+      "clone a repository",
+      "remote repository",
+      "push to a repository",
+      "private repository"
+    ],
+    "examples": [
+      "She cloned the repository and created a new branch.",
+      "Secrets must never be committed to a public repository."
+    ],
+    "common_mistakes": [
+      "Writing 'repositary' or 'repository' with the wrong stress.",
+      "Confusing repository with a single branch."
+    ],
+    "contrast_term": "branch",
+    "domain": "IT"
+  },
+  {
+    "term": "session",
+    "transcription": "/ˈseʃn/",
+    "part_of_speech": "noun",
+    "definition_en": "A period of interaction between a user and a system, during which the system keeps the user's state.",
+    "translation_ru": "сеанс, сессия",
+    "collocations": [
+      "start a session",
+      "session expires",
+      "end a session",
+      "session cookie"
+    ],
+    "examples": [
+      "The session expires after thirty minutes of inactivity.",
+      "Stealing a session cookie lets an attacker act as the user."
+    ],
+    "common_mistakes": [
+      "Confusing session with the cookie that stores its identifier.",
+      "Writing 'sesion'."
+    ],
+    "contrast_term": "cookie",
+    "domain": "IT"
+  },
+  {
+    "term": "token",
+    "transcription": "/ˈtəʊkən/",
+    "part_of_speech": "noun",
+    "definition_en": "A string issued by a system that proves the identity or rights of its holder without a password.",
+    "translation_ru": "токен",
+    "collocations": [
+      "access token",
+      "issue a token",
+      "token expires",
+      "revoke a token"
+    ],
+    "examples": [
+      "The client sends the access token in the Authorization header.",
+      "An expired token must be refreshed or revoked."
+    ],
+    "common_mistakes": [
+      "Confusing a token with a password.",
+      "Saying that a token never expires."
+    ],
+    "contrast_term": "password",
+    "domain": "Information security"
+  }
+]

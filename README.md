@@ -12,6 +12,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env        # затем заполните значения
 alembic upgrade head        # применить миграции
+python -m app.seed          # загрузить стартовые карточки
 uvicorn app.main:app --reload
 ```
 
@@ -30,6 +31,7 @@ pytest
 - `app/config.py` - настройки из `.env`
 - `app/db.py` - подключение к БД и сессии
 - `app/api/` - маршруты, `app/models/` - таблицы, `app/schemas/` - Pydantic-схемы
+- `app/seed.py`, `data/cards.json` - загрузка стартовых карточек
 - `alembic/` - миграции
 - `tests/` - тесты pytest
 - `static/` - фронтенд PWA (позже)
