@@ -5,6 +5,7 @@ from app.schemas.card import CardRead
 
 
 class TaskOut(BaseModel):
+    task_id: int | None = None
     card_id: int
     task_type: TaskType
     instruction: str
@@ -21,6 +22,7 @@ class AnswerIn(BaseModel):
     card_id: int
     task_type: TaskType
     answer: str = Field(max_length=500)
+    task_id: int | None = None
 
 
 class AnswerOut(BaseModel):

@@ -53,3 +53,13 @@ class SchedulerConfig:
 
 
 scheduler_config = SchedulerConfig()
+
+
+@dataclass(frozen=True)
+class GenerationConfig:
+    max_retries: int = 2
+    bank_min_size: int = 3
+    options_count: int = 4
+
+
+generation_config = GenerationConfig()

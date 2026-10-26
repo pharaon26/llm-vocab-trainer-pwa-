@@ -6,7 +6,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.api.session import get_today
+from types import SimpleNamespace
+
+from app.api.session import get_llm_provider, get_today
 from app.config import settings
 from app.db import Base, get_db
 from app.main import app
@@ -35,9 +37,15 @@ def clock():
 
 
 @pytest.fixture
-def client(db, clock):
+def llm():
+    return SimpleNamespace(provider=None)
+
+
+@pytest.fixture
+def client(db, clock, llm):
     app.dependency_overrides[get_db] = lambda: db
     app.dependency_overrides[get_today] = lambda: clock.today
+    app.dependency_overrides[get_llm_provider] = lambda: llm.provider
     yield TestClient(app)
     app.dependency_overrides.clear()
 

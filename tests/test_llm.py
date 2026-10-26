@@ -78,6 +78,14 @@ def test_prompt_contains_card_and_task(card, task_type):
     assert "strict JSON" in user
 
 
+@pytest.mark.parametrize("task_type", GENERATED_TYPES)
+def test_prompt_names_the_term_explicitly(card, task_type):
+    _, user = build_prompt(card, task_type, "B1")
+    assert "{term}" not in user
+    if task_type != TaskType.DEFINITION_MATCH:
+        assert '"vulnerability"' in user.split("<card>")[0]
+
+
 def test_prompt_card_has_only_reference_fields(card):
     _, user = build_prompt(card, TaskType.GAP_FILL, "B1")
     payload = json.loads(re.search(r"<card>\s*(.*?)\s*</card>", user, re.DOTALL).group(1))
@@ -85,9 +93,12 @@ def test_prompt_card_has_only_reference_fields(card):
     assert "verified" not in payload and "id" not in payload
 
 
-def test_non_generated_type_rejected(card):
+@pytest.mark.parametrize(
+    "task_type", [TaskType.WRITE_TERM, TaskType.SPELLING_CHOICE, TaskType.COLLOCATION_CHOICE]
+)
+def test_non_generated_type_rejected(card, task_type):
     with pytest.raises(ValueError):
-        generate_task(FakeProvider(), card, TaskType.WRITE_TERM)
+        generate_task(FakeProvider(), card, task_type)
 
 
 @pytest.mark.parametrize("task_type", GENERATED_TYPES)

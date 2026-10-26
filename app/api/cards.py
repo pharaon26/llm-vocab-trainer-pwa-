@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import require_teacher
 from app.db import get_db
-from app.models import Card, CardProgress, ReviewHistory
+from app.models import Card, CardProgress, ReviewHistory, TaskBank
 from app.schemas.card import CardCreate, CardRead
 
 router = APIRouter(prefix="/cards", tags=["cards"])
@@ -72,5 +72,6 @@ def delete_card(card_id: int, db: Session = Depends(get_db)):
     card = get_card_or_404(card_id, db)
     db.execute(delete(ReviewHistory).where(ReviewHistory.card_id == card_id))
     db.execute(delete(CardProgress).where(CardProgress.card_id == card_id))
+    db.execute(delete(TaskBank).where(TaskBank.card_id == card_id))
     db.delete(card)
     db.commit()

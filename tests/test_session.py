@@ -3,7 +3,9 @@ from datetime import timedelta
 import pytest
 
 from app.enums import TaskType
-from app.models import Card, CardProgress, ReviewHistory
+from app.llm.base import LLMError
+from app.llm.fake import FakeProvider
+from app.models import Card, CardProgress, ReviewHistory, TaskBank
 from app.seed import load_cards
 from app.services.tasks import correct_answer
 
@@ -21,11 +23,20 @@ def next_task(client, headers):
 
 def answer(client, headers, db, task, correct=True):
     card = db.get(Card, task["card_id"])
-    text = correct_answer(card, TaskType(task["task_type"])) if correct else "definitely wrong"
+    if task.get("task_id"):
+        right = db.get(TaskBank, task["task_id"]).correct_answer
+    else:
+        right = correct_answer(card, TaskType(task["task_type"]))
+    text = right if correct else "definitely wrong"
     response = client.post(
         "/session/answer",
         headers=headers,
-        json={"card_id": task["card_id"], "task_type": task["task_type"], "answer": text},
+        json={
+            "card_id": task["card_id"],
+            "task_type": task["task_type"],
+            "answer": text,
+            "task_id": task.get("task_id"),
+        },
     )
     assert response.status_code == 200, response.text
     return response.json()
@@ -141,3 +152,61 @@ def test_progress_is_per_student(client, db, student_headers, verified_cards):
     answer(client, student_headers, db, next_task(client, student_headers)["task"])
     other = login(client, name="other")
     assert next_task(client, other)["remaining"] == 5
+
+
+def test_generated_task_flow(client, db, llm, student_headers, verified_cards):
+    llm.provider = FakeProvider()
+    task = next_task(client, student_headers)["task"]
+    assert task["task_id"] is not None
+    assert task["task_type"] == TaskType.DEFINITION_MATCH.value
+
+    result = answer(client, student_headers, db, task)
+    assert result["correct"] is True
+    entry = db.get(TaskBank, task["task_id"])
+    assert entry.times_used == 1
+    history = db.query(ReviewHistory).filter_by(card_id=task["card_id"]).one()
+    assert history.task_bank_id == task["task_id"]
+
+
+def test_generated_task_wrong_answer(client, db, llm, student_headers, verified_cards):
+    llm.provider = FakeProvider()
+    task = next_task(client, student_headers)["task"]
+    result = answer(client, student_headers, db, task, correct=False)
+    assert result["correct"] is False
+    assert result["error_type"] == "meaning"
+    assert result["correct_answer"] == db.get(TaskBank, task["task_id"]).correct_answer
+
+
+def test_task_id_of_another_card_rejected(client, db, llm, student_headers, verified_cards):
+    llm.provider = FakeProvider()
+    first = next_task(client, student_headers)["task"]
+    other = db.query(TaskBank).filter(TaskBank.card_id != first["card_id"]).first()
+    if other is None:
+        other = TaskBank(
+            card_id=first["card_id"] + 1, task_type="definition_match", source="fake",
+            prompt="p", options=["a", "b"], correct_answer="a",
+        )
+        db.add(other)
+        db.commit()
+    response = client.post(
+        "/session/answer",
+        headers=student_headers,
+        json={"card_id": first["card_id"], "task_type": first["task_type"], "answer": "x", "task_id": other.id},
+    )
+    assert response.status_code == 422
+
+
+def test_session_survives_llm_failure(client, db, llm, student_headers, verified_cards):
+    llm.provider = FakeProvider([LLMError("down")] * 10)
+    task = next_task(client, student_headers)["task"]
+    assert task["task_id"] is None
+    assert answer(client, student_headers, db, task)["correct"] is True
+
+
+def test_deleting_card_removes_bank_entries(client, db, llm, student_headers, teacher_headers, verified_cards):
+    llm.provider = FakeProvider()
+    task = next_task(client, student_headers)["task"]
+    answer(client, student_headers, db, task)
+    response = client.delete(f"/cards/{task['card_id']}", headers=teacher_headers)
+    assert response.status_code == 204
+    assert db.query(TaskBank).filter_by(card_id=task["card_id"]).count() == 0

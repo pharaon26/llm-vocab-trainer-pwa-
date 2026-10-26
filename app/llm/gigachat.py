@@ -25,6 +25,7 @@ class GigaChatProvider(LLMProvider):
         if not ca_path.is_file():
             raise LLMError(f"CA bundle not found: {ca_path}")
 
+        self.name = f"gigachat:{model}"
         self.temperature = temperature
         self.client = GigaChat(
             credentials=credentials,

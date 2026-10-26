@@ -1,7 +1,8 @@
 import json
 import re
+from typing import TypeVar
 
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from app.config import settings
 from app.enums import TaskType
@@ -10,23 +11,28 @@ from app.llm.prompts import build_prompt
 from app.models import Card
 from app.schemas.generation import GeneratedTask
 
-GENERATED_TYPES = (TaskType.GAP_FILL, TaskType.COLLOCATION_CHOICE, TaskType.DEFINITION_MATCH)
+ModelT = TypeVar("ModelT", bound=BaseModel)
+
+GENERATED_TYPES = (TaskType.GAP_FILL, TaskType.DEFINITION_MATCH)
 
 
 class InvalidResponse(ValueError):
     pass
 
 
-def parse_response(text: str) -> GeneratedTask:
+def parse_model(text: str, model: type[ModelT]) -> ModelT:
     cleaned = re.sub(r"```(?:json)?", "", text)
     start, end = cleaned.find("{"), cleaned.rfind("}")
     if start == -1 or end <= start:
         raise InvalidResponse("No JSON object in the response")
     try:
-        data = json.loads(cleaned[start : end + 1])
-        return GeneratedTask.model_validate(data)
+        return model.model_validate(json.loads(cleaned[start : end + 1]))
     except (json.JSONDecodeError, ValidationError) as exc:
         raise InvalidResponse(str(exc)) from exc
+
+
+def parse_response(text: str) -> GeneratedTask:
+    return parse_model(text, GeneratedTask)
 
 
 def generate_task(

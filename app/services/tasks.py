@@ -10,6 +10,14 @@ BLANK = "____"
 TYPO_DISTANCE = 2
 FALLBACK = (TaskType.DEFINITION_MATCH, TaskType.WRITE_TERM)
 
+INSTRUCTIONS = {
+    TaskType.SPELLING_CHOICE: "Выберите правильное написание термина",
+    TaskType.DEFINITION_MATCH: "Выберите определение, которое соответствует термину",
+    TaskType.GAP_FILL: "Вставьте подходящий термин в пропуск",
+    TaskType.COLLOCATION_CHOICE: "Выберите слово, которое сочетается с термином",
+    TaskType.WRITE_TERM: "Запишите термин по определению",
+}
+
 ERROR_BY_TASK = {
     TaskType.SPELLING_CHOICE: ErrorType.FORM,
     TaskType.DEFINITION_MATCH: ErrorType.MEANING,
@@ -18,7 +26,7 @@ ERROR_BY_TASK = {
 }
 
 
-def _norm(text: str) -> str:
+def norm(text: str) -> str:
     return " ".join(text.split()).casefold()
 
 
@@ -41,13 +49,13 @@ def gap_sentence(card: Card) -> str | None:
 
 
 def collocation_gap(card: Card) -> tuple[str, str] | None:
-    term = _norm(card.term)
+    term = norm(card.term)
     for collocation in card.collocations:
         words = collocation.split()
         if len(words) != 2:
             continue
         for index, word in enumerate(words):
-            if _norm(word) == term:
+            if norm(word) == term:
                 hidden = words[1 - index]
                 prompt = f"{BLANK} {word}" if index == 1 else f"{word} {BLANK}"
                 return prompt, hidden
@@ -72,9 +80,11 @@ def correct_answer(card: Card, task_type: TaskType) -> str:
     return card.term
 
 
-def evaluate(card: Card, task_type: TaskType, answer: str) -> ErrorType | None:
-    expected = _norm(correct_answer(card, task_type))
-    given = _norm(answer)
+def evaluate(
+    card: Card, task_type: TaskType, answer: str, correct: str | None = None
+) -> ErrorType | None:
+    expected = norm(correct if correct is not None else correct_answer(card, task_type))
+    given = norm(answer)
     if given == expected:
         return None
     if task_type == TaskType.WRITE_TERM:
@@ -103,7 +113,7 @@ def _misspellings(term: str, rng: random.Random) -> list[str]:
             variant = term[:i] + term[i + 1 :]
         else:
             variant = term[:i] + term[i] + term[i:]
-        if _norm(variant) != _norm(term):
+        if norm(variant) != norm(term):
             variants.add(variant)
     return rng.sample(sorted(variants), min(len(variants), OPTIONS_COUNT - 1))
 
@@ -114,7 +124,7 @@ def _spelling_choice(card, others, rng):
         return None
     return _task(
         card, TaskType.SPELLING_CHOICE,
-        "Выберите правильное написание термина",
+        INSTRUCTIONS[TaskType.SPELLING_CHOICE],
         card.translation_ru, card.term, typos, rng=rng,
     )
 
@@ -122,7 +132,7 @@ def _spelling_choice(card, others, rng):
 def _definition_match(card, others, rng):
     pool = list(others)
     rng.shuffle(pool)
-    pool.sort(key=lambda other: _norm(other.term) != _norm(card.contrast_term))
+    pool.sort(key=lambda other: norm(other.term) != norm(card.contrast_term))
     definitions = []
     for other in pool:
         if other.definition_en != card.definition_en and other.definition_en not in definitions:
@@ -132,7 +142,7 @@ def _definition_match(card, others, rng):
         return None
     return _task(
         card, TaskType.DEFINITION_MATCH,
-        "Выберите определение, которое соответствует термину",
+        INSTRUCTIONS[TaskType.DEFINITION_MATCH],
         card.term, card.definition_en, definitions, rng=rng,
     )
 
@@ -141,32 +151,32 @@ def _gap_fill(card, others, rng):
     terms = [card.contrast_term] + [other.term for other in rng.sample(others, len(others))]
     distractors = []
     for term in terms:
-        if _norm(term) != _norm(card.term) and _norm(term) not in map(_norm, distractors):
+        if norm(term) != norm(card.term) and norm(term) not in map(norm, distractors):
             distractors.append(term)
     distractors = distractors[: OPTIONS_COUNT - 1]
     if not distractors:
         return None
     return _task(
         card, TaskType.GAP_FILL,
-        "Вставьте подходящий термин в пропуск",
+        INSTRUCTIONS[TaskType.GAP_FILL],
         gap_sentence(card), card.term, distractors, rng=rng,
     )
 
 
 def _collocation_choice(card, others, rng):
     prompt, hidden = collocation_gap(card)
-    own_words = {_norm(word) for col in card.collocations for word in col.split()}
+    own_words = {norm(word) for col in card.collocations for word in col.split()}
     pool = []
     for other in others:
         gap = collocation_gap(other)
-        if gap and _norm(gap[1]) not in own_words and gap[1] not in pool:
+        if gap and norm(gap[1]) not in own_words and gap[1] not in pool:
             pool.append(gap[1])
     distractors = rng.sample(pool, min(len(pool), OPTIONS_COUNT - 1))
     if not distractors:
         return None
     return _task(
         card, TaskType.COLLOCATION_CHOICE,
-        "Выберите слово, которое сочетается с термином",
+        INSTRUCTIONS[TaskType.COLLOCATION_CHOICE],
         prompt, hidden, distractors, rng=rng,
     )
 
@@ -174,7 +184,7 @@ def _collocation_choice(card, others, rng):
 def _write_term(card, others, rng):
     return _task(
         card, TaskType.WRITE_TERM,
-        "Запишите термин по определению",
+        INSTRUCTIONS[TaskType.WRITE_TERM],
         card.definition_en,
     )
 

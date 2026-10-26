@@ -5,7 +5,6 @@ from app.enums import TaskType
 from app.llm.base import LLMError, LLMProvider
 
 GENERIC_TERMS = ["protocol", "database", "compiler"]
-GENERIC_WORDS = ["purple", "seven", "wooden"]
 GENERIC_DEFINITIONS = [
     "A named storage place for files inside an operating system.",
     "A device that converts digital signals into sound.",
@@ -14,6 +13,8 @@ GENERIC_DEFINITIONS = [
 
 
 class FakeProvider(LLMProvider):
+    name = "fake"
+
     def __init__(self, responses: list[str | Exception] | None = None):
         self.responses = list(responses) if responses is not None else None
         self.calls: list[tuple[str, str]] = []
@@ -32,10 +33,11 @@ class FakeProvider(LLMProvider):
     def _auto(self, user: str) -> dict:
         card = json.loads(re.search(r"<card>\s*(.*?)\s*</card>", user, re.DOTALL).group(1))
         task_type = TaskType(re.search(r"Task type: (\w+)", user).group(1))
+        if "<task>" in user:
+            task = json.loads(re.search(r"<task>\s*(.*?)\s*</task>", user, re.DOTALL).group(1))
+            return self._review(card, task_type, task)
         if task_type == TaskType.GAP_FILL:
             return self._gap_fill(card)
-        if task_type == TaskType.COLLOCATION_CHOICE:
-            return self._collocation(card)
         return self._definition(card)
 
     def _gap_fill(self, card: dict) -> dict:
@@ -49,17 +51,6 @@ class FakeProvider(LLMProvider):
         options = [term, *[d for d in distractors if d.lower() != term.lower()][:3]]
         return {"prompt": sentence, "options": options, "correct_answer": term}
 
-    def _collocation(self, card: dict) -> dict:
-        term = card["term"].lower()
-        for collocation in card["collocations"]:
-            words = collocation.split()
-            if len(words) == 2 and term in (w.lower() for w in words):
-                index = 0 if words[0].lower() == term else 1
-                hidden = words[1 - index]
-                prompt = f"{words[0]} ____" if index == 0 else f"____ {words[1]}"
-                return {"prompt": prompt, "options": [hidden, *GENERIC_WORDS], "correct_answer": hidden}
-        return {"prompt": f"____ {card['term']}", "options": ["security", *GENERIC_WORDS], "correct_answer": "security"}
-
     def _definition(self, card: dict) -> dict:
         definition = card["definition_en"]
         return {
@@ -67,3 +58,12 @@ class FakeProvider(LLMProvider):
             "options": [definition, *GENERIC_DEFINITIONS],
             "correct_answer": definition,
         }
+
+    def _review(self, card: dict, task_type: TaskType, task: dict) -> dict:
+        term = card["term"].lower()
+        options = task["options"]
+        if task_type == TaskType.GAP_FILL:
+            fitting = [o for o in options if o.lower() == term]
+        else:
+            fitting = [o for o in options if o == card["definition_en"]]
+        return {"fitting_options": fitting, "term_meaning_matches": True}
