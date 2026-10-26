@@ -28,10 +28,18 @@ async function loadNext(quiet = false) {
   try {
     const data = await api.nextTask();
     if (data.task) {
-      showTask(data.task, data.remaining);
+      showTask(data.task, `В очереди: ${data.remaining}`);
     } else {
       const checkedAt = quiet ? new Date().toLocaleTimeString("ru-RU") : "";
-      show(views.doneView({ ...stats, info: data, checkedAt, onRefresh: () => loadNext(true) }));
+      show(
+        views.doneView({
+          ...stats,
+          info: data,
+          checkedAt,
+          onRefresh: () => loadNext(true),
+          onPractice: () => loadPractice(),
+        }),
+      );
     }
   } catch (error) {
     showFailure(error);
@@ -60,19 +68,39 @@ function writeDraft(task, text) {
   }
 }
 
-function showTask(task, remaining) {
-  const view = views.taskView(task, remaining, {
+function showTask(task, meta, practice = false) {
+  const view = views.taskView(task, meta, {
     draft: readDraft(task),
     onDraft: (text) => writeDraft(task, text),
-    onSubmit: (answer) => submit(task, view, answer),
+    onSubmit: (answer) => submit(task, view, answer, practice),
+    onExit: practice ? () => loadNext() : null,
   });
   show(view.node);
 }
 
-async function submit(task, view, answer) {
+async function loadPractice(previousCardId = null) {
+  show(views.loadingView("Подбираем задание…"));
+  try {
+    const { task } = await api.practiceNext(previousCardId);
+    if (task) {
+      showTask(task, "Свободная тренировка: расписание повторений не меняется", true);
+    } else {
+      show(views.messageView("Пока нечего тренировать", "Сначала откройте новые термины в повторении.", "К повторению", () => loadNext()));
+    }
+  } catch (error) {
+    if (error.status === 409) {
+      show(views.messageView("Сначала завершите повторение", "Свободная тренировка доступна, когда задания на сегодня выполнены.", "К повторению", () => loadNext()));
+    } else {
+      showFailure(error);
+    }
+  }
+}
+
+async function submit(task, view, answer, practice) {
   view.setBusy(true);
   try {
-    const result = await api.answer({
+    const send = practice ? api.practiceAnswer : api.answer;
+    const result = await send({
       card_id: task.card_id,
       task_type: task.task_type,
       answer,
@@ -80,11 +108,16 @@ async function submit(task, view, answer) {
       context: task.context ?? null,
     });
     writeDraft(task, "");
-    stats.answered += 1;
-    if (result.correct) {
-      stats.correct += 1;
+    if (!practice) {
+      stats.answered += 1;
+      if (result.correct) {
+        stats.correct += 1;
+      }
     }
-    const feedback = views.feedbackView(result, answer, { onNext: () => loadNext() });
+    const feedback = views.feedbackView(result, answer, {
+      onNext: () => (practice ? loadPractice(task.card_id) : loadNext()),
+      onExit: practice ? () => loadNext() : null,
+    });
     show(feedback.node);
     feedback.focus();
   } catch (error) {

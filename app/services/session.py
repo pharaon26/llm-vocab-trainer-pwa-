@@ -58,7 +58,11 @@ def _stage_task(progress: CardProgress) -> TaskType:
 def _retry_items(db: Session, user: User, today: date) -> list[QueueItem]:
     rows = db.scalars(
         select(ReviewHistory)
-        .where(ReviewHistory.user_id == user.id, ReviewHistory.answered_on == today)
+        .where(
+            ReviewHistory.user_id == user.id,
+            ReviewHistory.answered_on == today,
+            ReviewHistory.is_practice.is_(False),
+        )
         .order_by(ReviewHistory.id)
     ).all()
     last_by_card = {row.card_id: row for row in rows}
@@ -121,7 +125,18 @@ def next_task(
     return get_task(db, provider, item.card, task_type, others, rng), len(queue)
 
 
-def idle_info(db: Session, user: User, today: date) -> tuple[date | None, int]:
+def _opened_card(db: Session, user: User, card_id: int) -> Card:
+    card = db.scalar(
+        select(Card)
+        .join(CardProgress, CardProgress.card_id == Card.id)
+        .where(CardProgress.user_id == user.id, Card.id == card_id, Card.verified.is_(True))
+    )
+    if card is None:
+        raise CardNotInSession
+    return card
+
+
+def idle_info(db: Session, user: User, today: date) -> tuple[date | None, int, int]:
     next_review = db.scalar(
         select(func.min(CardProgress.due_date))
         .join(Card, Card.id == CardProgress.card_id)
@@ -131,7 +146,13 @@ def idle_info(db: Session, user: User, today: date) -> tuple[date | None, int]:
     unseen = db.scalar(
         select(func.count()).select_from(Card).where(Card.verified.is_(True), Card.id.not_in(known))
     )
-    return next_review, unseen
+    opened = db.scalar(
+        select(func.count())
+        .select_from(CardProgress)
+        .join(Card, Card.id == CardProgress.card_id)
+        .where(CardProgress.user_id == user.id, Card.verified.is_(True))
+    )
+    return next_review, unseen, opened
 
 
 def _update_progress(
@@ -168,12 +189,16 @@ def submit_answer(
     config: SchedulerConfig = scheduler_config,
     provider: LLMProvider | None = None,
     context: str | None = None,
+    practice: bool = False,
 ) -> AnswerOut:
-    queue = build_queue(db, user, today, config)
-    item = next((i for i in queue if i.card.id == card_id), None)
-    if item is None:
-        raise CardNotInSession
-    card = item.card
+    if practice:
+        card = _opened_card(db, user, card_id)
+    else:
+        queue = build_queue(db, user, today, config)
+        item = next((i for i in queue if i.card.id == card_id), None)
+        if item is None:
+            raise CardNotInSession
+        card = item.card
 
     classified_by = "task"
     comment = None
@@ -205,10 +230,11 @@ def submit_answer(
             ReviewHistory.card_id == card.id,
             ReviewHistory.answered_on == today,
             ReviewHistory.is_retry.is_(False),
+            ReviewHistory.is_practice.is_(False),
         )
     )
-    is_retry = already_counted is not None
-    if not is_retry:
+    is_retry = already_counted is not None and not practice
+    if not is_retry and not practice:
         _update_progress(db, user, card, error, today, config)
 
     db.add(
@@ -216,7 +242,7 @@ def submit_answer(
             user_id=user.id, card_id=card.id, task_type=task_type.value, answer=answer,
             prompt=task_prompt(card, task_type, context, entry), correct_answer=correct_text,
             is_correct=error is None, error_type=error.value if error else None,
-            is_retry=is_retry, answered_on=today, task_bank_id=task_id,
+            is_retry=is_retry, is_practice=practice, answered_on=today, task_bank_id=task_id,
             classified_by=classified_by, comment=comment,
         )
     )
@@ -227,8 +253,8 @@ def submit_answer(
         error_type=error,
         correct_answer=correct_text,
         card=CardRead.model_validate(card),
-        retry_in_session=error is not None,
+        retry_in_session=error is not None and not practice,
         classified_by=classified_by,
         comment=comment,
-        remaining=len(build_queue(db, user, today, config)),
+        remaining=0 if practice else len(build_queue(db, user, today, config)),
     )

@@ -22,6 +22,7 @@ class NextOut(BaseModel):
     next_review_date: date | None = None
     unseen_cards: int = 0
     new_cards_per_day: int | None = None
+    opened_cards: int = 0
 
 
 class AnswerIn(BaseModel):
@@ -41,3 +42,7 @@ class AnswerOut(BaseModel):
     classified_by: str
     comment: str | None = None
     remaining: int
+
+
+class PracticeNextOut(BaseModel):
+    task: TaskOut | None

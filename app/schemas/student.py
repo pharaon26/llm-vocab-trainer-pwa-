@@ -38,6 +38,7 @@ class HistoryItem(BaseModel):
     is_correct: bool
     error_type: ErrorType | None
     is_retry: bool
+    is_practice: bool
     classified_by: str
     comment: str | None
 
@@ -63,6 +64,7 @@ class DayStat(BaseModel):
     answered: int
     correct: int
     accuracy: float | None
+    practice: int = 0
 
 
 class StreakStat(BaseModel):

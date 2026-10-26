@@ -61,7 +61,7 @@ export function startView({ name, onStart }) {
   );
 }
 
-export function taskView(task, remaining, { draft, onDraft, onSubmit }) {
+export function taskView(task, meta, { draft, onDraft, onSubmit, onExit }) {
   let selected = null;
   let busy = false;
   let input = null;
@@ -125,13 +125,14 @@ export function taskView(task, remaining, { draft, onDraft, onSubmit }) {
   const node = el(
     "section",
     { className: "card" },
-    el("p", { className: "meta" }, `В очереди: ${remaining}`),
+    el("p", { className: "meta" }, meta),
     el("h2", {}, task.instruction),
     el("p", { className: "prompt" }, task.prompt),
     task.context && el("p", { className: "context" }, task.context),
     control,
     banner,
     el("div", { className: "actions" }, submit, skip),
+    onExit && el("button", { type: "button", className: "link", onclick: onExit }, "Закончить тренировку"),
   );
   refresh();
 
@@ -175,7 +176,7 @@ function cardReference(card) {
   );
 }
 
-export function feedbackView(result, userAnswer, { onNext }) {
+export function feedbackView(result, userAnswer, { onNext, onExit }) {
   const verdict = result.correct
     ? "Верно!"
     : `Неверно${result.error_type ? `: ${ERROR_LABELS[result.error_type]}` : ""}`;
@@ -184,7 +185,7 @@ export function feedbackView(result, userAnswer, { onNext }) {
   const node = el(
     "section",
     { className: "card" },
-    el("p", { className: "meta" }, `Осталось: ${result.remaining}`),
+    el("p", { className: "meta" }, onExit ? "Тренировка: расписание повторений не меняется" : `Осталось: ${result.remaining}`),
     el("h2", { className: result.correct ? "ok" : "bad" }, verdict),
     !result.correct && el("p", {}, el("strong", {}, "Ваш ответ: "), userAnswer || "(пусто)"),
     !result.correct && el("p", {}, el("strong", {}, "Эталон: "), result.correct_answer),
@@ -192,11 +193,12 @@ export function feedbackView(result, userAnswer, { onNext }) {
     result.retry_in_session && el("p", { className: "meta" }, "Этот термин вернется в конце сессии."),
     cardReference(result.card),
     next,
+    onExit && el("button", { type: "button", className: "secondary", onclick: onExit }, "Закончить тренировку"),
   );
   return { node, focus: () => next.focus() };
 }
 
-export function doneView({ answered, correct, info, checkedAt, onRefresh }) {
+export function doneView({ answered, correct, info, checkedAt, onRefresh, onPractice }) {
   const noCards = answered === 0 && !info.next_review_date && info.unseen_cards === 0;
   if (noCards) {
     return el(
@@ -218,6 +220,8 @@ export function doneView({ answered, correct, info, checkedAt, onRefresh }) {
       el("p", {}, `Новые термины открываются по ${info.new_cards_per_day} в день, осталось новых: ${info.unseen_cards}.`),
     el("p", { className: "meta" }, "Задания на сегодня выполнены, возвращайтесь по расписанию."),
     checkedAt && el("p", { className: "meta" }, `Проверено в ${checkedAt}: новых заданий нет.`),
+    info.opened_cards > 0 &&
+      el("button", { type: "button", className: "primary", onclick: onPractice }, "Свободная тренировка"),
     el("button", { type: "button", className: "secondary", onclick: onRefresh }, "Проверить снова"),
   );
 }

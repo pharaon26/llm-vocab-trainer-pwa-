@@ -37,6 +37,7 @@ def error_counts(db: Session, user: User) -> dict[int, dict[str, int]]:
             ReviewHistory.user_id == user.id,
             ReviewHistory.is_correct.is_(False),
             ReviewHistory.is_retry.is_(False),
+            ReviewHistory.is_practice.is_(False),
         )
         .group_by(ReviewHistory.card_id, ReviewHistory.error_type)
     ).all()
@@ -101,6 +102,7 @@ def build_history(db: Session, user: User, term: str | None, limit: int, offset:
                     entry.correct_answer if entry else correct_answer(card, task_type)
                 ),
                 is_correct=row.is_correct, error_type=row.error_type, is_retry=row.is_retry,
+                is_practice=row.is_practice,
                 classified_by=row.classified_by, comment=row.comment,
             )
         )
@@ -141,9 +143,20 @@ def build_stats(db: Session, user: User, today: date, days: int) -> StatsOut:
     correct_flag = case((ReviewHistory.is_correct.is_(True), 1), else_=0)
     graded = db.execute(
         select(ReviewHistory.answered_on, func.count(), func.sum(correct_flag))
-        .where(ReviewHistory.user_id == user.id, ReviewHistory.is_retry.is_(False))
+        .where(
+            ReviewHistory.user_id == user.id,
+            ReviewHistory.is_retry.is_(False),
+            ReviewHistory.is_practice.is_(False),
+        )
         .group_by(ReviewHistory.answered_on)
     ).all()
+    practice_per_day = dict(
+        db.execute(
+            select(ReviewHistory.answered_on, func.count())
+            .where(ReviewHistory.user_id == user.id, ReviewHistory.is_practice.is_(True))
+            .group_by(ReviewHistory.answered_on)
+        ).all()
+    )
     per_day = {day: (answered, correct) for day, answered, correct in graded}
     active_days = set(
         db.scalars(select(ReviewHistory.answered_on).where(ReviewHistory.user_id == user.id).distinct())
@@ -156,6 +169,7 @@ def build_stats(db: Session, user: User, today: date, days: int) -> StatsOut:
             answered=per_day.get(day, (0, 0))[0],
             correct=per_day.get(day, (0, 0))[1],
             accuracy=_accuracy(per_day.get(day, (0, 0))[1], per_day.get(day, (0, 0))[0]),
+            practice=practice_per_day.get(day, 0),
         )
         for day in window
     ]
@@ -167,6 +181,7 @@ def build_stats(db: Session, user: User, today: date, days: int) -> StatsOut:
                 ReviewHistory.user_id == user.id,
                 ReviewHistory.is_correct.is_(False),
                 ReviewHistory.is_retry.is_(False),
+                ReviewHistory.is_practice.is_(False),
             )
             .group_by(ReviewHistory.error_type)
         ).all()

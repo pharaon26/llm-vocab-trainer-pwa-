@@ -14,6 +14,7 @@ def build_analytics(db: Session, min_answers: int = 3, limit: int = 10) -> Analy
     scope = (
         User.role == Role.STUDENT.value,
         ReviewHistory.is_retry.is_(False),
+        ReviewHistory.is_practice.is_(False),
     )
     wrong = case((ReviewHistory.is_correct.is_(False), 1), else_=0)
 
@@ -53,11 +54,19 @@ def build_analytics(db: Session, min_answers: int = 3, limit: int = 10) -> Analy
         .order_by(ReviewHistory.classified_by)
     ).all()
 
+    practice_answers = db.scalar(
+        select(func.count())
+        .select_from(ReviewHistory)
+        .join(User, User.id == ReviewHistory.user_id)
+        .where(User.role == Role.STUDENT.value, ReviewHistory.is_practice.is_(True))
+    )
+
     return AnalyticsOut(
         students=students,
         answers=answers,
         errors=errors,
         error_rate=_ratio(errors, answers),
+        practice_answers=practice_answers,
         min_answers=min_answers,
         error_types=[
             ErrorTypeStat(error_type=t, count=by_type.get(t.value, 0), share=_ratio(by_type.get(t.value, 0), errors))

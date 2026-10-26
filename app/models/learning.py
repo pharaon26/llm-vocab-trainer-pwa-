@@ -1,6 +1,6 @@
 from datetime import date, datetime
 
-from sqlalchemy import Boolean, Date, DateTime, Float, ForeignKey, String, Text, UniqueConstraint, func
+from sqlalchemy import Boolean, Date, DateTime, Float, ForeignKey, String, Text, UniqueConstraint, false, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base
@@ -35,6 +35,7 @@ class ReviewHistory(Base):
     is_correct: Mapped[bool] = mapped_column(Boolean)
     error_type: Mapped[str | None] = mapped_column(String(20))
     is_retry: Mapped[bool] = mapped_column(Boolean)
+    is_practice: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
     classified_by: Mapped[str] = mapped_column(String(10), server_default="task")
     comment: Mapped[str | None] = mapped_column(Text)
     task_bank_id: Mapped[int | None] = mapped_column(ForeignKey("task_bank.id", ondelete="SET NULL"))

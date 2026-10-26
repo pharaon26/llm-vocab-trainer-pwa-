@@ -46,6 +46,7 @@ class AnalyticsOut(BaseModel):
     answers: int
     errors: int
     error_rate: float
+    practice_answers: int
     min_answers: int
     error_types: list[ErrorTypeStat]
     hardest_terms: list[TermStat]

@@ -81,7 +81,7 @@ def test_daily_accuracy_counts_first_answers_only(client, db, clock, student_hea
 
     data = client.get("/me/stats", headers=student_headers).json()
     by_date = {d["date"]: d for d in data["days"]}
-    assert by_date["2026-01-09"] == {"date": "2026-01-09", "answered": 3, "correct": 2, "accuracy": 0.667}
+    assert by_date["2026-01-09"] == {"date": "2026-01-09", "answered": 3, "correct": 2, "accuracy": 0.667, "practice": 0}
     assert by_date["2026-01-10"]["accuracy"] == 1.0
     assert data["totals"] == {"answered": 4, "correct": 3, "accuracy": 0.75}
 

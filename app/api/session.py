@@ -40,11 +40,31 @@ def next_task(
     task, remaining = session_service.next_task(db, user, today, provider)
     if task is not None:
         return NextOut(task=task, remaining=remaining)
-    next_review, unseen = session_service.idle_info(db, user, today)
+    next_review, unseen, opened = session_service.idle_info(db, user, today)
     return NextOut(
-        task=None, remaining=0, next_review_date=next_review, unseen_cards=unseen,
+        task=None, remaining=0, next_review_date=next_review, unseen_cards=unseen, opened_cards=opened,
         new_cards_per_day=scheduler_config.new_cards_per_day,
     )
+
+
+def submit_or_http(
+    db: Session, user: User, data: AnswerIn, today: date, provider: LLMProvider | None, practice: bool
+) -> AnswerOut:
+    try:
+        return session_service.submit_answer(
+            db, user, data.card_id, data.task_type, data.answer, today,
+            task_id=data.task_id, provider=provider, context=data.context, practice=practice,
+        )
+    except session_service.CardNotInSession:
+        raise HTTPException(409, "Card is not available for this answer")
+    except ClassifierUnavailable:
+        raise HTTPException(
+            503,
+            "The answer could not be checked and was not recorded. Submit it again in a moment.",
+            headers={"Retry-After": "5"},
+        )
+    except session_service.TaskUnavailable:
+        raise HTTPException(422, "Task type is not available for this card")
 
 
 @router.post("/answer", response_model=AnswerOut)
@@ -55,18 +75,4 @@ def answer(
     today: date = Depends(get_today),
     provider: LLMProvider | None = Depends(get_llm_provider),
 ):
-    try:
-        return session_service.submit_answer(
-            db, user, data.card_id, data.task_type, data.answer, today,
-            task_id=data.task_id, provider=provider, context=data.context,
-        )
-    except session_service.CardNotInSession:
-        raise HTTPException(409, "Card is not in today's session")
-    except ClassifierUnavailable:
-        raise HTTPException(
-            503,
-            "The answer could not be checked and was not recorded. Submit it again in a moment.",
-            headers={"Retry-After": "5"},
-        )
-    except session_service.TaskUnavailable:
-        raise HTTPException(422, "Task type is not available for this card")
+    return submit_or_http(db, user, data, today, provider, practice=False)
