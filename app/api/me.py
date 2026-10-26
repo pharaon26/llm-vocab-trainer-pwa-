@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import current_user
 from app.db import get_db
 from app.models import User
-from app.schemas.student import HistoryOut, ProgressOut
+from app.schemas.student import DictionaryEntry, HistoryOut, ProgressOut
 from app.services import student as student_service
 
 router = APIRouter(prefix="/me", tags=["me"])
@@ -24,3 +24,8 @@ def history(
     db: Session = Depends(get_db),
 ):
     return student_service.build_history(db, user, term, limit, offset)
+
+
+@router.get("/dictionary", response_model=list[DictionaryEntry])
+def dictionary(user: User = Depends(current_user), db: Session = Depends(get_db)):
+    return student_service.build_dictionary(db, user)

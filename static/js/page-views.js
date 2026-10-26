@@ -123,3 +123,57 @@ export function historyView({ terms, term, items, total, onTerm, onMore }) {
     items.length < total && el("button", { type: "button", onclick: onMore }, "Показать еще"),
   );
 }
+
+export function dictionaryView({ entries }) {
+  const list = el("ul", { className: "list" });
+  const empty = el("p", { hidden: true }, "Ничего не найдено.");
+
+  const items = entries.map((entry) => ({
+    entry,
+    node: el(
+      "li",
+      { className: "row" },
+      el(
+        "details",
+        { className: "info dictionary-entry" },
+        el(
+          "summary",
+          {},
+          el("strong", {}, entry.term),
+          " ",
+          el("span", { className: "ipa" }, entry.transcription),
+          " ",
+          el("span", { className: "pos" }, entry.part_of_speech),
+          el("div", { className: "translation" }, entry.translation_ru),
+        ),
+        el("p", {}, entry.definition_en),
+        el("h4", {}, "Словосочетания"),
+        el("ul", {}, entry.collocations.map((item) => el("li", {}, item))),
+        el("h4", {}, "Примеры"),
+        el("ul", {}, entry.examples.map((item) => el("li", {}, item))),
+      ),
+    ),
+  }));
+  list.append(...items.map((item) => item.node));
+
+  const search = el("input", { type: "search", id: "dictionary-search", placeholder: "Поиск по термину или переводу", autocomplete: "off" });
+  search.addEventListener("input", () => {
+    const query = search.value.trim().toLowerCase();
+    let visible = 0;
+    for (const { entry, node } of items) {
+      const match = !query || entry.term.toLowerCase().includes(query) || entry.translation_ru.toLowerCase().includes(query);
+      node.hidden = !match;
+      visible += match ? 1 : 0;
+    }
+    empty.hidden = visible > 0;
+  });
+
+  return el(
+    "section",
+    { className: "card" },
+    el("h2", {}, "Словарь"),
+    entries.length
+      ? [el("p", { className: "meta" }, `Открытых терминов: ${entries.length}`), search, list, empty]
+      : el("p", {}, "Здесь появятся термины, которые вы откроете в повторении."),
+  );
+}

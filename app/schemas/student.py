@@ -46,3 +46,13 @@ class HistoryOut(BaseModel):
     total: int
     terms: list[str]
     items: list[HistoryItem]
+
+
+class DictionaryEntry(BaseModel):
+    term: str
+    transcription: str
+    part_of_speech: str
+    definition_en: str
+    translation_ru: str
+    collocations: list[str]
+    examples: list[str]

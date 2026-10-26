@@ -7,7 +7,7 @@ from app.config import LearningConfig, learning_config
 from app.enums import ErrorType
 from app.enums import TaskType
 from app.models import Card, CardProgress, ReviewHistory, TaskBank, User
-from app.schemas.student import HistoryItem, HistoryOut, ProgressItem, ProgressOut, ProgressSummary
+from app.schemas.student import DictionaryEntry, HistoryItem, HistoryOut, ProgressItem, ProgressOut, ProgressSummary
 from app.services.tasks import correct_answer, task_prompt
 
 
@@ -94,3 +94,13 @@ def build_history(db: Session, user: User, term: str | None, limit: int, offset:
             )
         )
     return HistoryOut(total=total, terms=list(terms), items=items)
+
+
+def build_dictionary(db: Session, user: User) -> list[DictionaryEntry]:
+    cards = db.scalars(
+        select(Card)
+        .join(CardProgress, CardProgress.card_id == Card.id)
+        .where(CardProgress.user_id == user.id, Card.verified.is_(True))
+        .order_by(Card.term)
+    ).all()
+    return [DictionaryEntry.model_validate(card, from_attributes=True) for card in cards]

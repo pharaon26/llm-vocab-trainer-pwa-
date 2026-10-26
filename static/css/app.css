@@ -395,3 +395,20 @@ body.has-nav main {
   gap: 6px;
   margin-top: 4px;
 }
+
+input[type="search"] {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.dictionary-entry summary {
+  cursor: pointer;
+}
+
+.dictionary-entry[open] summary {
+  margin-bottom: 8px;
+}
+
+.row[hidden] {
+  display: none;
+}

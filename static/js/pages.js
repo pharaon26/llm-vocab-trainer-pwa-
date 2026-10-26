@@ -77,3 +77,12 @@ export async function showHistory() {
   show(views.loadingView("Загружаем историю…"));
   await guard(() => load(true));
 }
+
+export async function showDictionary() {
+  show(views.loadingView("Загружаем словарь…"));
+  try {
+    show(pageViews.dictionaryView({ entries: await api.dictionary() }));
+  } catch (error) {
+    failure(error, showDictionary);
+  }
+}
