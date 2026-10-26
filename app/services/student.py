@@ -20,6 +20,7 @@ from app.schemas.student import (
     TotalsStat,
 )
 from app.services.tasks import correct_answer, task_prompt
+from app.services.visibility import in_selected_decks, usable
 
 
 def card_status(progress: CardProgress | None, config: LearningConfig = learning_config) -> str:
@@ -48,10 +49,14 @@ def error_counts(db: Session, user: User) -> dict[int, dict[str, int]]:
 
 
 def build_progress(db: Session, user: User, config: LearningConfig = learning_config) -> ProgressOut:
-    cards = db.scalars(select(Card).where(Card.verified.is_(True)).order_by(Card.term)).all()
     progress = {
         p.card_id: p for p in db.scalars(select(CardProgress).where(CardProgress.user_id == user.id))
     }
+    cards = db.scalars(
+        select(Card)
+        .where(usable(user), in_selected_decks(db, user) | Card.id.in_(list(progress)))
+        .order_by(Card.term)
+    ).all()
     errors = error_counts(db, user)
     empty = {t.value: 0 for t in ErrorType}
 
@@ -113,7 +118,7 @@ def build_dictionary(db: Session, user: User) -> list[DictionaryEntry]:
     cards = db.scalars(
         select(Card)
         .join(CardProgress, CardProgress.card_id == Card.id)
-        .where(CardProgress.user_id == user.id, Card.verified.is_(True))
+        .where(CardProgress.user_id == user.id, usable(user))
         .order_by(Card.term)
     ).all()
     return [DictionaryEntry.model_validate(card, from_attributes=True) for card in cards]

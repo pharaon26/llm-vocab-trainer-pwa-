@@ -4,8 +4,9 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import require_teacher
 from app.db import get_db
-from app.models import Card, CardProgress, ReviewHistory, TaskBank
+from app.models import Card, CardProgress, DeckCard, ReviewHistory, TaskBank
 from app.schemas.card import CardCreate, CardRead
+from app.services.cards import card_values
 
 router = APIRouter(prefix="/cards", tags=["cards"])
 
@@ -26,7 +27,7 @@ def ensure_term_free(db: Session, term: str, exclude_id: int | None = None) -> N
 @router.post("", response_model=CardRead, status_code=201, dependencies=[Depends(require_teacher)])
 def create_card(data: CardCreate, db: Session = Depends(get_db)):
     ensure_term_free(db, data.term)
-    card = Card(**data.model_dump(), verified=False)
+    card = Card(**card_values(db, data.model_dump()), verified=False)
     db.add(card)
     db.commit()
     db.refresh(card)
@@ -50,7 +51,7 @@ def read_card(card_id: int, db: Session = Depends(get_db)):
 def update_card(card_id: int, data: CardCreate, db: Session = Depends(get_db)):
     card = get_card_or_404(card_id, db)
     ensure_term_free(db, data.term, exclude_id=card_id)
-    for field, value in data.model_dump().items():
+    for field, value in card_values(db, data.model_dump()).items():
         setattr(card, field, value)
     card.verified = False
     db.commit()
@@ -73,5 +74,6 @@ def delete_card(card_id: int, db: Session = Depends(get_db)):
     db.execute(delete(ReviewHistory).where(ReviewHistory.card_id == card_id))
     db.execute(delete(CardProgress).where(CardProgress.card_id == card_id))
     db.execute(delete(TaskBank).where(TaskBank.card_id == card_id))
+    db.execute(delete(DeckCard).where(DeckCard.card_id == card_id))
     db.delete(card)
     db.commit()

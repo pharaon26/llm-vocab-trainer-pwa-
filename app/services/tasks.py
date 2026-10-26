@@ -160,7 +160,7 @@ def _spelling_choice(card, others, rng):
 def _definition_match(card, others, rng):
     pool = list(others)
     rng.shuffle(pool)
-    pool.sort(key=lambda other: norm(other.term) != norm(card.contrast_term))
+    pool.sort(key=lambda other: (norm(other.term) != norm(card.contrast_term or ""), other.domain_id != card.domain_id))
     definitions = []
     for other in pool:
         if other.definition_en != card.definition_en and other.definition_en not in definitions:
@@ -176,7 +176,8 @@ def _definition_match(card, others, rng):
 
 
 def _gap_fill(card, others, rng):
-    terms = [card.contrast_term] + [other.term for other in rng.sample(others, len(others))]
+    ordered = sorted(rng.sample(others, len(others)), key=lambda other: other.domain_id != card.domain_id)
+    terms = ([card.contrast_term] if card.contrast_term else []) + [other.term for other in ordered]
     distractors = []
     for term in terms:
         if norm(term) != norm(card.term) and norm(term) not in map(norm, distractors):
@@ -194,12 +195,15 @@ def _gap_fill(card, others, rng):
 def _collocation_choice(card, others, rng):
     prompt, hidden = collocation_gap(card)
     own_words = {norm(word) for col in card.collocations for word in col.split()}
-    pool = []
+    same_domain, other_domains = [], []
     for other in others:
         gap = collocation_gap(other)
-        if gap and norm(gap[1]) not in own_words and gap[1] not in pool:
-            pool.append(gap[1])
-    distractors = rng.sample(pool, min(len(pool), OPTIONS_COUNT - 1))
+        group = same_domain if other.domain_id == card.domain_id else other_domains
+        if gap and norm(gap[1]) not in own_words and gap[1] not in same_domain + other_domains:
+            group.append(gap[1])
+    distractors = rng.sample(same_domain, min(len(same_domain), OPTIONS_COUNT - 1))
+    missing = OPTIONS_COUNT - 1 - len(distractors)
+    distractors += rng.sample(other_domains, min(len(other_domains), missing))
     if not distractors:
         return None
     return _task(

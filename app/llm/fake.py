@@ -4,7 +4,7 @@ import re
 from app.enums import TaskType
 from app.llm.base import LLMError, LLMProvider
 
-GENERIC_TERMS = ["protocol", "database", "compiler"]
+GENERIC_TERMS = ["process", "method", "system"]
 GENERIC_DEFINITIONS = [
     "A named storage place for files inside an operating system.",
     "A device that converts digital signals into sound.",
@@ -50,7 +50,7 @@ class FakeProvider(LLMProvider):
             (pattern.sub("____", e) for e in card["examples"] if pattern.search(e)),
             "The team discussed ____ during the meeting.",
         )
-        distractors = [card["contrast_term"], *GENERIC_TERMS]
+        distractors = [*([card["contrast_term"]] if card["contrast_term"] else []), *GENERIC_TERMS]
         options = [term, *[d for d in distractors if d.lower() != term.lower()][:3]]
         return {"prompt": sentence, "options": options, "correct_answer": term}
 

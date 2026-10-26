@@ -12,6 +12,7 @@ from app.services.session import build_queue
 from app.services.student import error_counts
 from app.services.task_source import get_task
 from app.services.tasks import OPEN_TYPES
+from app.services.visibility import usable
 
 CLOSED_TYPES = [t for t in TaskType if t not in OPEN_TYPES]
 
@@ -35,7 +36,7 @@ def practice_next(
     opened = db.scalars(
         select(Card)
         .join(CardProgress, CardProgress.card_id == Card.id)
-        .where(CardProgress.user_id == user.id, Card.verified.is_(True))
+        .where(CardProgress.user_id == user.id, usable(user))
     ).all()
     if not opened:
         return None
@@ -46,5 +47,5 @@ def practice_next(
     card = rng.choices(candidates, weights)[0]
 
     task_type = rng.choice(list(TaskType) if provider is not None else CLOSED_TYPES)
-    others = list(db.scalars(select(Card).where(Card.id != card.id)))
+    others = list(db.scalars(select(Card).where(Card.id != card.id, usable(user))))
     return get_task(db, provider, card, task_type, others, rng)

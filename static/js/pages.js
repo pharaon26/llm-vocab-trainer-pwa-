@@ -99,17 +99,20 @@ export async function showStats() {
 export async function showSettings(notice = "") {
   show(views.loadingView("Загружаем настройки…"));
   try {
-    const settings = await api.settings();
+    const [settings, decks] = await Promise.all([api.settings(), api.decks()]);
     const render = (message, error) =>
       show(
         pageViews.settingsView({
           settings,
+          decks,
           notice: message,
           error,
-          onSave: async (value) => {
+          onSave: async ({ perDay, deckIds }) => {
             try {
-              Object.assign(settings, await api.saveSettings(value));
-              render(`Сохранено: ${settings.new_cards_per_day} в день.`, "");
+              Object.assign(settings, await api.saveSettings(perDay));
+              const saved = await api.saveDecks(deckIds);
+              decks.splice(0, decks.length, ...saved);
+              render(`Сохранено. Новых терминов в день: ${settings.new_cards_per_day}, наборов: ${deckIds.length}.`, "");
             } catch (err) {
               if (err.status === 401) {
                 unauthorized();

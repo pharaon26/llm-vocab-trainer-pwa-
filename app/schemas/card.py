@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
 
 NonEmpty = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 
@@ -14,8 +14,14 @@ class CardCreate(BaseModel):
     collocations: Annotated[list[NonEmpty], Field(min_length=2, max_length=4)]
     examples: Annotated[list[NonEmpty], Field(min_length=2, max_length=3)]
     common_mistakes: Annotated[list[NonEmpty], Field(min_length=1)]
-    contrast_term: Annotated[NonEmpty, Field(max_length=100)]
+    contrast_term: Annotated[str, StringConstraints(strip_whitespace=True, max_length=100)] | None = None
     domain: Annotated[NonEmpty, Field(max_length=50)]
+
+
+    @field_validator("contrast_term")
+    @classmethod
+    def empty_contrast_is_none(cls, value):
+        return value or None
 
 
 class CardRead(CardCreate):

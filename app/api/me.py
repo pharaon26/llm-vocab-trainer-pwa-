@@ -1,13 +1,15 @@
 from datetime import date
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api.deps import current_user, get_today
 from app.db import get_db
 from app.models import User
 from app.config import learning_config
+from app.schemas.catalog import DeckOut, DeckSelectionIn
 from app.schemas.student import DictionaryEntry, HistoryOut, ProgressOut, SettingsIn, SettingsOut, StatsOut
+from app.services import decks as decks_service
 from app.services import student as student_service
 
 router = APIRouter(prefix="/me", tags=["me"])
@@ -62,3 +64,17 @@ def update_settings(data: SettingsIn, user: User = Depends(current_user), db: Se
     user.new_cards_per_day = data.new_cards_per_day
     db.commit()
     return settings_out(user)
+
+
+@router.get("/decks", response_model=list[DeckOut])
+def my_decks(user: User = Depends(current_user), db: Session = Depends(get_db)):
+    return decks_service.list_decks(db, user)
+
+
+@router.put("/decks", response_model=list[DeckOut])
+def choose_decks(data: DeckSelectionIn, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    try:
+        decks_service.select_decks(db, user, data.deck_ids)
+    except decks_service.UnknownDecks:
+        raise HTTPException(422, "Unknown deck id")
+    return decks_service.list_decks(db, user)

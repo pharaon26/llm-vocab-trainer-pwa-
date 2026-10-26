@@ -220,7 +220,7 @@ export function statsView({ data }) {
   );
 }
 
-export function settingsView({ settings, notice = "", error = "", onSave }) {
+export function settingsView({ settings, decks, notice = "", error = "", onSave }) {
   const output = el("output", { for: "per-day", className: "per-day" }, String(settings.new_cards_per_day));
   const range = el("input", {
     id: "per-day",
@@ -233,6 +233,41 @@ export function settingsView({ settings, notice = "", error = "", onSave }) {
   range.addEventListener("input", () => {
     output.textContent = range.value;
   });
+
+  const boxes = decks.map((deck) => {
+    const box = el("input", { type: "checkbox", id: `deck-${deck.id}`, value: String(deck.id) });
+    box.checked = deck.selected;
+    return box;
+  });
+  const deckList = el(
+    "fieldset",
+    { className: "decks" },
+    el("legend", {}, "Наборы для изучения"),
+    decks.length
+      ? decks.map((deck, index) =>
+          el(
+            "label",
+            { className: "deck-option", for: `deck-${deck.id}` },
+            boxes[index],
+            el(
+              "span",
+              {},
+              el("strong", {}, deck.name),
+              " ",
+              el("span", { className: "badge" }, deck.domain),
+              el("span", { className: "meta" }, ` ${deck.cards} карточек`),
+              deck.description && el("span", { className: "definition" }, deck.description),
+            ),
+          ),
+        )
+      : el("p", {}, "Наборов пока нет."),
+    el(
+      "p",
+      { className: "meta" },
+      "Новые термины берутся только из выбранных наборов. Повторения уже открытых терминов продолжаются, даже если набор снят.",
+    ),
+  );
+
   return el(
     "section",
     { className: "card" },
@@ -244,8 +279,17 @@ export function settingsView({ settings, notice = "", error = "", onSave }) {
       { className: "meta" },
       `От ${settings.min_new_per_day} до ${settings.max_new_per_day}. Столько новых терминов открывается в повторении каждый день, кроме тех, что нужно повторить по расписанию. Изменение действует сразу.`,
     ),
+    deckList,
     notice && el("p", { className: "banner ok", role: "status" }, notice),
     error && el("p", { className: "banner error", role: "alert" }, error),
-    el("button", { type: "button", className: "primary", onclick: () => onSave(Number(range.value)) }, "Сохранить"),
+    el(
+      "button",
+      {
+        type: "button",
+        className: "primary",
+        onclick: () => onSave({ perDay: Number(range.value), deckIds: boxes.filter((box) => box.checked).map((box) => Number(box.value)) }),
+      },
+      "Сохранить",
+    ),
   );
 }

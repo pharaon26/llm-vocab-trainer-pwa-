@@ -14,6 +14,7 @@ from app.schemas.session import AnswerOut, TaskOut
 from app.services.classification import classify_open_answer
 from app.services.scheduler import ReviewState, next_due_date, review
 from app.services.task_source import get_task
+from app.services.visibility import in_selected_decks, usable
 from app.services.tasks import OPEN_TYPES, correct_answer, evaluate, is_available, task_prompt
 
 STAGE_TASKS = (
@@ -69,7 +70,7 @@ def _retry_items(db: Session, user: User, today: date) -> list[QueueItem]:
     items = []
     for row in sorted(last_by_card.values(), key=lambda r: r.id):
         card = db.get(Card, row.card_id)
-        if not row.is_correct and not row.is_retry and card.verified:
+        if not row.is_correct and not row.is_retry and db.scalar(select(Card.id).where(Card.id == card.id, usable(user))):
             items.append(QueueItem(card, TASK_BY_ERROR[ErrorType(row.error_type)]))
     return items
 
@@ -82,7 +83,7 @@ def build_queue(
         .join(Card, Card.id == CardProgress.card_id)
         .where(
             CardProgress.user_id == user.id,
-            Card.verified.is_(True),
+            usable(user),
             CardProgress.due_date <= today,
         )
         .order_by(CardProgress.due_date, Card.id)
@@ -98,7 +99,7 @@ def build_queue(
     known = select(CardProgress.card_id).where(CardProgress.user_id == user.id)
     new_cards = db.scalars(
         select(Card)
-        .where(Card.verified.is_(True), Card.id.not_in(known))
+        .where(usable(user), in_selected_decks(db, user), Card.id.not_in(known))
         .order_by(Card.id)
         .limit(slots)
     ).all()
@@ -121,7 +122,7 @@ def next_task(
     task_type = item.task_type
     if task_type in OPEN_TYPES and provider is None:
         task_type = TaskType.WRITE_TERM
-    others = list(db.scalars(select(Card).where(Card.id != item.card.id)))
+    others = list(db.scalars(select(Card).where(Card.id != item.card.id, usable(user))))
     return get_task(db, provider, item.card, task_type, others, rng), len(queue)
 
 
@@ -129,7 +130,7 @@ def _opened_card(db: Session, user: User, card_id: int) -> Card:
     card = db.scalar(
         select(Card)
         .join(CardProgress, CardProgress.card_id == Card.id)
-        .where(CardProgress.user_id == user.id, Card.id == card_id, Card.verified.is_(True))
+        .where(CardProgress.user_id == user.id, Card.id == card_id, usable(user))
     )
     if card is None:
         raise CardNotInSession
@@ -140,17 +141,19 @@ def idle_info(db: Session, user: User, today: date) -> tuple[date | None, int, i
     next_review = db.scalar(
         select(func.min(CardProgress.due_date))
         .join(Card, Card.id == CardProgress.card_id)
-        .where(CardProgress.user_id == user.id, Card.verified.is_(True), CardProgress.due_date > today)
+        .where(CardProgress.user_id == user.id, usable(user), CardProgress.due_date > today)
     )
     known = select(CardProgress.card_id).where(CardProgress.user_id == user.id)
     unseen = db.scalar(
-        select(func.count()).select_from(Card).where(Card.verified.is_(True), Card.id.not_in(known))
+        select(func.count())
+        .select_from(Card)
+        .where(usable(user), in_selected_decks(db, user), Card.id.not_in(known))
     )
     opened = db.scalar(
         select(func.count())
         .select_from(CardProgress)
         .join(Card, Card.id == CardProgress.card_id)
-        .where(CardProgress.user_id == user.id, Card.verified.is_(True))
+        .where(CardProgress.user_id == user.id, usable(user))
     )
     return next_review, unseen, opened
 

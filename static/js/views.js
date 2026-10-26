@@ -172,7 +172,7 @@ function cardReference(card) {
     list("Словосочетания", card.collocations),
     list("Примеры", card.examples),
     list("Частые ошибки", card.common_mistakes),
-    el("p", {}, el("strong", {}, "Не путать с: "), card.contrast_term),
+    card.contrast_term && el("p", {}, el("strong", {}, "Не путать с: "), card.contrast_term),
   );
 }
 
@@ -205,7 +205,8 @@ export function doneView({ answered, correct, info, checkedAt, onRefresh, onPrac
       "section",
       { className: "card" },
       el("h2", {}, "Заданий пока нет"),
-      el("p", {}, "Возможно, преподаватель еще не проверил карточки. Загляните позже."),
+      el("p", {}, "Выберите наборы для изучения в настройках или загляните позже: возможно, преподаватель еще не проверил карточки."),
+      el("p", {}, el("a", { href: "#/settings" }, "Открыть настройки")),
       checkedAt && el("p", { className: "meta" }, `Проверено в ${checkedAt}: новых заданий нет.`),
       el("button", { type: "button", className: "primary", onclick: onRefresh }, "Проверить снова"),
     );

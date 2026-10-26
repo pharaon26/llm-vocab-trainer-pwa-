@@ -455,3 +455,32 @@ input[type="range"] {
 .topbar a {
   color: var(--primary);
 }
+
+fieldset.decks {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.deck-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-weight: 400;
+}
+
+.deck-option input {
+  width: 24px;
+  min-height: 24px;
+  margin-top: 2px;
+}
+
+.deck-option .definition {
+  display: block;
+  color: var(--muted);
+  font-size: 0.95rem;
+}

@@ -4,7 +4,8 @@ from app.enums import TaskType
 from app.models import Card
 
 SYSTEM_PROMPT = (
-    "You are an experienced English teacher for university students of IT and information security. "
+    "You are an experienced English teacher for university students who learn professional English vocabulary "
+    "in their field; every request names the field as the domain of the card. "
     "You create one exercise at a time for a vocabulary trainer. "
     "Reply with one JSON object only: no markdown, no code fences, no comments."
 )
@@ -12,13 +13,13 @@ SYSTEM_PROMPT = (
 TASK_DESCRIPTIONS = {
     TaskType.GAP_FILL: (
         'Write ONE new sentence (not copied from the card examples) in which the word "{term}" is replaced with "____". '
-        'Example for the term "firewall": "The administrator configured the ____ to block incoming traffic." '
+        'Example (format only) for the term "invoice": "The accountant sent the ____ to the client." '
         '"prompt" is that sentence. "options" has exactly 4 items: "{term}" and 3 other terms from the same '
         'domain that do not fit the sentence. "correct_answer" is "{term}".'
     ),
     TaskType.DEFINITION_MATCH: (
         '"prompt" is the target term. "options" has exactly 4 English definitions: the correct definition of the '
-        "target term (copied from the card) and 3 definitions of other terms, one of which is the contrast term. "
+        "target term (copied from the card) and 3 definitions of other terms from the same professional domain{contrast}. "
         '"correct_answer" is the correct definition.'
     ),
 }
@@ -50,13 +51,18 @@ CARD_FIELDS = (
 )
 
 
+def task_description(card: Card, task_type: TaskType) -> str:
+    contrast = ", one of which is the contrast term" if card.contrast_term else ""
+    return TASK_DESCRIPTIONS[task_type].replace("{term}", card.term).replace("{contrast}", contrast)
+
+
 def build_prompt(card: Card, task_type: TaskType, level: str) -> tuple[str, str]:
     card_json = json.dumps({f: getattr(card, f) for f in CARD_FIELDS}, ensure_ascii=False, indent=2)
     user = (
         f"Domain: {card.domain}\n"
         f"Student level (CEFR): {level}\n"
         f"Task type: {task_type.value}\n\n"
-        f"Task description:\n{TASK_DESCRIPTIONS[task_type].replace('{term}', card.term)}\n\n"
+        f"Task description:\n{task_description(card, task_type)}\n\n"
         f"Target term card (reference data, do not change it):\n<card>\n{card_json}\n</card>\n\n"
         f"{RULES}\n\n{RESPONSE_FORMAT}"
     )
@@ -64,7 +70,8 @@ def build_prompt(card: Card, task_type: TaskType, level: str) -> tuple[str, str]
 
 
 CHECK_SYSTEM_PROMPT = (
-    "You are a strict reviewer of English vocabulary exercises for students of IT and information security. "
+    "You are a strict reviewer of English professional-vocabulary exercises for university students; "
+    "the field is given as the domain of the card. "
     "Reply with one JSON object only: no markdown, no code fences, no comments."
 )
 
@@ -101,8 +108,8 @@ def build_check_prompt(card: Card, task_type: TaskType, task) -> tuple[str, str]
 
 
 CLASSIFY_SYSTEM_PROMPT = (
-    "You are an experienced English teacher for university students of IT and information security. "
-    "You assess a student's written answer about one English term and classify the mistake, if any. "
+    "You are an experienced English teacher for university students who learn professional English vocabulary. "
+    "You assess a student's written answer about one English term from the card's domain and classify the mistake, if any. "
     "Reply with one JSON object only: no markdown, no code fences, no comments."
 )
 

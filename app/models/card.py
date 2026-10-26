@@ -1,7 +1,8 @@
-from sqlalchemy import JSON, Boolean, String, Text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import JSON, Boolean, ForeignKey, String, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
+from app.models.catalog import Domain
 
 
 class Card(Base):
@@ -16,6 +17,12 @@ class Card(Base):
     collocations: Mapped[list[str]] = mapped_column(JSON)
     examples: Mapped[list[str]] = mapped_column(JSON)
     common_mistakes: Mapped[list[str]] = mapped_column(JSON)
-    contrast_term: Mapped[str] = mapped_column(String(100))
-    domain: Mapped[str] = mapped_column(String(50))
+    contrast_term: Mapped[str | None] = mapped_column(String(100))
+    domain_id: Mapped[int] = mapped_column(ForeignKey("domains.id"))
     verified: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    domain_ref: Mapped[Domain] = relationship(lazy="joined")
+
+    @property
+    def domain(self) -> str:
+        return self.domain_ref.name

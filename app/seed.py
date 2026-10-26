@@ -8,18 +8,25 @@ from sqlalchemy.orm import Session
 from app.db import SessionLocal
 from app.models import Card
 from app.schemas.card import CardCreate
+from app.services.cards import add_to_deck, card_values, ensure_default_deck
 
 CARDS_FILE = Path(__file__).resolve().parent.parent / "data" / "cards.json"
 
 
 def load_cards(db: Session, path: Path = CARDS_FILE) -> tuple[int, int]:
     added = skipped = 0
+    deck = ensure_default_deck(db)
     for raw in json.loads(path.read_text(encoding="utf-8")):
         data = CardCreate(**raw)
-        if db.scalar(select(Card).where(Card.term == data.term)):
+        card = db.scalar(select(Card).where(Card.term == data.term))
+        if card is not None:
+            add_to_deck(db, deck, card)
             skipped += 1
             continue
-        db.add(Card(**data.model_dump(), verified=False))
+        card = Card(**card_values(db, data.model_dump()), verified=False)
+        db.add(card)
+        db.flush()
+        add_to_deck(db, deck, card)
         added += 1
     db.commit()
     return added, skipped
@@ -32,7 +39,7 @@ def update_cards(db: Session, path: Path = CARDS_FILE) -> int:
         card = db.scalar(select(Card).where(Card.term == data["term"]))
         if card is None or all(getattr(card, field) == value for field, value in data.items()):
             continue
-        for field, value in data.items():
+        for field, value in card_values(db, data).items():
             setattr(card, field, value)
         card.verified = False
         updated += 1
