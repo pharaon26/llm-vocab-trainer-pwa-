@@ -126,60 +126,6 @@ export function historyView({ terms, term, items, total, onTerm, onMore }) {
   );
 }
 
-export function dictionaryView({ entries }) {
-  const list = el("ul", { className: "list" });
-  const empty = el("p", { hidden: true }, "Ничего не найдено.");
-
-  const items = entries.map((entry) => ({
-    entry,
-    node: el(
-      "li",
-      { className: "row" },
-      el(
-        "details",
-        { className: "info dictionary-entry" },
-        el(
-          "summary",
-          {},
-          el("strong", {}, entry.term),
-          " ",
-          el("span", { className: "ipa" }, entry.transcription),
-          " ",
-          el("span", { className: "pos" }, entry.part_of_speech),
-          el("div", { className: "translation" }, entry.translation_ru),
-        ),
-        el("p", {}, entry.definition_en),
-        el("h4", {}, "Словосочетания"),
-        el("ul", {}, entry.collocations.map((item) => el("li", {}, item))),
-        el("h4", {}, "Примеры"),
-        el("ul", {}, entry.examples.map((item) => el("li", {}, item))),
-      ),
-    ),
-  }));
-  list.append(...items.map((item) => item.node));
-
-  const search = el("input", { type: "search", id: "dictionary-search", placeholder: "Поиск по термину или переводу", autocomplete: "off" });
-  search.addEventListener("input", () => {
-    const query = search.value.trim().toLowerCase();
-    let visible = 0;
-    for (const { entry, node } of items) {
-      const match = !query || entry.term.toLowerCase().includes(query) || entry.translation_ru.toLowerCase().includes(query);
-      node.hidden = !match;
-      visible += match ? 1 : 0;
-    }
-    empty.hidden = visible > 0;
-  });
-
-  return el(
-    "section",
-    { className: "card" },
-    el("h2", {}, "Словарь"),
-    entries.length
-      ? [el("p", { className: "meta" }, `Открытых терминов: ${entries.length}`), search, list, empty]
-      : el("p", {}, "Здесь появятся термины, которые вы откроете в повторении."),
-  );
-}
-
 export function statsView({ data }) {
   const { streak, totals } = data;
   const shortDate = (iso) => new Date(`${iso}T00:00:00`).toLocaleDateString("ru-RU", { day: "numeric", month: "short" });
@@ -291,5 +237,257 @@ export function settingsView({ settings, decks, notice = "", error = "", onSave 
       },
       "Сохранить",
     ),
+  );
+}
+
+const SOURCE_LABELS = { dictionary: "словарь", llm: "модель: проверьте", user: "вы" };
+const SOURCE_CLASS = { dictionary: "badge src-dictionary", llm: "badge src-llm", user: "badge src-user" };
+
+const WORD_FIELDS = [
+  ["transcription", "Транскрипция", "text"],
+  ["part_of_speech", "Часть речи", "text"],
+  ["definition_en", "Определение (English)", "area"],
+  ["translation_ru", "Перевод на русский", "text"],
+  ["collocations", "Словосочетания", "lines", "2-4, по одному в строке"],
+  ["examples", "Примеры", "lines", "2-3, по одному в строке"],
+  ["common_mistakes", "Типичные ошибки", "lines", "по одной в строке"],
+  ["contrast_term", "Контрастный термин", "text", "необязательно"],
+];
+
+export function dictionaryView({ entries, drafts, myCards, onAdd, onOpenDraft, onDeleteDraft, onEditCard, onDeleteCard }) {
+  const list = el("ul", { className: "list" });
+  const empty = el("p", { hidden: true }, "Ничего не найдено.");
+  const items = entries.map((entry) => ({
+    entry,
+    node: el(
+      "li",
+      { className: "row" },
+      el(
+        "details",
+        { className: "info dictionary-entry" },
+        el(
+          "summary",
+          {},
+          el("strong", {}, entry.term),
+          " ",
+          el("span", { className: "ipa" }, entry.transcription),
+          " ",
+          el("span", { className: "pos" }, entry.part_of_speech),
+          entry.personal && el("span", { className: "badge" }, "моя"),
+          el("div", { className: "translation" }, entry.translation_ru),
+        ),
+        el("p", {}, entry.definition_en),
+        el("h4", {}, "Словосочетания"),
+        el("ul", {}, entry.collocations.map((item) => el("li", {}, item))),
+        el("h4", {}, "Примеры"),
+        el("ul", {}, entry.examples.map((item) => el("li", {}, item))),
+      ),
+    ),
+  }));
+  list.append(...items.map((item) => item.node));
+
+  const search = el("input", { type: "search", id: "dictionary-search", placeholder: "Поиск по термину или переводу", autocomplete: "off" });
+  search.addEventListener("input", () => {
+    const query = search.value.trim().toLowerCase();
+    let visible = 0;
+    for (const { entry, node } of items) {
+      const match = !query || entry.term.toLowerCase().includes(query) || entry.translation_ru.toLowerCase().includes(query);
+      node.hidden = !match;
+      visible += match ? 1 : 0;
+    }
+    empty.hidden = visible > 0;
+  });
+
+  const draftRows = drafts.map((draft) =>
+    el(
+      "li",
+      { className: "row" },
+      el(
+        "div",
+        { className: "info" },
+        el("strong", {}, draft.term),
+        " ",
+        el("span", { className: "badge" }, draft.domain),
+        el("div", { className: "definition" }, draft.missing.length ? `Не заполнено полей: ${draft.missing.length}` : "Готов к подтверждению"),
+      ),
+      el(
+        "div",
+        { className: "buttons" },
+        el("button", { type: "button", className: "primary", onclick: () => onOpenDraft(draft) }, "Продолжить"),
+        el("button", { type: "button", className: "danger", onclick: () => onDeleteDraft(draft) }, "Удалить"),
+      ),
+    ),
+  );
+  const cardRows = myCards.map((card) =>
+    el(
+      "li",
+      { className: "row" },
+      el(
+        "div",
+        { className: "info" },
+        el("strong", {}, card.term),
+        " ",
+        el("span", { className: "badge" }, card.domain),
+        el("div", { className: "definition" }, card.translation_ru),
+      ),
+      el(
+        "div",
+        { className: "buttons" },
+        el("button", { type: "button", onclick: () => onEditCard(card) }, "Изменить"),
+        el("button", { type: "button", className: "danger", onclick: () => onDeleteCard(card) }, "Удалить"),
+      ),
+    ),
+  );
+
+  return el(
+    "section",
+    { className: "card" },
+    el("h2", {}, "Словарь"),
+    el("div", { className: "toolbar" }, el("button", { type: "button", className: "primary", onclick: onAdd }, "Добавить термин")),
+    drafts.length > 0 && [
+      el("h3", {}, "Черновики"),
+      el("p", { className: "meta" }, "Черновик попадает в повторения только после вашей проверки и подтверждения."),
+      el("ul", { className: "list" }, draftRows),
+    ],
+    myCards.length > 0 && [el("h3", {}, "Мои слова"), el("ul", { className: "list" }, cardRows)],
+    el("h3", {}, "Открытые термины"),
+    entries.length
+      ? [el("p", { className: "meta" }, `Открытых терминов: ${entries.length}`), search, list, empty]
+      : el("p", {}, "Здесь появятся термины, которые вы откроете в повторении."),
+  );
+}
+
+export function addTermView({ domains, term = "", domain = "", error = "", onSubmit, onCancel }) {
+  const input = el("input", { id: "new-term", type: "text", maxlength: 100, required: true, autocomplete: "off", placeholder: "Например, latency или man-in-the-middle attack" });
+  input.value = term;
+  const select = el("select", { id: "new-domain", required: true }, domains.map((item) => el("option", { value: item.name }, item.name)));
+  if (domain) {
+    select.value = domain;
+  }
+  return el(
+    "form",
+    {
+      className: "card",
+      onsubmit: (event) => {
+        event.preventDefault();
+        onSubmit(input.value.trim(), select.value);
+      },
+    },
+    el("h2", {}, "Добавить термин"),
+    el("label", { for: "new-term" }, "Слово или словосочетание"),
+    input,
+    el("label", { for: "new-domain" }, "Область"),
+    select,
+    el("p", { className: "meta" }, "Приложение соберет черновик карточки: данные из словаря, недостающее предложит модель. Вы просмотрите, поправите и подтвердите."),
+    error && el("p", { className: "banner error", role: "alert" }, error),
+    el("div", { className: "actions" }, el("button", { type: "submit", className: "primary" }, "Подобрать данные"), el("button", { type: "button", className: "secondary", onclick: onCancel }, "Отмена")),
+  );
+}
+
+export function duplicateView({ duplicate, onBack, onEnableDeck }) {
+  return el(
+    "section",
+    { className: "card" },
+    el("h2", {}, "Такой термин уже есть"),
+    el("p", {}, el("strong", {}, duplicate.term), " ", el("span", { className: "badge" }, duplicate.domain), duplicate.personal && el("span", { className: "badge" }, "моя карточка")),
+    el("p", {}, duplicate.definition_en),
+    duplicate.personal
+      ? el("p", { className: "meta" }, "Это ваша личная карточка, она уже в повторениях.")
+      : duplicate.decks.length
+        ? [
+            el("p", { className: "meta" }, "Общая карточка входит в наборы:"),
+            el(
+              "ul",
+              { className: "list" },
+              duplicate.decks.map((deck) =>
+                el(
+                  "li",
+                  { className: "row" },
+                  el("div", { className: "info" }, el("strong", {}, deck.name), " ", el("span", { className: deck.selected ? "badge ok" : "badge" }, deck.selected ? "выбран" : "не выбран")),
+                  !deck.selected && el("button", { type: "button", onclick: () => onEnableDeck(deck) }, "Включить набор"),
+                ),
+              ),
+            ),
+          ]
+        : el("p", { className: "meta" }, "Карточка общая, но пока не входит ни в один набор."),
+    el("button", { type: "button", className: "primary", onclick: onBack }, "Понятно"),
+  );
+}
+
+export function draftEditorView({ draft, domains, mode = "draft", error = "", notice = "", onSave, onConfirm, onDelete, onCancel }) {
+  const inputs = {};
+  const badges = {};
+  const sources = { ...draft.sources };
+
+  const rows = WORD_FIELDS.map(([name, label, kind, hint]) => {
+    const input = el(kind === "text" ? "input" : "textarea", { id: `w-${name}`, type: kind === "text" ? "text" : null, rows: kind === "text" ? null : kind === "lines" ? 4 : 3 });
+    const value = draft.fields[name];
+    input.value = Array.isArray(value) ? value.join("\n") : (value ?? "");
+    inputs[name] = [input, kind];
+    const badge = el("span", { className: "source-slot" });
+    badges[name] = badge;
+    const paint = () => {
+      badge.replaceChildren();
+      const source = sources[name];
+      if (source) {
+        badge.append(" ", el("span", { className: SOURCE_CLASS[source] }, SOURCE_LABELS[source]));
+      } else if (!input.value.trim() && name !== "contrast_term") {
+        badge.append(" ", el("span", { className: "badge bad" }, "заполните"));
+      }
+    };
+    paint();
+    input.addEventListener("input", () => {
+      sources[name] = "user";
+      paint();
+    });
+    return el(
+      "div",
+      { className: "field" },
+      el("label", { for: `w-${name}` }, label, hint && el("span", { className: "hint" }, ` (${hint})`), badge),
+      input,
+      name === "definition_en" && draft.general_definition && el("p", { className: "meta" }, `Общее определение из словаря: ${draft.general_definition}`),
+    );
+  });
+
+  const select = el("select", { id: "w-domain" }, domains.map((item) => el("option", { value: item.name }, item.name)));
+  select.value = draft.domain;
+
+  const collect = () => {
+    const fields = {};
+    for (const [name, [input, kind]] of Object.entries(inputs)) {
+      fields[name] = kind === "lines" ? input.value.split("\n").map((line) => line.trim()).filter(Boolean) : input.value.trim();
+    }
+    return { fields, domain: select.value };
+  };
+
+  return el(
+    "form",
+    {
+      className: "card",
+      onsubmit: (event) => {
+        event.preventDefault();
+        (mode === "draft" ? onConfirm : onSave)(collect());
+      },
+    },
+    el("h2", {}, mode === "draft" ? `Черновик: ${draft.term}` : `Изменить: ${draft.term}`),
+    mode === "draft" && el("p", { className: "meta" }, "Проверьте каждое поле. Поля, предложенные моделью, помечены: они могут содержать неточности."),
+    draft.notices.map((text) => el("p", { className: "banner warn", role: "status" }, text)),
+    el("div", { className: "field" }, el("label", { for: "w-domain" }, "Область"), select),
+    draft.audio_url && el("audio", { controls: true, preload: "none", src: draft.audio_url }),
+    rows,
+    notice && el("p", { className: "banner ok", role: "status" }, notice),
+    error && el("p", { className: "banner error", role: "alert" }, error),
+    el(
+      "div",
+      { className: "actions" },
+      mode === "draft"
+        ? [
+            el("button", { type: "submit", className: "primary" }, "Подтвердить"),
+            el("button", { type: "button", onclick: () => onSave(collect()) }, "Сохранить черновик"),
+          ]
+        : el("button", { type: "submit", className: "primary" }, "Сохранить"),
+      el("button", { type: "button", className: "secondary", onclick: onCancel }, "Назад"),
+    ),
+    mode === "draft" && el("button", { type: "button", className: "link", onclick: onDelete }, "Удалить черновик"),
   );
 }

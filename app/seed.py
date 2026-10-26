@@ -18,7 +18,7 @@ def load_cards(db: Session, path: Path = CARDS_FILE) -> tuple[int, int]:
     deck = ensure_default_deck(db)
     for raw in json.loads(path.read_text(encoding="utf-8")):
         data = CardCreate(**raw)
-        card = db.scalar(select(Card).where(Card.term == data.term))
+        card = db.scalar(select(Card).where(Card.term == data.term, Card.owner_id.is_(None)))
         if card is not None:
             add_to_deck(db, deck, card)
             skipped += 1
@@ -36,7 +36,7 @@ def update_cards(db: Session, path: Path = CARDS_FILE) -> int:
     updated = 0
     for raw in json.loads(path.read_text(encoding="utf-8")):
         data = CardCreate(**raw).model_dump()
-        card = db.scalar(select(Card).where(Card.term == data["term"]))
+        card = db.scalar(select(Card).where(Card.term == data["term"], Card.owner_id.is_(None)))
         if card is None or all(getattr(card, field) == value for field, value in data.items()):
             continue
         for field, value in card_values(db, data).items():

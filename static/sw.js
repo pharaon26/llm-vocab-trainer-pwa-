@@ -1,4 +1,4 @@
-const CACHE = "vocab-trainer-v2";
+const CACHE = "vocab-trainer-v3";
 
 const SHELL = [
   "/",
@@ -13,6 +13,7 @@ const SHELL = [
   "/js/session.js",
   "/js/pages.js",
   "/js/page-views.js",
+  "/js/words.js",
   "/manifest.json",
   "/icons/icon.svg",
   "/icons/icon-192.png",

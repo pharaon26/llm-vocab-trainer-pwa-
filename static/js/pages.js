@@ -78,15 +78,6 @@ export async function showHistory() {
   await guard(() => load(true));
 }
 
-export async function showDictionary() {
-  show(views.loadingView("Загружаем словарь…"));
-  try {
-    show(pageViews.dictionaryView({ entries: await api.dictionary() }));
-  } catch (error) {
-    failure(error, showDictionary);
-  }
-}
-
 export async function showStats() {
   show(views.loadingView("Загружаем статистику…"));
   try {

@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     gigachat_scope: str = "GIGACHAT_API_PERS"
     gigachat_model: str = "GigaChat-2"
     gigachat_ca_bundle: str = "certs/russian_trusted_root_ca_pem.crt"
+    dictionary_provider: Literal["dictionaryapi", "none"] = "dictionaryapi"
+    dictionary_url: str = "https://api.dictionaryapi.dev/api/v2/entries/en"
     teacher_password: str = ""
 
 
@@ -90,3 +92,16 @@ class LearningConfig:
 
 
 learning_config = LearningConfig()
+
+
+@dataclass(frozen=True)
+class DraftConfig:
+    daily_llm_limit: int = 30
+    max_retries: int = 2
+    dictionary_timeout: float = 3.0
+    extract_max_chars: int = 4000
+    extract_max_terms: int = 15
+    max_open_drafts: int = 50
+
+
+draft_config = DraftConfig()

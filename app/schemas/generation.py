@@ -21,3 +21,15 @@ class GeneratedTask(BaseModel):
     @classmethod
     def normalize_blank(cls, value: str) -> str:
         return re.sub(r"_{3,}", "____", value)
+
+
+class DraftSuggestion(BaseModel):
+    translation_ru: str | None = None
+    collocations: list[str] = []
+    common_mistakes: list[str] = []
+    contrast_term: str | None = None
+    transcription: str | None = None
+    part_of_speech: str | None = None
+    definition_en: str | None = None
+    general_definition_fits: bool = True
+    examples: list[str] = []

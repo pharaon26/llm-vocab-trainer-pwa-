@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from app.api.deps import require_teacher
@@ -13,13 +13,13 @@ router = APIRouter(prefix="/cards", tags=["cards"])
 
 def get_card_or_404(card_id: int, db: Session) -> Card:
     card = db.get(Card, card_id)
-    if card is None:
+    if card is None or card.owner_id is not None:
         raise HTTPException(404, "Card not found")
     return card
 
 
 def ensure_term_free(db: Session, term: str, exclude_id: int | None = None) -> None:
-    existing = db.scalar(select(Card).where(Card.term == term))
+    existing = db.scalar(select(Card).where(func.lower(Card.term) == term.lower(), Card.owner_id.is_(None)))
     if existing and existing.id != exclude_id:
         raise HTTPException(409, "Card with this term already exists")
 
@@ -36,7 +36,7 @@ def create_card(data: CardCreate, db: Session = Depends(get_db)):
 
 @router.get("", response_model=list[CardRead], dependencies=[Depends(require_teacher)])
 def list_cards(verified: bool | None = None, db: Session = Depends(get_db)):
-    query = select(Card).order_by(Card.term)
+    query = select(Card).where(Card.owner_id.is_(None)).order_by(Card.term)
     if verified is not None:
         query = query.where(Card.verified == verified)
     return db.scalars(query).all()

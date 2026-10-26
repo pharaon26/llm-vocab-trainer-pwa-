@@ -1,4 +1,5 @@
 from datetime import date
+from types import SimpleNamespace
 
 import pytest
 from fastapi.testclient import TestClient
@@ -6,11 +7,12 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from types import SimpleNamespace
-
-from app.api.session import get_llm_provider, get_today
+from app.api.deps import get_today
+from app.api.personal import get_dictionary_provider
+from app.api.session import get_llm_provider
 from app.config import settings
 from app.db import Base, get_db
+from app.dictionary.fake import FakeDictionary
 from app.main import app
 
 
@@ -42,10 +44,16 @@ def llm():
 
 
 @pytest.fixture
-def client(db, clock, llm):
+def dictionary():
+    return SimpleNamespace(provider=FakeDictionary())
+
+
+@pytest.fixture
+def client(db, clock, llm, dictionary):
     app.dependency_overrides[get_db] = lambda: db
     app.dependency_overrides[get_today] = lambda: clock.today
     app.dependency_overrides[get_llm_provider] = lambda: llm.provider
+    app.dependency_overrides[get_dictionary_provider] = lambda: dictionary.provider
     yield TestClient(app)
     app.dependency_overrides.clear()
 

@@ -68,7 +68,7 @@ def apply_deck(db: Session, deck: Deck, name: str, description: str, domain: str
 
 def set_deck_cards(db: Session, deck: Deck, card_ids: list[int]) -> None:
     ids = set(card_ids)
-    known = set(db.scalars(select(Card.id).where(Card.id.in_(ids))))
+    known = set(db.scalars(select(Card.id).where(Card.id.in_(ids), Card.owner_id.is_(None))))
     if known != ids:
         raise UnknownDecks
     db.execute(delete(DeckCard).where(DeckCard.deck_id == deck.id))

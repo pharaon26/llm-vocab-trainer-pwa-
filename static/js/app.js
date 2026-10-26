@@ -1,9 +1,10 @@
 import * as api from "./api.js";
 import { clear, el, svg } from "./dom.js";
-import { showDictionary, showHistory, showProgress, showSettings, showStats } from "./pages.js";
+import { showHistory, showProgress, showSettings, showStats } from "./pages.js";
 import { resetStats, showStart } from "./session.js";
 import { setLogoutHandler, show } from "./ui.js";
 import * as views from "./views.js";
+import { showDictionary } from "./words.js";
 
 const userBox = document.getElementById("user-box");
 const nav = document.getElementById("nav");

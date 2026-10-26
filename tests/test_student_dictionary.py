@@ -45,6 +45,7 @@ def test_entry_has_the_requested_fields_only(client, db, student_headers, cards)
     entry = client.get("/me/dictionary", headers=student_headers).json()[0]
     assert set(entry) == {
         "term", "transcription", "part_of_speech", "definition_en", "translation_ru", "collocations", "examples",
+        "personal",
     }
     assert entry["translation_ru"] == "угроза"
     assert len(entry["collocations"]) >= 2 and len(entry["examples"]) >= 2

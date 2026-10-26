@@ -20,7 +20,7 @@ from app.schemas.student import (
     TotalsStat,
 )
 from app.services.tasks import correct_answer, task_prompt
-from app.services.visibility import in_selected_decks, usable
+from app.services.visibility import new_term_pool, usable
 
 
 def card_status(progress: CardProgress | None, config: LearningConfig = learning_config) -> str:
@@ -54,7 +54,7 @@ def build_progress(db: Session, user: User, config: LearningConfig = learning_co
     }
     cards = db.scalars(
         select(Card)
-        .where(usable(user), in_selected_decks(db, user) | Card.id.in_(list(progress)))
+        .where(usable(user), new_term_pool(db, user) | Card.id.in_(list(progress)))
         .order_by(Card.term)
     ).all()
     errors = error_counts(db, user)

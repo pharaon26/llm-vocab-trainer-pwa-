@@ -14,7 +14,7 @@ from app.schemas.session import AnswerOut, TaskOut
 from app.services.classification import classify_open_answer
 from app.services.scheduler import ReviewState, next_due_date, review
 from app.services.task_source import get_task
-from app.services.visibility import in_selected_decks, usable
+from app.services.visibility import new_term_pool, usable
 from app.services.tasks import OPEN_TYPES, correct_answer, evaluate, is_available, task_prompt
 
 STAGE_TASKS = (
@@ -99,8 +99,8 @@ def build_queue(
     known = select(CardProgress.card_id).where(CardProgress.user_id == user.id)
     new_cards = db.scalars(
         select(Card)
-        .where(usable(user), in_selected_decks(db, user), Card.id.not_in(known))
-        .order_by(Card.id)
+        .where(usable(user), new_term_pool(db, user), Card.id.not_in(known))
+        .order_by(Card.owner_id.is_(None), Card.id)
         .limit(slots)
     ).all()
     items += [QueueItem(card, STAGE_TASKS[0]) for card in new_cards]
@@ -147,7 +147,7 @@ def idle_info(db: Session, user: User, today: date) -> tuple[date | None, int, i
     unseen = db.scalar(
         select(func.count())
         .select_from(Card)
-        .where(usable(user), in_selected_decks(db, user), Card.id.not_in(known))
+        .where(usable(user), new_term_pool(db, user), Card.id.not_in(known))
     )
     opened = db.scalar(
         select(func.count())

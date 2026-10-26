@@ -1,11 +1,13 @@
-from sqlalchemy import select
+from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
 
 from app.models import Card, Deck, DeckCard, User, UserDeck
 
 
 def usable(user: User):
-    return Card.verified.is_(True)
+    shared = and_(Card.owner_id.is_(None), Card.verified.is_(True))
+    personal = and_(Card.owner_id == user.id, Card.confirmed_by_owner.is_(True))
+    return or_(shared, personal)
 
 
 def selected_deck_ids(db: Session, user: User) -> list[int]:
@@ -17,3 +19,7 @@ def selected_deck_ids(db: Session, user: User) -> list[int]:
 def in_selected_decks(db: Session, user: User):
     deck_ids = selected_deck_ids(db, user)
     return Card.id.in_(select(DeckCard.card_id).where(DeckCard.deck_id.in_(deck_ids)))
+
+
+def new_term_pool(db: Session, user: User):
+    return or_(in_selected_decks(db, user), Card.owner_id == user.id)

@@ -9,6 +9,7 @@
   --ok: #1d7a46;
   --bad: #b3261e;
   --note-bg: #eaf1fb;
+  --warn: #b25e00;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -23,6 +24,7 @@
     --ok: #55c486;
     --bad: #ff8a80;
     --note-bg: #1f2c3f;
+    --warn: #ffb454;
   }
 }
 
@@ -483,4 +485,60 @@ fieldset.decks {
   display: block;
   color: var(--muted);
   font-size: 0.95rem;
+}
+
+.badge.src-dictionary {
+  color: var(--ok);
+  border-color: var(--ok);
+}
+
+.badge.src-llm {
+  color: var(--warn);
+  border-color: var(--warn);
+}
+
+.badge.src-user {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.banner.warn {
+  padding: 10px 12px;
+  color: var(--warn);
+  border: 1px solid var(--warn);
+  border-radius: 8px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hint {
+  font-weight: 400;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+audio {
+  width: 100%;
+}
+
+select {
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 12px;
+  font: inherit;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
 }

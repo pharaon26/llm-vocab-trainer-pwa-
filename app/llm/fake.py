@@ -31,6 +31,8 @@ class FakeProvider(LLMProvider):
         return item
 
     def _auto(self, user: str) -> dict:
+        if "<dictionary>" in user:
+            return self._draft(user)
         card = json.loads(re.search(r"<card>\s*(.*?)\s*</card>", user, re.DOTALL).group(1))
         task_type = TaskType(re.search(r"Task type: (\w+)", user).group(1))
         if "<student_answer>" in user:
@@ -83,4 +85,19 @@ class FakeProvider(LLMProvider):
             "is_correct": ok,
             "error_type": None if ok else error,
             "comment": "Ответ засчитан." if ok else "Ответ не раскрывает термин.",
+        }
+
+    def _draft(self, user: str) -> dict:
+        term = re.search(r"Term: (.+)", user).group(1).strip()
+        known = json.loads(re.search(r"<dictionary>\s*(.*?)\s*</dictionary>", user, re.DOTALL).group(1))
+        return {
+            "translation_ru": f"перевод: {term}",
+            "collocations": [f"key {term}", f"{term} system", f"common {term}"],
+            "common_mistakes": [f"Confusing {term} with a similar term."],
+            "contrast_term": None,
+            "transcription": None if known.get("transcription") else f"/{term}/",
+            "part_of_speech": None if known.get("part_of_speech") else "noun",
+            "definition_en": None if known.get("definition_en") else f"A professional term: {term}.",
+            "general_definition_fits": True,
+            "examples": [] if len(known.get("examples") or []) >= 2 else [f"We discussed the {term} yesterday.", f"The {term} was important."],
         }

@@ -58,6 +58,7 @@ class DictionaryEntry(BaseModel):
     translation_ru: str
     collocations: list[str]
     examples: list[str]
+    personal: bool = False
 
 
 class DayStat(BaseModel):
