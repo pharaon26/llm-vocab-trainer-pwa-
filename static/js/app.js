@@ -1,6 +1,6 @@
 import * as api from "./api.js";
 import { clear, el, svg } from "./dom.js";
-import { showDictionary, showHistory, showProgress } from "./pages.js";
+import { showDictionary, showHistory, showProgress, showStats } from "./pages.js";
 import { resetStats, showStart } from "./session.js";
 import { setLogoutHandler, show } from "./ui.js";
 import * as views from "./views.js";
@@ -13,6 +13,7 @@ const NAV = [
   ["progress", "Прогресс", "M5 20v-6 M12 20V8 M19 20V4", showProgress],
   ["dictionary", "Словарь", "M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z M5 17a3 3 0 0 1 3-3h11", showDictionary],
   ["history", "История", "M12 3a9 9 0 1 0 0 18a9 9 0 0 0 0-18z M12 7v5l3 2", showHistory],
+  ["stats", "Статистика", "M12 3a9 9 0 1 0 0 18a9 9 0 0 0 0-18z M12 3v9h9", showStats],
 ];
 
 const ROUTES = Object.fromEntries(NAV.map(([id, , , handler]) => [id, handler]));

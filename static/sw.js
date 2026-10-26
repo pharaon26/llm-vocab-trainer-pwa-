@@ -8,6 +8,7 @@ const SHELL = [
   "/js/dom.js",
   "/js/views.js",
   "/js/ui.js",
+  "/js/charts.js",
   "/js/format.js",
   "/js/session.js",
   "/js/pages.js",

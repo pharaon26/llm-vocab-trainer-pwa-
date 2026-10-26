@@ -1,3 +1,5 @@
+from datetime import date
+
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
@@ -7,6 +9,10 @@ from app.enums import Role
 from app.models import AuthToken, User
 
 bearer = HTTPBearer(auto_error=False)
+
+
+def get_today() -> date:
+    return date.today()
 
 
 def current_user(

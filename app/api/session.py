@@ -5,7 +5,7 @@ from functools import lru_cache
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.api.deps import current_user
+from app.api.deps import current_user, get_today
 from app.config import scheduler_config
 from app.db import get_db
 from app.llm.base import LLMError, LLMProvider
@@ -19,10 +19,6 @@ router = APIRouter(prefix="/session", tags=["session"])
 
 
 logger = logging.getLogger(__name__)
-
-
-def get_today() -> date:
-    return date.today()
 
 
 @lru_cache

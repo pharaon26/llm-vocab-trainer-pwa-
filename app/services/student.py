@@ -1,13 +1,24 @@
-from datetime import date
+from datetime import date, timedelta
 
-from sqlalchemy import func, select
+from sqlalchemy import case, func, select
 from sqlalchemy.orm import Session
 
 from app.config import LearningConfig, learning_config
-from app.enums import ErrorType
-from app.enums import TaskType
+from app.enums import ErrorType, TaskType
 from app.models import Card, CardProgress, ReviewHistory, TaskBank, User
-from app.schemas.student import DictionaryEntry, HistoryItem, HistoryOut, ProgressItem, ProgressOut, ProgressSummary
+from app.schemas.student import (
+    DayStat,
+    DictionaryEntry,
+    HistoryItem,
+    HistoryOut,
+    ProgressItem,
+    ProgressOut,
+    ProgressSummary,
+    StatsOut,
+    StreakStat,
+    StudentErrorStat,
+    TotalsStat,
+)
 from app.services.tasks import correct_answer, task_prompt
 
 
@@ -104,3 +115,76 @@ def build_dictionary(db: Session, user: User) -> list[DictionaryEntry]:
         .order_by(Card.term)
     ).all()
     return [DictionaryEntry.model_validate(card, from_attributes=True) for card in cards]
+
+
+def streaks(active_days: set[date], today: date) -> tuple[int, int]:
+    best = run = 0
+    previous = None
+    for day in sorted(active_days):
+        run = run + 1 if previous is not None and day - previous == timedelta(days=1) else 1
+        best = max(best, run)
+        previous = day
+
+    cursor = today if today in active_days else today - timedelta(days=1)
+    current = 0
+    while cursor in active_days:
+        current += 1
+        cursor -= timedelta(days=1)
+    return current, best
+
+
+def _accuracy(correct: int, answered: int) -> float | None:
+    return round(correct / answered, 3) if answered else None
+
+
+def build_stats(db: Session, user: User, today: date, days: int) -> StatsOut:
+    correct_flag = case((ReviewHistory.is_correct.is_(True), 1), else_=0)
+    graded = db.execute(
+        select(ReviewHistory.answered_on, func.count(), func.sum(correct_flag))
+        .where(ReviewHistory.user_id == user.id, ReviewHistory.is_retry.is_(False))
+        .group_by(ReviewHistory.answered_on)
+    ).all()
+    per_day = {day: (answered, correct) for day, answered, correct in graded}
+    active_days = set(
+        db.scalars(select(ReviewHistory.answered_on).where(ReviewHistory.user_id == user.id).distinct())
+    )
+
+    window = [today - timedelta(days=offset) for offset in range(days - 1, -1, -1)]
+    day_stats = [
+        DayStat(
+            date=day,
+            answered=per_day.get(day, (0, 0))[0],
+            correct=per_day.get(day, (0, 0))[1],
+            accuracy=_accuracy(per_day.get(day, (0, 0))[1], per_day.get(day, (0, 0))[0]),
+        )
+        for day in window
+    ]
+
+    by_type = dict(
+        db.execute(
+            select(ReviewHistory.error_type, func.count())
+            .where(
+                ReviewHistory.user_id == user.id,
+                ReviewHistory.is_correct.is_(False),
+                ReviewHistory.is_retry.is_(False),
+            )
+            .group_by(ReviewHistory.error_type)
+        ).all()
+    )
+    errors = sum(by_type.values())
+    total_answered = sum(a for a, _ in per_day.values())
+    total_correct = sum(c for _, c in per_day.values())
+    current, best = streaks(active_days, today)
+
+    return StatsOut(
+        days=day_stats,
+        error_types=[
+            StudentErrorStat(
+                error_type=t, count=by_type.get(t.value, 0),
+                share=round(by_type.get(t.value, 0) / errors, 3) if errors else 0.0,
+            )
+            for t in ErrorType
+        ],
+        streak=StreakStat(current=current, best=best),
+        totals=TotalsStat(answered=total_answered, correct=total_correct, accuracy=_accuracy(total_correct, total_answered)),
+    )

@@ -1,4 +1,6 @@
-import { el, svg } from "../dom.js";
+import { barChart } from "../charts.js";
+import { el } from "../dom.js";
+import { percent } from "../format.js";
 import { ERROR_LABELS } from "../views.js";
 
 const TASK_LABELS = {
@@ -18,8 +20,6 @@ const CARD_FIELDS = [
   ["contrast_term", "Контрастный термин", "text"],
   ["domain", "Предметная область", "text"],
 ];
-
-const percent = (value) => `${Math.round(value * 100)}%`;
 
 export function loginView({ name = "", error = "", onSubmit }) {
   const nameInput = el("input", { id: "name", type: "text", maxlength: 50, required: true, autocomplete: "username" });
@@ -190,26 +190,6 @@ export function bankView({ entries, filter, onFilter, onToggle }) {
     ),
     entries.length ? el("ul", { className: "list" }, rows) : el("p", {}, "В банке пока нет заданий. Они появляются, когда студенты проходят сессии."),
   );
-}
-
-function truncate(text, max) {
-  return text.length > max ? `${text.slice(0, max - 1)}…` : text;
-}
-
-function barChart(ariaLabel, rows) {
-  const width = 400;
-  const rowHeight = 50;
-  const chart = svg("svg", { className: "chart", viewBox: `0 0 ${width} ${rows.length * rowHeight + 4}`, role: "img", "aria-label": ariaLabel });
-  rows.forEach((row, index) => {
-    const y = index * rowHeight;
-    const fill = row.value > 0 ? Math.max(2, row.value * width) : 0;
-    chart.append(
-      svg("text", { x: 0, y: y + 18 }, truncate(row.label, 24), svg("tspan", { dx: 10, className: "value" }, row.text)),
-      svg("rect", { x: 0, y: y + 26, width, height: 16, rx: 4, className: "track" }),
-      svg("rect", { x: 0, y: y + 26, width: fill, height: 16, rx: 4, className: "fill" }),
-    );
-  });
-  return chart;
 }
 
 export function analyticsView({ data, minAnswers, onMinAnswers }) {

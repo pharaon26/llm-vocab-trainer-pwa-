@@ -56,3 +56,34 @@ class DictionaryEntry(BaseModel):
     translation_ru: str
     collocations: list[str]
     examples: list[str]
+
+
+class DayStat(BaseModel):
+    date: date
+    answered: int
+    correct: int
+    accuracy: float | None
+
+
+class StreakStat(BaseModel):
+    current: int
+    best: int
+
+
+class TotalsStat(BaseModel):
+    answered: int
+    correct: int
+    accuracy: float | None
+
+
+class StudentErrorStat(BaseModel):
+    error_type: ErrorType
+    count: int
+    share: float
+
+
+class StatsOut(BaseModel):
+    days: list[DayStat]
+    error_types: list[StudentErrorStat]
+    streak: StreakStat
+    totals: TotalsStat

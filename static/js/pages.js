@@ -86,3 +86,12 @@ export async function showDictionary() {
     failure(error, showDictionary);
   }
 }
+
+export async function showStats() {
+  show(views.loadingView("Загружаем статистику…"));
+  try {
+    show(pageViews.statsView({ data: await api.stats() }));
+  } catch (error) {
+    failure(error, showStats);
+  }
+}

@@ -412,3 +412,25 @@ input[type="search"] {
 .row[hidden] {
   display: none;
 }
+
+.chart {
+  width: 100%;
+  height: auto;
+}
+
+.chart text {
+  font-size: 14px;
+  fill: var(--text);
+}
+
+.chart .value {
+  fill: var(--muted);
+}
+
+.chart .track {
+  fill: var(--border);
+}
+
+.chart .fill {
+  fill: var(--primary);
+}

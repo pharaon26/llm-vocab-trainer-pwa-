@@ -1,5 +1,6 @@
 import { el } from "./dom.js";
-import { describeDate } from "./format.js";
+import { barChart } from "./charts.js";
+import { describeDate, percent, plural } from "./format.js";
 import { ERROR_LABELS } from "./views.js";
 
 const STATUS_LABELS = { new: "новый", learning: "изучаю", learned: "выучен" };
@@ -175,5 +176,41 @@ export function dictionaryView({ entries }) {
     entries.length
       ? [el("p", { className: "meta" }, `Открытых терминов: ${entries.length}`), search, list, empty]
       : el("p", {}, "Здесь появятся термины, которые вы откроете в повторении."),
+  );
+}
+
+export function statsView({ data }) {
+  const { streak, totals } = data;
+  const shortDate = (iso) => new Date(`${iso}T00:00:00`).toLocaleDateString("ru-RU", { day: "numeric", month: "short" });
+  const dayRows = data.days.map((day) => ({
+    label: shortDate(day.date),
+    value: day.accuracy ?? 0,
+    text: day.answered ? `${day.correct} из ${day.answered} (${percent(day.accuracy)})` : "нет ответов",
+  }));
+  const errorRows = data.error_types.map((item) => ({
+    label: ERROR_LABELS[item.error_type],
+    value: item.share,
+    text: `${item.count} (${percent(item.share)})`,
+  }));
+  const hasErrors = data.error_types.some((item) => item.count > 0);
+  const streakText = (n) => `${n} ${plural(n, "день", "дня", "дней")}`;
+
+  return el(
+    "section",
+    { className: "card" },
+    el("h2", {}, "Моя статистика"),
+    el(
+      "div",
+      { className: "summary" },
+      el("div", {}, el("strong", {}, streakText(streak.current)), "серия подряд"),
+      el("div", {}, el("strong", {}, streakText(streak.best)), "лучшая серия"),
+      el("div", {}, el("strong", {}, String(totals.answered)), "ответов"),
+      el("div", {}, el("strong", {}, totals.accuracy == null ? "-" : percent(totals.accuracy)), "точность"),
+    ),
+    el("p", { className: "meta" }, "Серия: дни подряд, когда вы отвечали на задания. Точность и ошибки считаются по первым ответам в сессии, повторы после ошибки не входят."),
+    el("h3", {}, `Точность по дням (последние ${data.days.length})`),
+    barChart("Точность по дням", dayRows),
+    el("h3", {}, "Мои ошибки по типам"),
+    hasErrors ? barChart("Мои ошибки по типам", errorRows) : el("p", {}, "Ошибок пока нет."),
   );
 }
