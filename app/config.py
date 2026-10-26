@@ -1,15 +1,26 @@
 from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from app.enums import ErrorType
+
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     database_url: str = "sqlite:///./app.db"
-    gigachat_api_key: str = ""
+    llm_provider: Literal["fake", "gigachat"] = "fake"
+    llm_temperature: float = 0.3
+    llm_timeout: float = 30.0
+    student_level: str = "B1"
+    gigachat_credentials: str = ""
+    gigachat_scope: str = "GIGACHAT_API_PERS"
+    gigachat_model: str = "GigaChat-2"
+    gigachat_ca_bundle: str = "certs/russian_trusted_root_ca_pem.crt"
     teacher_password: str = ""
 
 
