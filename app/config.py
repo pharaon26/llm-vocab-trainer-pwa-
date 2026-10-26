@@ -63,3 +63,20 @@ class GenerationConfig:
 
 
 generation_config = GenerationConfig()
+
+
+@dataclass(frozen=True)
+class ClassificationConfig:
+    max_retries: int = 2
+    typo_distance: int = 2
+    situations: tuple[str, ...] = (
+        "Вы пишете отчет об инциденте информационной безопасности для руководителя.",
+        "Вы объясняете коллеге из другой команды, почему релиз пришлось отложить.",
+        "Вы пишете комментарий к pull request.",
+        "Вы описываете проблему в тикете для службы поддержки.",
+        "Вы готовите для заказчика отчет по результатам тестирования системы.",
+        "Вы объясняете новому сотруднику, как устроена защита вашего сервиса.",
+    )
+
+
+classification_config = ClassificationConfig()

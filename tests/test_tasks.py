@@ -2,10 +2,11 @@ import random
 
 import pytest
 
+from app.config import classification_config
 from app.enums import ErrorType, TaskType
 from app.models import Card
 from app.seed import load_cards
-from app.services.tasks import BLANK, build_task, correct_answer, evaluate, gap_sentence
+from app.services.tasks import BLANK, OPEN_TYPES, build_task, correct_answer, evaluate, gap_sentence
 
 
 @pytest.fixture
@@ -20,7 +21,10 @@ def build(cards, term, task_type, seed=1):
     return build_task(card, others, task_type, random.Random(seed))
 
 
-@pytest.mark.parametrize("task_type", [t for t in TaskType if t != TaskType.WRITE_TERM])
+CHOICE_TYPES = [t for t in TaskType if t != TaskType.WRITE_TERM and t not in OPEN_TYPES]
+
+
+@pytest.mark.parametrize("task_type", CHOICE_TYPES)
 def test_choice_tasks_contain_correct_answer_once(cards, task_type):
     for term, card in cards.items():
         task = build(cards, term, task_type)
@@ -93,3 +97,26 @@ def test_evaluate_collocation(cards):
     card = cards["vulnerability"]
     assert evaluate(card, TaskType.COLLOCATION_CHOICE, "critical") is None
     assert evaluate(card, TaskType.COLLOCATION_CHOICE, "high") == ErrorType.COLLOCATION
+
+
+def test_open_tasks_have_no_options_and_compose_has_situation(cards):
+    explain = build(cards, "patch", TaskType.EXPLAIN_MEANING)
+    assert explain.options is None and explain.prompt == "patch" and explain.context is None
+    compose = build(cards, "patch", TaskType.COMPOSE_SENTENCE)
+    assert compose.options is None and compose.prompt == "patch"
+    assert compose.context in classification_config.situations
+
+
+def test_situation_is_chosen_randomly(cards):
+    seen = {build(cards, "patch", TaskType.COMPOSE_SENTENCE, seed=i).context for i in range(40)}
+    assert len(seen) == len(classification_config.situations)
+
+
+def test_open_answers_are_not_compared(cards):
+    with pytest.raises(ValueError):
+        evaluate(cards["patch"], TaskType.EXPLAIN_MEANING, "anything")
+
+
+def test_open_task_reference_is_shown(cards):
+    assert correct_answer(cards["patch"], TaskType.EXPLAIN_MEANING) == cards["patch"].definition_en
+    assert correct_answer(cards["patch"], TaskType.COMPOSE_SENTENCE) == cards["patch"].examples[0]

@@ -1,6 +1,7 @@
 import random
 import re
 
+from app.config import ClassificationConfig, classification_config
 from app.enums import ErrorType, TaskType
 from app.models import Card
 from app.schemas.session import TaskOut
@@ -16,7 +17,11 @@ INSTRUCTIONS = {
     TaskType.GAP_FILL: "Вставьте подходящий термин в пропуск",
     TaskType.COLLOCATION_CHOICE: "Выберите слово, которое сочетается с термином",
     TaskType.WRITE_TERM: "Запишите термин по определению",
+    TaskType.EXPLAIN_MEANING: "Объясните значение термина своими словами на английском (1-2 предложения)",
+    TaskType.COMPOSE_SENTENCE: "Составьте одно предложение на английском с этим термином для ситуации ниже",
 }
+
+OPEN_TYPES = (TaskType.EXPLAIN_MEANING, TaskType.COMPOSE_SENTENCE)
 
 ERROR_BY_TASK = {
     TaskType.SPELLING_CHOICE: ErrorType.FORM,
@@ -30,7 +35,7 @@ def norm(text: str) -> str:
     return " ".join(text.split()).casefold()
 
 
-def _distance(a: str, b: str) -> int:
+def distance(a: str, b: str) -> int:
     previous = list(range(len(b) + 1))
     for i, ca in enumerate(a, 1):
         current = [i]
@@ -73,6 +78,10 @@ def is_available(card: Card, task_type: TaskType) -> bool:
 
 
 def correct_answer(card: Card, task_type: TaskType) -> str:
+    if task_type == TaskType.EXPLAIN_MEANING:
+        return card.definition_en
+    if task_type == TaskType.COMPOSE_SENTENCE:
+        return card.examples[0]
     if task_type == TaskType.DEFINITION_MATCH:
         return card.definition_en
     if task_type == TaskType.COLLOCATION_CHOICE:
@@ -83,12 +92,14 @@ def correct_answer(card: Card, task_type: TaskType) -> str:
 def evaluate(
     card: Card, task_type: TaskType, answer: str, correct: str | None = None
 ) -> ErrorType | None:
+    if task_type in OPEN_TYPES:
+        raise ValueError("Open tasks are classified, not compared")
     expected = norm(correct if correct is not None else correct_answer(card, task_type))
     given = norm(answer)
     if given == expected:
         return None
     if task_type == TaskType.WRITE_TERM:
-        return ErrorType.FORM if _distance(given, expected) <= TYPO_DISTANCE else ErrorType.MEANING
+        return ErrorType.FORM if distance(given, expected) <= TYPO_DISTANCE else ErrorType.MEANING
     return ERROR_BY_TASK[task_type]
 
 
@@ -189,7 +200,19 @@ def _write_term(card, others, rng):
     )
 
 
+def _explain_meaning(card, others, rng):
+    return _task(card, TaskType.EXPLAIN_MEANING, INSTRUCTIONS[TaskType.EXPLAIN_MEANING], card.term)
+
+
+def _compose_sentence(card, others, rng, config: ClassificationConfig = classification_config):
+    task = _task(card, TaskType.COMPOSE_SENTENCE, INSTRUCTIONS[TaskType.COMPOSE_SENTENCE], card.term)
+    task.context = rng.choice(config.situations)
+    return task
+
+
 _BUILDERS = {
+    TaskType.EXPLAIN_MEANING: _explain_meaning,
+    TaskType.COMPOSE_SENTENCE: _compose_sentence,
     TaskType.SPELLING_CHOICE: _spelling_choice,
     TaskType.DEFINITION_MATCH: _definition_match,
     TaskType.GAP_FILL: _gap_fill,

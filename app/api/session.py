@@ -12,6 +12,7 @@ from app.llm.factory import get_provider
 from app.models import User
 from app.schemas.session import AnswerIn, AnswerOut, NextOut
 from app.services import session as session_service
+from app.services.classification import ClassifierUnavailable
 
 router = APIRouter(prefix="/session", tags=["session"])
 
@@ -49,12 +50,20 @@ def answer(
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
     today: date = Depends(get_today),
+    provider: LLMProvider | None = Depends(get_llm_provider),
 ):
     try:
         return session_service.submit_answer(
-            db, user, data.card_id, data.task_type, data.answer, today, data.task_id
+            db, user, data.card_id, data.task_type, data.answer, today,
+            task_id=data.task_id, provider=provider, context=data.context,
         )
     except session_service.CardNotInSession:
         raise HTTPException(409, "Card is not in today's session")
+    except ClassifierUnavailable:
+        raise HTTPException(
+            503,
+            "The answer could not be checked and was not recorded. Submit it again in a moment.",
+            headers={"Retry-After": "5"},
+        )
     except session_service.TaskUnavailable:
         raise HTTPException(422, "Task type is not available for this card")

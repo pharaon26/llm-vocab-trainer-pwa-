@@ -11,6 +11,7 @@ class TaskOut(BaseModel):
     instruction: str
     prompt: str
     options: list[str] | None = None
+    context: str | None = None
 
 
 class NextOut(BaseModel):
@@ -23,6 +24,7 @@ class AnswerIn(BaseModel):
     task_type: TaskType
     answer: str = Field(max_length=500)
     task_id: int | None = None
+    context: str | None = Field(default=None, max_length=300)
 
 
 class AnswerOut(BaseModel):
@@ -31,4 +33,6 @@ class AnswerOut(BaseModel):
     correct_answer: str
     card: CardRead
     retry_in_session: bool
+    classified_by: str
+    comment: str | None = None
     remaining: int

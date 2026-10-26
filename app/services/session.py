@@ -5,23 +5,25 @@ from datetime import date
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.config import SchedulerConfig, scheduler_config
+from app.config import SchedulerConfig, classification_config, scheduler_config
 from app.enums import ErrorType, TaskType
 from app.llm.base import LLMProvider
 from app.models import Card, CardProgress, ReviewHistory, TaskBank, User
 from app.schemas.card import CardRead
 from app.schemas.session import AnswerOut, TaskOut
+from app.services.classification import classify_open_answer
 from app.services.scheduler import ReviewState, next_due_date, review
 from app.services.task_source import get_task
-from app.services.tasks import correct_answer, evaluate, is_available
+from app.services.tasks import OPEN_TYPES, correct_answer, evaluate, is_available
 
 STAGE_TASKS = (
     TaskType.DEFINITION_MATCH,
     TaskType.GAP_FILL,
     TaskType.COLLOCATION_CHOICE,
     TaskType.SPELLING_CHOICE,
-    TaskType.WRITE_TERM,
 )
+
+ADVANCED_TASKS = (TaskType.WRITE_TERM, TaskType.EXPLAIN_MEANING, TaskType.COMPOSE_SENTENCE)
 
 TASK_BY_ERROR = {
     ErrorType.FORM: TaskType.WRITE_TERM,
@@ -48,7 +50,9 @@ class QueueItem:
 def _stage_task(progress: CardProgress) -> TaskType:
     if progress.last_error_type:
         return TASK_BY_ERROR[ErrorType(progress.last_error_type)]
-    return STAGE_TASKS[min(progress.repetitions, len(STAGE_TASKS) - 1)]
+    if progress.repetitions < len(STAGE_TASKS):
+        return STAGE_TASKS[progress.repetitions]
+    return ADVANCED_TASKS[(progress.repetitions - len(STAGE_TASKS)) % len(ADVANCED_TASKS)]
 
 
 def _retry_items(db: Session, user: User, today: date) -> list[QueueItem]:
@@ -110,8 +114,11 @@ def next_task(
     if not queue:
         return None, 0
     item = queue[0]
+    task_type = item.task_type
+    if task_type in OPEN_TYPES and provider is None:
+        task_type = TaskType.WRITE_TERM
     others = list(db.scalars(select(Card).where(Card.id != item.card.id)))
-    return get_task(db, provider, item.card, item.task_type, others, rng), len(queue)
+    return get_task(db, provider, item.card, task_type, others, rng), len(queue)
 
 
 def _update_progress(
@@ -146,6 +153,8 @@ def submit_answer(
     today: date,
     task_id: int | None = None,
     config: SchedulerConfig = scheduler_config,
+    provider: LLMProvider | None = None,
+    context: str | None = None,
 ) -> AnswerOut:
     queue = build_queue(db, user, today, config)
     item = next((i for i in queue if i.card.id == card_id), None)
@@ -153,8 +162,15 @@ def submit_answer(
         raise CardNotInSession
     card = item.card
 
-    entry = None
-    if task_id is not None:
+    classified_by = "task"
+    comment = None
+    if task_type in OPEN_TYPES:
+        if task_type == TaskType.COMPOSE_SENTENCE and context not in classification_config.situations:
+            raise TaskUnavailable
+        result = classify_open_answer(provider, card, task_type, answer, context)
+        error, classified_by, comment = result.error_type, result.source, result.comment
+        correct_text = correct_answer(card, task_type)
+    elif task_id is not None:
         entry = db.get(TaskBank, task_id)
         if entry is None or entry.card_id != card.id or entry.task_type != task_type.value:
             raise TaskUnavailable
@@ -166,6 +182,8 @@ def submit_answer(
             raise TaskUnavailable
         error = evaluate(card, task_type, answer)
         correct_text = correct_answer(card, task_type)
+        if task_type == TaskType.WRITE_TERM:
+            classified_by = "rule"
 
     already_counted = db.scalar(
         select(ReviewHistory.id).where(
@@ -184,6 +202,7 @@ def submit_answer(
             user_id=user.id, card_id=card.id, task_type=task_type.value, answer=answer,
             is_correct=error is None, error_type=error.value if error else None,
             is_retry=is_retry, answered_on=today, task_bank_id=task_id,
+            classified_by=classified_by, comment=comment,
         )
     )
     db.commit()
@@ -194,5 +213,7 @@ def submit_answer(
         correct_answer=correct_text,
         card=CardRead.model_validate(card),
         retry_in_session=error is not None,
+        classified_by=classified_by,
+        comment=comment,
         remaining=len(build_queue(db, user, today, config)),
     )

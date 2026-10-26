@@ -33,6 +33,9 @@ class FakeProvider(LLMProvider):
     def _auto(self, user: str) -> dict:
         card = json.loads(re.search(r"<card>\s*(.*?)\s*</card>", user, re.DOTALL).group(1))
         task_type = TaskType(re.search(r"Task type: (\w+)", user).group(1))
+        if "<student_answer>" in user:
+            answer = re.search(r"<student_answer>\n(.*?)\n</student_answer>", user, re.DOTALL).group(1)
+            return self._classify(card, task_type, answer)
         if "<task>" in user:
             task = json.loads(re.search(r"<task>\s*(.*?)\s*</task>", user, re.DOTALL).group(1))
             return self._review(card, task_type, task)
@@ -67,3 +70,17 @@ class FakeProvider(LLMProvider):
         else:
             fitting = [o for o in options if o == card["definition_en"]]
         return {"fitting_options": fitting, "term_meaning_matches": True}
+
+    def _classify(self, card: dict, task_type: TaskType, answer: str) -> dict:
+        words = lambda text: {w for w in re.findall(r"[a-z]+", text.lower()) if len(w) > 3}
+        if task_type == TaskType.EXPLAIN_MEANING:
+            ok = len(words(answer) & words(card["definition_en"])) >= 2
+            error = "meaning"
+        else:
+            ok = card["term"].lower() in answer.lower() and len(answer.split()) >= 4
+            error = "usage"
+        return {
+            "is_correct": ok,
+            "error_type": None if ok else error,
+            "comment": "Ответ засчитан." if ok else "Ответ не раскрывает термин.",
+        }

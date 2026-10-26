@@ -23,7 +23,9 @@ def next_task(client, headers):
 
 def answer(client, headers, db, task, correct=True):
     card = db.get(Card, task["card_id"])
-    if task.get("task_id"):
+    if task["task_type"] in ("explain_meaning", "compose_sentence"):
+        right = "A weakness in a system that an attacker can exploit. We found a " + card.term + " today."
+    elif task.get("task_id"):
         right = db.get(TaskBank, task["task_id"]).correct_answer
     else:
         right = correct_answer(card, TaskType(task["task_type"]))
@@ -36,6 +38,7 @@ def answer(client, headers, db, task, correct=True):
             "task_type": task["task_type"],
             "answer": text,
             "task_id": task.get("task_id"),
+            "context": task.get("context"),
         },
     )
     assert response.status_code == 200, response.text
@@ -210,3 +213,135 @@ def test_deleting_card_removes_bank_entries(client, db, llm, student_headers, te
     response = client.delete(f"/cards/{task['card_id']}", headers=teacher_headers)
     assert response.status_code == 204
     assert db.query(TaskBank).filter_by(card_id=task["card_id"]).count() == 0
+
+
+def set_progress(db, user_name, card_id, repetitions, today):
+    from app.models import User
+
+    user = db.query(User).filter_by(name=user_name).one()
+    progress = CardProgress(
+        user_id=user.id, card_id=card_id, interval=10, ease=2.5, repetitions=repetitions,
+        first_seen_on=today, due_date=today,
+    )
+    db.add(progress)
+    db.commit()
+
+
+def advanced_task(client, db, clock, headers, repetitions):
+    first = db.query(Card).order_by(Card.id).first()
+    set_progress(db, "student", first.id, repetitions, clock.today)
+    task = next_task(client, headers)["task"]
+    assert task["card_id"] == first.id
+    return task
+
+
+@pytest.mark.parametrize(
+    "repetitions, task_type",
+    [(4, "write_term"), (5, "explain_meaning"), (6, "compose_sentence"), (7, "write_term")],
+)
+def test_advanced_stage_rotates_task_types(client, db, clock, llm, student_headers, verified_cards, repetitions, task_type):
+    llm.provider = FakeProvider()
+    assert advanced_task(client, db, clock, student_headers, repetitions)["task_type"] == task_type
+
+
+def test_open_task_falls_back_to_write_term_without_llm(client, db, clock, student_headers, verified_cards):
+    assert advanced_task(client, db, clock, student_headers, 5)["task_type"] == "write_term"
+
+
+def test_compose_task_has_configured_situation(client, db, clock, llm, student_headers, verified_cards):
+    from app.config import classification_config
+
+    llm.provider = FakeProvider()
+    task = advanced_task(client, db, clock, student_headers, 6)
+    assert task["context"] in classification_config.situations
+    assert task["options"] is None
+
+
+def test_explain_answer_is_classified_and_recorded(client, db, clock, llm, student_headers, verified_cards):
+    llm.provider = FakeProvider()
+    task = advanced_task(client, db, clock, student_headers, 5)
+    result = answer(client, student_headers, db, task)
+    assert result["correct"] is True
+    assert result["classified_by"] == "llm"
+    assert result["comment"]
+    assert result["correct_answer"] == db.get(Card, task["card_id"]).definition_en
+    history = db.query(ReviewHistory).filter_by(card_id=task["card_id"]).one()
+    assert (history.classified_by, history.is_correct) == ("llm", True)
+    assert history.comment == result["comment"]
+
+
+def test_wrong_open_answer_updates_scheduler(client, db, clock, llm, student_headers, verified_cards):
+    llm.provider = FakeProvider([
+        '{"is_correct": false, "error_type": "meaning", "comment": "Неверно."}'
+    ])
+    task = advanced_task(client, db, clock, student_headers, 5)
+    result = answer(client, student_headers, db, task, correct=False)
+    assert result["error_type"] == "meaning"
+    assert result["retry_in_session"] is True
+    progress = db.query(CardProgress).filter_by(card_id=task["card_id"]).one()
+    assert progress.pending_interval == 1 and progress.ease == 2.3
+
+
+def test_classifier_down_returns_503_and_records_nothing(client, db, clock, llm, student_headers, verified_cards):
+    llm.provider = FakeProvider()
+    task = advanced_task(client, db, clock, student_headers, 5)
+    llm.provider = FakeProvider([LLMError("down")])
+    progress = db.query(CardProgress).filter_by(card_id=task["card_id"]).one()
+    before = (progress.interval, progress.ease, progress.repetitions, progress.due_date)
+
+    response = client.post(
+        "/session/answer",
+        headers=student_headers,
+        json={"card_id": task["card_id"], "task_type": task["task_type"], "answer": "My long answer"},
+    )
+    assert response.status_code == 503
+    assert response.headers["retry-after"] == "5"
+    assert db.query(ReviewHistory).count() == 0
+    db.refresh(progress)
+    assert before == (progress.interval, progress.ease, progress.repetitions, progress.due_date)
+
+    llm.provider = FakeProvider()
+    retry = answer(client, student_headers, db, task)
+    assert retry["classified_by"] == "llm"
+    assert db.query(ReviewHistory).count() == 1
+
+
+def test_compose_requires_a_configured_situation(client, db, clock, llm, student_headers, verified_cards):
+    llm.provider = FakeProvider()
+    task = advanced_task(client, db, clock, student_headers, 6)
+    for context in (None, "Придуманная ситуация"):
+        response = client.post(
+            "/session/answer",
+            headers=student_headers,
+            json={"card_id": task["card_id"], "task_type": "compose_sentence", "answer": "x", "context": context},
+        )
+        assert response.status_code == 422
+
+
+def test_spelling_error_in_open_answer_never_reaches_llm(client, db, clock, llm, student_headers, verified_cards):
+    llm.provider = FakeProvider()
+    task = advanced_task(client, db, clock, student_headers, 6)
+    term = db.get(Card, task["card_id"]).term
+    typo = term[:3] + term[4:]
+    response = client.post(
+        "/session/answer",
+        headers=student_headers,
+        json={
+            "card_id": task["card_id"], "task_type": "compose_sentence",
+            "answer": f"We found a {typo} today.", "context": task["context"],
+        },
+    )
+    body = response.json()
+    assert body["error_type"] == "form" and body["classified_by"] == "rule"
+    assert llm.provider.calls == []
+
+
+def test_choice_answer_is_recorded_as_task_classified(client, db, student_headers, verified_cards):
+    first = next_task(client, student_headers)["task"]
+    assert answer(client, student_headers, db, first)["classified_by"] == "task"
+
+
+def test_write_term_answer_is_recorded_as_rule_classified(client, db, clock, student_headers, verified_cards):
+    typed = advanced_task(client, db, clock, student_headers, 4)
+    assert typed["task_type"] == "write_term"
+    assert answer(client, student_headers, db, typed)["classified_by"] == "rule"

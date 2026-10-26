@@ -14,6 +14,8 @@ class TaskType(str, Enum):
     GAP_FILL = "gap_fill"
     COLLOCATION_CHOICE = "collocation_choice"
     WRITE_TERM = "write_term"
+    EXPLAIN_MEANING = "explain_meaning"
+    COMPOSE_SENTENCE = "compose_sentence"
 
 
 class Role(str, Enum):

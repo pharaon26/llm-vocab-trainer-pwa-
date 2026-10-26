@@ -33,6 +33,8 @@ class ReviewHistory(Base):
     is_correct: Mapped[bool] = mapped_column(Boolean)
     error_type: Mapped[str | None] = mapped_column(String(20))
     is_retry: Mapped[bool] = mapped_column(Boolean)
+    classified_by: Mapped[str] = mapped_column(String(10), server_default="task")
+    comment: Mapped[str | None] = mapped_column(Text)
     task_bank_id: Mapped[int | None] = mapped_column(ForeignKey("task_bank.id", ondelete="SET NULL"))
     answered_on: Mapped[date] = mapped_column(Date)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
