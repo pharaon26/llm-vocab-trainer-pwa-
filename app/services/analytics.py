@@ -13,6 +13,7 @@ def _ratio(part: int, whole: int) -> float:
 def build_analytics(db: Session, min_answers: int = 3, limit: int = 10) -> AnalyticsOut:
     scope = (
         User.role == Role.STUDENT.value,
+        Card.owner_id.is_(None),
         ReviewHistory.is_retry.is_(False),
         ReviewHistory.is_practice.is_(False),
     )
@@ -21,6 +22,7 @@ def build_analytics(db: Session, min_answers: int = 3, limit: int = 10) -> Analy
     students, answers, errors = db.execute(
         select(func.count(func.distinct(ReviewHistory.user_id)), func.count(), func.coalesce(func.sum(wrong), 0))
         .join(User, User.id == ReviewHistory.user_id)
+        .join(Card, Card.id == ReviewHistory.card_id)
         .where(*scope)
     ).one()
 
@@ -42,6 +44,7 @@ def build_analytics(db: Session, min_answers: int = 3, limit: int = 10) -> Analy
         db.execute(
             select(ReviewHistory.error_type, func.count())
             .join(User, User.id == ReviewHistory.user_id)
+            .join(Card, Card.id == ReviewHistory.card_id)
             .where(*scope, ReviewHistory.is_correct.is_(False))
             .group_by(ReviewHistory.error_type)
         ).all()
@@ -49,6 +52,7 @@ def build_analytics(db: Session, min_answers: int = 3, limit: int = 10) -> Analy
     by_source = db.execute(
         select(ReviewHistory.classified_by, func.count())
         .join(User, User.id == ReviewHistory.user_id)
+        .join(Card, Card.id == ReviewHistory.card_id)
         .where(*scope)
         .group_by(ReviewHistory.classified_by)
         .order_by(ReviewHistory.classified_by)
@@ -58,7 +62,8 @@ def build_analytics(db: Session, min_answers: int = 3, limit: int = 10) -> Analy
         select(func.count())
         .select_from(ReviewHistory)
         .join(User, User.id == ReviewHistory.user_id)
-        .where(User.role == Role.STUDENT.value, ReviewHistory.is_practice.is_(True))
+        .join(Card, Card.id == ReviewHistory.card_id)
+        .where(User.role == Role.STUDENT.value, Card.owner_id.is_(None), ReviewHistory.is_practice.is_(True))
     )
 
     return AnalyticsOut(

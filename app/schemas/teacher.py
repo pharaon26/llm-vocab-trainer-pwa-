@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.enums import ErrorType, TaskType
 
@@ -51,3 +51,25 @@ class AnalyticsOut(BaseModel):
     error_types: list[ErrorTypeStat]
     hardest_terms: list[TermStat]
     classified_by: list[SourceStat]
+
+
+class PersonalCardForTeacher(BaseModel):
+    id: int
+    term: str
+    domain: str
+    owner: str
+    transcription: str
+    part_of_speech: str
+    definition_en: str
+    translation_ru: str
+    collocations: list[str]
+    examples: list[str]
+    common_mistakes: list[str]
+    contrast_term: str | None
+    audio_url: str | None
+    sources: dict[str, str]
+    shared_duplicate: bool
+
+
+class PromoteIn(BaseModel):
+    deck_ids: list[int] = Field(min_length=1)

@@ -6,7 +6,7 @@ const api = createApi("vt_teacher");
 const root = document.getElementById("app");
 const userBox = document.getElementById("user-box");
 
-const state = { tab: "cards", cardFilter: "all", bankFilter: "all", minAnswers: 3 };
+const state = { tab: "cards", cardFilter: "all", bankFilter: "all", minAnswers: 3, personalOwner: "" };
 let content = null;
 
 function showPage(node) {
@@ -96,6 +96,12 @@ function openTab() {
   if (state.tab === "cards") {
     return guarded(showCards);
   }
+  if (state.tab === "decks") {
+    return guarded(showDecks);
+  }
+  if (state.tab === "personal") {
+    return guarded(showPersonal);
+  }
   if (state.tab === "bank") {
     return guarded(showBank);
   }
@@ -113,8 +119,8 @@ async function showCards() {
         state.cardFilter = value;
         guarded(showCards);
       },
-      onNew: () => showCardForm(null),
-      onEdit: (card) => showCardForm(card),
+      onNew: () => guarded(() => showCardForm(null)),
+      onEdit: (card) => guarded(() => showCardForm(card)),
       onVerify: (card) => guarded(async () => {
         await api.request(`/cards/${card.id}/verify`, { method: "PATCH" });
         await showCards();
@@ -132,10 +138,12 @@ async function showCards() {
   );
 }
 
-function showCardForm(card, error = "", draft = card) {
+async function showCardForm(card, error = "", draft = card) {
+  const domains = await api.request("/domains");
   show(
     views.cardFormView({
       card: draft,
+      domains,
       error,
       onCancel: () => guarded(showCards),
       onSave: async (data) => {
@@ -213,3 +221,138 @@ async function init() {
 }
 
 init();
+
+async function showDecks(notice = "", error = "") {
+  const [decks, domains] = await Promise.all([api.request("/teacher/decks"), api.request("/domains")]);
+  show(
+    views.decksView({
+      decks,
+      domains,
+      notice,
+      error,
+      onNew: () => guarded(() => showDeckForm(null)),
+      onEdit: (deck) => guarded(() => showDeckForm(deck)),
+      onCards: (deck) => guarded(() => showDeckCards(deck)),
+      onDelete: (deck) => {
+        if (window.confirm(`Удалить набор «${deck.name}»? Карточки останутся, но выбор этого набора у студентов пропадет.`)) {
+          guarded(async () => {
+            await api.request(`/teacher/decks/${deck.id}`, { method: "DELETE" });
+            await showDecks("Набор удален.");
+          });
+        }
+      },
+      onNewDomain: (name) => guarded(async () => {
+        if (!name) {
+          return showDecks("", "Введите название области.");
+        }
+        try {
+          await api.request("/teacher/domains", { method: "POST", body: { name } });
+          return showDecks(`Область «${name}» добавлена.`);
+        } catch (err) {
+          if (err.status === 409) {
+            return showDecks("", "Такая область уже есть.");
+          }
+          throw err;
+        }
+      }),
+    }),
+  );
+}
+
+async function showDeckForm(deck, error = "", draft = deck) {
+  const domains = await api.request("/domains");
+  show(
+    views.deckFormView({
+      deck: draft,
+      domains,
+      error,
+      onCancel: () => guarded(() => showDecks()),
+      onSave: async (data) => {
+        try {
+          if (deck) {
+            await api.request(`/teacher/decks/${deck.id}`, { method: "PUT", body: data });
+          } else {
+            await api.request("/teacher/decks", { method: "POST", body: data });
+          }
+          await showDecks("Набор сохранен.");
+        } catch (err) {
+          if (err.status === 401 || err.status === 403) {
+            logout("Сессия истекла или нет прав преподавателя, войдите снова.");
+            return;
+          }
+          showDeckForm(deck, err.message, { ...(deck || {}), ...data });
+        }
+      },
+    }),
+  );
+}
+
+async function showDeckCards(deck) {
+  const cards = await api.request("/cards");
+  show(
+    views.deckCardsView({
+      deck,
+      cards,
+      onBack: () => guarded(() => showDecks()),
+      onSave: (ids) => guarded(async () => {
+        await api.request(`/teacher/decks/${deck.id}/cards`, { method: "PUT", body: { card_ids: ids } });
+        await showDecks(`Состав набора «${deck.name}» сохранен: ${ids.length}.`);
+      }),
+    }),
+  );
+}
+
+async function showPersonal() {
+  const query = state.personalOwner ? `?owner=${encodeURIComponent(state.personalOwner)}` : "";
+  const [cards, all] = await Promise.all([api.request(`/teacher/personal-cards${query}`), api.request("/teacher/personal-cards")]);
+  show(
+    views.personalView({
+      cards,
+      owners: [...new Set(all.map((card) => card.owner))].sort(),
+      owner: state.personalOwner,
+      onOwner: (value) => {
+        state.personalOwner = value;
+        guarded(showPersonal);
+      },
+      onOpen: (card) => guarded(() => showPersonalCard(card)),
+    }),
+  );
+}
+
+async function showPersonalCard(card, extra = {}) {
+  const [decks, domains] = await Promise.all([api.request("/teacher/decks"), api.request("/domains")]);
+  show(
+    views.personalCardView({
+      card,
+      decks,
+      domains,
+      ...extra,
+      onBack: () => guarded(showPersonal),
+      onSave: async (data) => {
+        try {
+          const saved = await api.request(`/teacher/personal-cards/${card.id}`, { method: "PUT", body: data });
+          showPersonalCard(saved, { notice: "Изменения сохранены." });
+        } catch (err) {
+          if (err.status === 401 || err.status === 403) {
+            logout("Сессия истекла или нет прав преподавателя, войдите снова.");
+            return;
+          }
+          showPersonalCard({ ...card, ...data }, { error: err.message });
+        }
+      },
+      onPromote: async (deckIds) => {
+        try {
+          await api.request(`/teacher/personal-cards/${card.id}/promote`, { method: "POST", body: { deck_ids: deckIds } });
+          state.tab = "personal";
+          await showPersonal();
+        } catch (err) {
+          if (err.status === 401 || err.status === 403) {
+            logout("Сессия истекла или нет прав преподавателя, войдите снова.");
+            return;
+          }
+          showPersonalCard(card, { error: err.message });
+        }
+      },
+    }),
+  );
+}

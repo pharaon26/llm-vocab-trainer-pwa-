@@ -5,10 +5,12 @@ from sqlalchemy.orm import Session
 from app.api.deps import require_teacher
 from app.db import get_db
 from app.enums import TaskType
-from app.models import Card, Deck, Domain, TaskBank
+from app.models import Card, Deck, Domain, TaskBank, User
 from app.schemas.catalog import DeckCardsIn, DeckIn, DomainIn, DomainOut, TeacherDeckOut
-from app.schemas.teacher import AnalyticsOut, BankEntryOut, BankPatch
+from app.schemas.card import CardCreate, CardRead
+from app.schemas.teacher import AnalyticsOut, BankEntryOut, BankPatch, PersonalCardForTeacher, PromoteIn
 from app.services import decks as decks_service
+from app.services import drafts as drafts_service
 from app.services.cards import get_or_create_domain
 from app.services.analytics import build_analytics
 
@@ -40,7 +42,7 @@ def list_bank(
     rejected: bool | None = None,
     db: Session = Depends(get_db),
 ):
-    query = select(TaskBank, Card.term).join(Card, Card.id == TaskBank.card_id)
+    query = select(TaskBank, Card.term).join(Card, Card.id == TaskBank.card_id).where(Card.owner_id.is_(None))
     if card_id is not None:
         query = query.where(TaskBank.card_id == card_id)
     if task_type is not None:
@@ -121,3 +123,59 @@ def set_cards(deck_id: int, data: DeckCardsIn, db: Session = Depends(get_db)):
 @router.delete("/decks/{deck_id}", status_code=204)
 def delete_deck(deck_id: int, db: Session = Depends(get_db)):
     decks_service.delete_deck(db, get_deck_or_404(db, deck_id))
+
+
+def personal_for_teacher(db: Session, card: Card, owner: str) -> PersonalCardForTeacher:
+    return PersonalCardForTeacher(
+        id=card.id, term=card.term, domain=card.domain, owner=owner, transcription=card.transcription,
+        part_of_speech=card.part_of_speech, definition_en=card.definition_en,
+        translation_ru=card.translation_ru, collocations=card.collocations, examples=card.examples,
+        common_mistakes=card.common_mistakes, contrast_term=card.contrast_term, audio_url=card.audio_url,
+        sources=dict(card.field_sources or {}),
+        shared_duplicate=drafts_service.shared_duplicate(db, card) is not None,
+    )
+
+
+def get_personal_or_404(db: Session, card_id: int) -> tuple[Card, str]:
+    row = db.execute(
+        select(Card, User.name).join(User, User.id == Card.owner_id).where(Card.id == card_id)
+    ).first()
+    if row is None:
+        raise HTTPException(404, "Personal card not found")
+    return row[0], row[1]
+
+
+@router.get("/personal-cards", response_model=list[PersonalCardForTeacher])
+def list_personal_cards(owner: str | None = None, db: Session = Depends(get_db)):
+    query = (
+        select(Card, User.name)
+        .join(User, User.id == Card.owner_id)
+        .where(Card.owner_id.isnot(None), Card.confirmed_by_owner.is_(True))
+        .order_by(Card.term, User.name)
+    )
+    if owner:
+        query = query.where(User.name == owner)
+    return [personal_for_teacher(db, card, name) for card, name in db.execute(query).all()]
+
+
+@router.put("/personal-cards/{card_id}", response_model=PersonalCardForTeacher)
+def edit_personal_card(card_id: int, data: CardCreate, db: Session = Depends(get_db)):
+    card, owner = get_personal_or_404(db, card_id)
+    clash = db.scalar(
+        select(Card).where(Card.owner_id == card.owner_id, Card.id != card_id, func.lower(Card.term) == data.term.lower())
+    )
+    if clash:
+        raise HTTPException(409, "The student already has a card with this term")
+    drafts_service.update_personal_card(db, card, data)
+    return personal_for_teacher(db, card, owner)
+
+
+@router.post("/personal-cards/{card_id}/promote", response_model=CardRead)
+def promote_personal_card(card_id: int, data: PromoteIn, db: Session = Depends(get_db)):
+    card, _ = get_personal_or_404(db, card_id)
+    try:
+        return drafts_service.promote_card(db, card, data.deck_ids)
+    except drafts_service.UnknownDecksForPromotion:
+        raise HTTPException(422, "Unknown deck id")
+    except drafts_service.PromotionBlocked:
+        raise HTTPException(409, "A shared card with this term already exists")

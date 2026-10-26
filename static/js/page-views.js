@@ -240,8 +240,8 @@ export function settingsView({ settings, decks, notice = "", error = "", onSave 
   );
 }
 
-const SOURCE_LABELS = { dictionary: "словарь", llm: "модель: проверьте", user: "вы" };
-const SOURCE_CLASS = { dictionary: "badge src-dictionary", llm: "badge src-llm", user: "badge src-user" };
+export const SOURCE_LABELS = { dictionary: "словарь", llm: "модель: проверьте", user: "вы" };
+export const SOURCE_CLASS = { dictionary: "badge src-dictionary", llm: "badge src-llm", user: "badge src-user" };
 
 const WORD_FIELDS = [
   ["transcription", "Транскрипция", "text"],

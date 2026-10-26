@@ -15,6 +15,7 @@ from app.models import (
     Card,
     CardDraft,
     CardProgress,
+    Deck,
     DeckCard,
     Domain,
     LlmUsage,
@@ -55,6 +56,14 @@ class UnknownDomain(Exception):
 
 
 class TooManyDrafts(Exception):
+    pass
+
+
+class PromotionBlocked(Exception):
+    pass
+
+
+class UnknownDecksForPromotion(Exception):
     pass
 
 
@@ -344,3 +353,31 @@ def delete_personal_card(db: Session, card: Card) -> None:
     db.execute(delete(DeckCard).where(DeckCard.card_id == card.id))
     db.delete(card)
     db.commit()
+
+
+def shared_duplicate(db: Session, card: Card) -> Card | None:
+    return db.scalar(
+        select(Card).where(func.lower(Card.term) == card.term.lower(), Card.owner_id.is_(None), Card.id != card.id)
+    )
+
+
+def promote_card(db: Session, card: Card, deck_ids: list[int]) -> Card:
+    ids = set(deck_ids)
+    decks = db.scalars(select(Deck).where(Deck.id.in_(ids))).all()
+    if len(decks) != len(ids):
+        raise UnknownDecksForPromotion
+    if shared_duplicate(db, card) is not None:
+        raise PromotionBlocked
+    card.owner_id = None
+    card.confirmed_by_owner = False
+    card.verified = True
+    for deck in decks:
+        if db.get(DeckCard, (deck.id, card.id)) is None:
+            db.add(DeckCard(deck_id=deck.id, card_id=card.id))
+    try:
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise PromotionBlocked from exc
+    return card
+
