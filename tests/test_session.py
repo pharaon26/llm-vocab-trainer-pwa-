@@ -345,3 +345,18 @@ def test_write_term_answer_is_recorded_as_rule_classified(client, db, clock, stu
     typed = advanced_task(client, db, clock, student_headers, 4)
     assert typed["task_type"] == "write_term"
     assert answer(client, student_headers, db, typed)["classified_by"] == "rule"
+
+
+def test_failed_retry_is_not_repeated_again_in_session(client, db, student_headers, verified_cards):
+    first = next_task(client, student_headers)["task"]
+    answer(client, student_headers, db, first, correct=False)
+    for _ in range(4):
+        answer(client, student_headers, db, next_task(client, student_headers)["task"])
+    retry = next_task(client, student_headers)
+    assert retry["task"]["card_id"] == first["card_id"]
+
+    result = answer(client, student_headers, db, retry["task"], correct=False)
+    assert result["retry_in_session"] is True
+    assert next_task(client, student_headers) == {"task": None, "remaining": 0}
+    progress = db.query(CardProgress).filter_by(card_id=first["card_id"]).one()
+    assert progress.pending_interval == 1

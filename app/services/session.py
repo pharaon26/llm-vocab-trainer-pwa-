@@ -65,7 +65,7 @@ def _retry_items(db: Session, user: User, today: date) -> list[QueueItem]:
     items = []
     for row in sorted(last_by_card.values(), key=lambda r: r.id):
         card = db.get(Card, row.card_id)
-        if not row.is_correct and card.verified:
+        if not row.is_correct and not row.is_retry and card.verified:
             items.append(QueueItem(card, TASK_BY_ERROR[ErrorType(row.error_type)]))
     return items
 
