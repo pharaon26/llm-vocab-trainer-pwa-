@@ -218,3 +218,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Локальная база прототипа
+*.db
+
+# IDE
+.idea/
