@@ -96,5 +96,7 @@ export const dictionary = () => student.request("/me/dictionary");
 export const stats = () => student.request("/me/stats");
 export const practiceNext = (exclude) => student.request(`/practice/next${exclude ? `?exclude=${exclude}` : ""}`);
 export const practiceAnswer = (payload) => student.request("/practice/answer", { method: "POST", body: payload });
+export const settings = () => student.request("/me/settings");
+export const saveSettings = (value) => student.request("/me/settings", { method: "PUT", body: { new_cards_per_day: value } });
 export const nextTask = () => student.request("/session/next");
 export const answer = (payload) => student.request("/session/answer", { method: "POST", body: payload });

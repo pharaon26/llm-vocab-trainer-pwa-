@@ -12,6 +12,7 @@ class User(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(50), unique=True, index=True)
     role: Mapped[str] = mapped_column(String(10))
+    new_cards_per_day: Mapped[int] = mapped_column(default=5, server_default="5")
 
 
 class AuthToken(Base):

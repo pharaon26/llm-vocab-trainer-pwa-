@@ -85,6 +85,8 @@ classification_config = ClassificationConfig()
 @dataclass(frozen=True)
 class LearningConfig:
     learned_interval_days: float = 21
+    min_new_per_day: int = 1
+    max_new_per_day: int = 20
 
 
 learning_config = LearningConfig()

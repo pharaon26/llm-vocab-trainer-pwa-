@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.deps import current_user
-from app.config import settings
+from app.config import scheduler_config, settings
 from app.db import get_db
 from app.enums import Role
 from app.models import AuthToken, User
@@ -33,7 +33,7 @@ def login(data: LoginIn, db: Session = Depends(get_db)):
         raise HTTPException(403, "This name belongs to a teacher")
 
     if user is None:
-        user = User(name=data.name, role=data.role.value)
+        user = User(name=data.name, role=data.role.value, new_cards_per_day=scheduler_config.new_cards_per_day)
         db.add(user)
         db.flush()
 

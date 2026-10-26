@@ -94,7 +94,7 @@ def build_queue(
             CardProgress.user_id == user.id, CardProgress.first_seen_on == today
         )
     ).all()
-    slots = max(0, config.new_cards_per_day - len(started_today))
+    slots = max(0, user.new_cards_per_day - len(started_today))
     known = select(CardProgress.card_id).where(CardProgress.user_id == user.id)
     new_cards = db.scalars(
         select(Card)

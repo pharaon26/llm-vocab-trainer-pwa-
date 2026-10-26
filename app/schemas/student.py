@@ -1,8 +1,9 @@
 from datetime import date, datetime
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
+from app.config import learning_config
 from app.enums import ErrorType, TaskType
 
 
@@ -89,3 +90,13 @@ class StatsOut(BaseModel):
     error_types: list[StudentErrorStat]
     streak: StreakStat
     totals: TotalsStat
+
+
+class SettingsIn(BaseModel):
+    new_cards_per_day: int = Field(ge=learning_config.min_new_per_day, le=learning_config.max_new_per_day)
+
+
+class SettingsOut(BaseModel):
+    new_cards_per_day: int
+    min_new_per_day: int
+    max_new_per_day: int

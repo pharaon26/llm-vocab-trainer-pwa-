@@ -6,7 +6,6 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.api.deps import current_user, get_today
-from app.config import scheduler_config
 from app.db import get_db
 from app.llm.base import LLMError, LLMProvider
 from app.llm.factory import get_provider
@@ -43,7 +42,7 @@ def next_task(
     next_review, unseen, opened = session_service.idle_info(db, user, today)
     return NextOut(
         task=None, remaining=0, next_review_date=next_review, unseen_cards=unseen, opened_cards=opened,
-        new_cards_per_day=scheduler_config.new_cards_per_day,
+        new_cards_per_day=user.new_cards_per_day,
     )
 
 

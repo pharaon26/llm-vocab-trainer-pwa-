@@ -434,3 +434,24 @@ input[type="search"] {
 .chart .fill {
   fill: var(--primary);
 }
+
+input[type="range"] {
+  min-height: 32px;
+  padding: 0;
+  accent-color: var(--primary);
+}
+
+.banner.ok {
+  padding: 10px 12px;
+  color: var(--ok);
+  border: 1px solid var(--ok);
+  border-radius: 8px;
+}
+
+.per-day {
+  font-weight: 700;
+}
+
+.topbar a {
+  color: var(--primary);
+}

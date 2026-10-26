@@ -6,7 +6,8 @@ from sqlalchemy.orm import Session
 from app.api.deps import current_user, get_today
 from app.db import get_db
 from app.models import User
-from app.schemas.student import DictionaryEntry, HistoryOut, ProgressOut, StatsOut
+from app.config import learning_config
+from app.schemas.student import DictionaryEntry, HistoryOut, ProgressOut, SettingsIn, SettingsOut, StatsOut
 from app.services import student as student_service
 
 router = APIRouter(prefix="/me", tags=["me"])
@@ -41,3 +42,23 @@ def stats(
     today: date = Depends(get_today),
 ):
     return student_service.build_stats(db, user, today, days)
+
+
+def settings_out(user: User) -> SettingsOut:
+    return SettingsOut(
+        new_cards_per_day=user.new_cards_per_day,
+        min_new_per_day=learning_config.min_new_per_day,
+        max_new_per_day=learning_config.max_new_per_day,
+    )
+
+
+@router.get("/settings", response_model=SettingsOut)
+def read_settings(user: User = Depends(current_user)):
+    return settings_out(user)
+
+
+@router.put("/settings", response_model=SettingsOut)
+def update_settings(data: SettingsIn, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    user.new_cards_per_day = data.new_cards_per_day
+    db.commit()
+    return settings_out(user)

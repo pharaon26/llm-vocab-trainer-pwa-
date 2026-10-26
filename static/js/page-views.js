@@ -219,3 +219,33 @@ export function statsView({ data }) {
     hasErrors ? barChart("Мои ошибки по типам", errorRows) : el("p", {}, "Ошибок пока нет."),
   );
 }
+
+export function settingsView({ settings, notice = "", error = "", onSave }) {
+  const output = el("output", { for: "per-day", className: "per-day" }, String(settings.new_cards_per_day));
+  const range = el("input", {
+    id: "per-day",
+    type: "range",
+    min: settings.min_new_per_day,
+    max: settings.max_new_per_day,
+    step: 1,
+    value: settings.new_cards_per_day,
+  });
+  range.addEventListener("input", () => {
+    output.textContent = range.value;
+  });
+  return el(
+    "section",
+    { className: "card" },
+    el("h2", {}, "Настройки"),
+    el("label", { for: "per-day" }, "Новых терминов в день: ", output),
+    range,
+    el(
+      "p",
+      { className: "meta" },
+      `От ${settings.min_new_per_day} до ${settings.max_new_per_day}. Столько новых терминов открывается в повторении каждый день, кроме тех, что нужно повторить по расписанию. Изменение действует сразу.`,
+    ),
+    notice && el("p", { className: "banner ok", role: "status" }, notice),
+    error && el("p", { className: "banner error", role: "alert" }, error),
+    el("button", { type: "button", className: "primary", onclick: () => onSave(Number(range.value)) }, "Сохранить"),
+  );
+}

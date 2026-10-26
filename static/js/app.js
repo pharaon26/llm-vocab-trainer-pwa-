@@ -1,6 +1,6 @@
 import * as api from "./api.js";
 import { clear, el, svg } from "./dom.js";
-import { showDictionary, showHistory, showProgress, showStats } from "./pages.js";
+import { showDictionary, showHistory, showProgress, showSettings, showStats } from "./pages.js";
 import { resetStats, showStart } from "./session.js";
 import { setLogoutHandler, show } from "./ui.js";
 import * as views from "./views.js";
@@ -16,7 +16,7 @@ const NAV = [
   ["stats", "Статистика", "M12 3a9 9 0 1 0 0 18a9 9 0 0 0 0-18z M12 3v9h9", showStats],
 ];
 
-const ROUTES = Object.fromEntries(NAV.map(([id, , , handler]) => [id, handler]));
+const ROUTES = { ...Object.fromEntries(NAV.map(([id, , , handler]) => [id, handler])), settings: showSettings };
 
 function icon(path) {
   return svg("svg", { viewBox: "0 0 24 24", "aria-hidden": "true" }, path.split(" M").map((part, i) => svg("path", { d: i ? `M${part}` : part })));
@@ -67,7 +67,13 @@ function renderUserBox() {
   clear(userBox);
   const name = api.getName();
   if (name) {
-    userBox.append(el("span", {}, name), " ", el("button", { type: "button", className: "link", onclick: () => logout() }, "Выйти"));
+    userBox.append(
+      el("span", {}, name),
+      " ",
+      el("a", { href: "#/settings" }, "Настройки"),
+      " ",
+      el("button", { type: "button", className: "link", onclick: () => logout() }, "Выйти"),
+    );
   }
 }
 

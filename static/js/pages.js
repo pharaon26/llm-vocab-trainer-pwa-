@@ -95,3 +95,33 @@ export async function showStats() {
     failure(error, showStats);
   }
 }
+
+export async function showSettings(notice = "") {
+  show(views.loadingView("Загружаем настройки…"));
+  try {
+    const settings = await api.settings();
+    const render = (message, error) =>
+      show(
+        pageViews.settingsView({
+          settings,
+          notice: message,
+          error,
+          onSave: async (value) => {
+            try {
+              Object.assign(settings, await api.saveSettings(value));
+              render(`Сохранено: ${settings.new_cards_per_day} в день.`, "");
+            } catch (err) {
+              if (err.status === 401) {
+                unauthorized();
+              } else {
+                render("", err.message);
+              }
+            }
+          },
+        }),
+      );
+    render(notice, "");
+  } catch (error) {
+    failure(error, showSettings);
+  }
+}
