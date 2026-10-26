@@ -33,7 +33,7 @@ def create_card(data: CardCreate, db: Session = Depends(get_db)):
     return card
 
 
-@router.get("", response_model=list[CardRead])
+@router.get("", response_model=list[CardRead], dependencies=[Depends(require_teacher)])
 def list_cards(verified: bool | None = None, db: Session = Depends(get_db)):
     query = select(Card).order_by(Card.term)
     if verified is not None:
@@ -41,7 +41,7 @@ def list_cards(verified: bool | None = None, db: Session = Depends(get_db)):
     return db.scalars(query).all()
 
 
-@router.get("/{card_id}", response_model=CardRead)
+@router.get("/{card_id}", response_model=CardRead, dependencies=[Depends(require_teacher)])
 def read_card(card_id: int, db: Session = Depends(get_db)):
     return get_card_or_404(card_id, db)
 

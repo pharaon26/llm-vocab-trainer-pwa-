@@ -91,16 +91,27 @@ def test_shell_files_are_precached():
         assert f'"{path}"' in source, path
 
 
-def test_js_imports_resolve_and_are_precached():
+def test_js_imports_resolve_and_shell_modules_are_precached():
     source = (STATIC / "sw.js").read_text(encoding="utf-8")
-    for module in (STATIC / "js").glob("*.js"):
-        assert f'"/js/{module.name}"' in source, module.name
-        for imported in re.findall(r'from "\./([^"]+)"', module.read_text(encoding="utf-8")):
-            assert (STATIC / "js" / imported).is_file(), imported
+    for module in (STATIC / "js").rglob("*.js"):
+        text = module.read_text(encoding="utf-8")
+        if module.parent == STATIC / "js":
+            assert f'"/js/{module.name}"' in source, module.name
+            assert "teacher" not in " ".join(re.findall(r'from "([^"]+)"', text)), module.name
+        for imported in re.findall(r'from "(\.{1,2}/[^"]+)"', text):
+            assert (module.parent / imported).resolve().is_file(), f"{module.name}: {imported}"
+
+
+def test_teacher_page_is_served_and_references_exist(web):
+    assert web.get("/teacher.html").status_code == 200
+    html = (STATIC / "teacher.html").read_text(encoding="utf-8")
+    assert "<script>" not in html
+    for path in re.findall(r'(?:href|src)="(/[^"]+)"', html):
+        assert (STATIC / path.lstrip("/")).is_file(), path
 
 
 def test_frontend_never_writes_html_from_data():
-    for module in (STATIC / "js").glob("*.js"):
+    for module in (STATIC / "js").rglob("*.js"):
         text = module.read_text(encoding="utf-8")
         for forbidden in ("innerHTML", "outerHTML", "insertAdjacentHTML", "document.write", "eval("):
             assert forbidden not in text, f"{module.name}: {forbidden}"

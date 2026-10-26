@@ -1,0 +1,156 @@
+body.wide .topbar,
+body.wide main {
+  max-width: 960px;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  overflow-x: auto;
+}
+
+.tabs button[aria-selected="true"] {
+  font-weight: 600;
+  color: var(--primary-text);
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.toolbar select,
+.toolbar input {
+  width: auto;
+  min-height: 40px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.row .info {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.row .info .definition {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.row .buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.row button {
+  min-height: 40px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0 8px;
+  font-size: 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
+.badge.ok {
+  color: var(--ok);
+  border-color: var(--ok);
+}
+
+.badge.bad {
+  color: var(--bad);
+  border-color: var(--bad);
+}
+
+button.danger {
+  color: var(--bad);
+  border-color: var(--bad);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hint {
+  font-weight: 400;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.bank-options {
+  margin: 4px 0 0;
+}
+
+.bank-options .correct {
+  font-weight: 600;
+  color: var(--ok);
+}
+
+.row.rejected {
+  opacity: 0.65;
+}
+
+.chart {
+  width: 100%;
+  height: auto;
+}
+
+.chart text {
+  font-size: 14px;
+  fill: var(--text);
+}
+
+.chart .value {
+  fill: var(--muted);
+}
+
+.chart .track {
+  fill: var(--border);
+}
+
+.chart .fill {
+  fill: var(--primary);
+}
+
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.summary div {
+  min-width: 120px;
+}
+
+.summary strong {
+  display: block;
+  font-size: 1.5rem;
+}

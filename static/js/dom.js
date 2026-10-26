@@ -1,5 +1,6 @@
-export function el(tag, props = {}, ...children) {
-  const node = document.createElement(tag);
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+function build(node, props, children) {
   for (const [key, value] of Object.entries(props)) {
     if (value == null || value === false) {
       continue;
@@ -7,7 +8,7 @@ export function el(tag, props = {}, ...children) {
     if (key.startsWith("on")) {
       node.addEventListener(key.slice(2), value);
     } else if (key === "className") {
-      node.className = value;
+      node.setAttribute("class", value);
     } else {
       node.setAttribute(key, value === true ? "" : value);
     }
@@ -19,6 +20,14 @@ export function el(tag, props = {}, ...children) {
     node.append(child instanceof Node ? child : document.createTextNode(String(child)));
   }
   return node;
+}
+
+export function el(tag, props = {}, ...children) {
+  return build(document.createElement(tag), props, children);
+}
+
+export function svg(tag, props = {}, ...children) {
+  return build(document.createElementNS(SVG_NS, tag), props, children);
 }
 
 export function clear(node) {

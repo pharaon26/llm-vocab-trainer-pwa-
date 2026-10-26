@@ -70,7 +70,7 @@ def get_task(
                     logger.warning("LLM unavailable, using bank: %s", exc)
             if generated is not None:
                 entry = bank.get_or_create(db, card, task_type, generated, provider.name)
-            else:
+            if entry is None:
                 entry = bank.pick(db, card.id, task_type, source)
         if entry is not None:
             return _from_bank(entry, rng)

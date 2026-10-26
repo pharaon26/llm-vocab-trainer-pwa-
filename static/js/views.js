@@ -1,6 +1,6 @@
 import { el } from "./dom.js";
 
-const ERROR_LABELS = {
+export const ERROR_LABELS = {
   form: "форма (написание)",
   meaning: "значение",
   usage: "употребление",

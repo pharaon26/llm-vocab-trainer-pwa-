@@ -43,6 +43,14 @@ def test_student_cannot_modify_cards(client, student_headers):
     assert client.post("/cards", json=VALID).status_code == 403
 
 
+def test_reading_cards_requires_teacher(client, student_headers):
+    card_id = client.post("/cards", json=VALID).json()["id"]
+    plain = client.__class__(client.app)
+    assert plain.get("/cards").status_code == 401
+    assert plain.get(f"/cards/{card_id}").status_code == 401
+    assert plain.get("/cards", headers=student_headers).status_code == 403
+
+
 def test_not_found(client):
     assert client.get("/cards/999").status_code == 404
 
