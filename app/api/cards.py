@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
+from app.api.deps import require_teacher
 from app.db import get_db
-from app.models import Card
+from app.models import Card, CardProgress, ReviewHistory
 from app.schemas.card import CardCreate, CardRead
 
 router = APIRouter(prefix="/cards", tags=["cards"])
@@ -22,7 +23,7 @@ def ensure_term_free(db: Session, term: str, exclude_id: int | None = None) -> N
         raise HTTPException(409, "Card with this term already exists")
 
 
-@router.post("", response_model=CardRead, status_code=201)
+@router.post("", response_model=CardRead, status_code=201, dependencies=[Depends(require_teacher)])
 def create_card(data: CardCreate, db: Session = Depends(get_db)):
     ensure_term_free(db, data.term)
     card = Card(**data.model_dump(), verified=False)
@@ -45,7 +46,7 @@ def read_card(card_id: int, db: Session = Depends(get_db)):
     return get_card_or_404(card_id, db)
 
 
-@router.put("/{card_id}", response_model=CardRead)
+@router.put("/{card_id}", response_model=CardRead, dependencies=[Depends(require_teacher)])
 def update_card(card_id: int, data: CardCreate, db: Session = Depends(get_db)):
     card = get_card_or_404(card_id, db)
     ensure_term_free(db, data.term, exclude_id=card_id)
@@ -57,7 +58,7 @@ def update_card(card_id: int, data: CardCreate, db: Session = Depends(get_db)):
     return card
 
 
-@router.patch("/{card_id}/verify", response_model=CardRead)
+@router.patch("/{card_id}/verify", response_model=CardRead, dependencies=[Depends(require_teacher)])
 def verify_card(card_id: int, db: Session = Depends(get_db)):
     card = get_card_or_404(card_id, db)
     card.verified = True
@@ -66,7 +67,10 @@ def verify_card(card_id: int, db: Session = Depends(get_db)):
     return card
 
 
-@router.delete("/{card_id}", status_code=204)
+@router.delete("/{card_id}", status_code=204, dependencies=[Depends(require_teacher)])
 def delete_card(card_id: int, db: Session = Depends(get_db)):
-    db.delete(get_card_or_404(card_id, db))
+    card = get_card_or_404(card_id, db)
+    db.execute(delete(ReviewHistory).where(ReviewHistory.card_id == card_id))
+    db.execute(delete(CardProgress).where(CardProgress.card_id == card_id))
+    db.delete(card)
     db.commit()

@@ -1,11 +1,24 @@
+from datetime import date
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from app.api.session import get_today
+from app.config import settings
 from app.db import Base, get_db
 from app.main import app
+
+
+class Clock:
+    today = date(2026, 1, 1)
+
+
+@pytest.fixture(autouse=True)
+def teacher_password(monkeypatch):
+    monkeypatch.setattr(settings, "teacher_password", "secret")
 
 
 @pytest.fixture
@@ -17,7 +30,28 @@ def db():
 
 
 @pytest.fixture
-def client(db):
+def clock():
+    return Clock()
+
+
+@pytest.fixture
+def client(db, clock):
     app.dependency_overrides[get_db] = lambda: db
+    app.dependency_overrides[get_today] = lambda: clock.today
     yield TestClient(app)
     app.dependency_overrides.clear()
+
+
+def login(client, **body):
+    response = client.post("/auth/login", json=body)
+    return {"Authorization": f"Bearer {response.json()['token']}"}
+
+
+@pytest.fixture
+def teacher_headers(client):
+    return login(client, name="teacher", role="teacher", password="secret")
+
+
+@pytest.fixture
+def student_headers(client):
+    return login(client, name="student")

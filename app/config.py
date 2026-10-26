@@ -10,6 +10,7 @@ class Settings(BaseSettings):
 
     database_url: str = "sqlite:///./app.db"
     gigachat_api_key: str = ""
+    teacher_password: str = ""
 
 
 settings = Settings()
@@ -29,6 +30,7 @@ class SchedulerConfig:
     ease_step: float = 0.05
     first_interval: float = 1
     second_interval: float = 3
+    new_cards_per_day: int = 5
     error_rules: dict[ErrorType, ErrorRule] = field(
         default_factory=lambda: {
             ErrorType.FORM: ErrorRule(k=0.5, delta=0.10),

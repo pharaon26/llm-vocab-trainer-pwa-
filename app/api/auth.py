@@ -1,0 +1,48 @@
+import secrets
+
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from app.api.deps import current_user
+from app.config import settings
+from app.db import get_db
+from app.enums import Role
+from app.models import AuthToken, User
+from app.schemas.auth import LoginIn, LoginOut
+
+router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+def teacher_password_ok(password: str | None) -> bool:
+    if not settings.teacher_password or password is None:
+        return False
+    return secrets.compare_digest(password.encode(), settings.teacher_password.encode())
+
+
+@router.post("/login", response_model=LoginOut)
+def login(data: LoginIn, db: Session = Depends(get_db)):
+    user = db.scalar(select(User).where(User.name == data.name))
+
+    if data.role == Role.TEACHER:
+        if not teacher_password_ok(data.password):
+            raise HTTPException(403, "Wrong teacher password")
+        if user is not None and user.role != Role.TEACHER:
+            raise HTTPException(409, "This name is taken by a student")
+    elif user is not None and user.role == Role.TEACHER:
+        raise HTTPException(403, "This name belongs to a teacher")
+
+    if user is None:
+        user = User(name=data.name, role=data.role.value)
+        db.add(user)
+        db.flush()
+
+    token = AuthToken(token=secrets.token_urlsafe(32), user_id=user.id)
+    db.add(token)
+    db.commit()
+    return LoginOut(token=token.token, name=user.name, role=Role(user.role))
+
+
+@router.get("/me", response_model=LoginOut)
+def me(user: User = Depends(current_user)):
+    return LoginOut(token="", name=user.name, role=Role(user.role))

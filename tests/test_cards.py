@@ -5,6 +5,12 @@ import pytest
 from app.models import Card
 from app.seed import CARDS_FILE, load_cards
 
+@pytest.fixture
+def client(client, teacher_headers):
+    client.headers.update(teacher_headers)
+    return client
+
+
 VALID = {
     "term": "vulnerability",
     "transcription": "/ˌvʌlnərəˈbɪləti/",
@@ -30,6 +36,11 @@ def test_create_and_read(client):
 def test_duplicate_term_conflict(client):
     client.post("/cards", json=VALID)
     assert client.post("/cards", json=VALID).status_code == 409
+
+
+def test_student_cannot_modify_cards(client, student_headers):
+    client.headers.update(student_headers)
+    assert client.post("/cards", json=VALID).status_code == 403
 
 
 def test_not_found(client):
