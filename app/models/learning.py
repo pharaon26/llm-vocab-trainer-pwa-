@@ -30,6 +30,8 @@ class ReviewHistory(Base):
     card_id: Mapped[int] = mapped_column(ForeignKey("cards.id", ondelete="CASCADE"), index=True)
     task_type: Mapped[str] = mapped_column(String(30))
     answer: Mapped[str] = mapped_column(Text)
+    prompt: Mapped[str | None] = mapped_column(Text)
+    correct_answer: Mapped[str | None] = mapped_column(Text)
     is_correct: Mapped[bool] = mapped_column(Boolean)
     error_type: Mapped[str | None] = mapped_column(String(20))
     is_retry: Mapped[bool] = mapped_column(Boolean)

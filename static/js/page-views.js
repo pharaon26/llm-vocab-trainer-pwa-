@@ -63,3 +63,63 @@ export function progressView({ data, filter, onFilter }) {
     rows.length ? el("ul", { className: "list" }, rows) : el("p", {}, "В этой группе терминов нет."),
   );
 }
+
+const TASK_LABELS = {
+  spelling_choice: "написание",
+  definition_match: "определение",
+  gap_fill: "пропуск",
+  collocation_choice: "словосочетание",
+  write_term: "ввод термина",
+  explain_meaning: "объяснение",
+  compose_sentence: "предложение",
+};
+
+function formatDay(isoDate) {
+  return new Date(`${isoDate}T00:00:00`).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" });
+}
+
+export function historyView({ terms, term, items, total, onTerm, onMore }) {
+  const select = el(
+    "select",
+    { id: "term-filter", "aria-label": "Термин" },
+    el("option", { value: "" }, "Все термины"),
+    terms.map((name) => el("option", { value: name }, name)),
+  );
+  select.value = term;
+  select.addEventListener("change", () => onTerm(select.value));
+
+  const rows = items.map((item) =>
+    el(
+      "li",
+      { className: "row history-row" },
+      el(
+        "div",
+        { className: "info" },
+        el(
+          "div",
+          {},
+          el("strong", {}, item.term),
+          " ",
+          el("span", { className: "badge" }, TASK_LABELS[item.task_type] || item.task_type),
+          " ",
+          el("span", { className: item.is_correct ? "badge ok" : "badge bad" }, item.is_correct ? "верно" : `ошибка: ${ERROR_LABELS[item.error_type]}`),
+          item.is_retry && el("span", { className: "badge" }, "повтор"),
+          el("span", { className: "meta" }, ` ${formatDay(item.answered_on)}`),
+        ),
+        el("p", { className: "definition" }, el("strong", {}, "Задание: "), item.prompt),
+        el("p", {}, el("strong", {}, "Мой ответ: "), item.answer || "(пусто)"),
+        !item.is_correct && el("p", {}, el("strong", {}, "Правильно: "), item.correct_answer),
+        item.comment && el("p", { className: "note" }, item.comment),
+      ),
+    ),
+  );
+  return el(
+    "section",
+    { className: "card" },
+    el("h2", {}, "История ответов"),
+    el("div", { className: "toolbar" }, el("label", { for: "term-filter" }, "Термин:"), select),
+    el("p", { className: "meta" }, `Показано ${items.length} из ${total}`),
+    rows.length ? el("ul", { className: "list" }, rows) : el("p", {}, "Ответов пока нет."),
+    items.length < total && el("button", { type: "button", onclick: onMore }, "Показать еще"),
+  );
+}

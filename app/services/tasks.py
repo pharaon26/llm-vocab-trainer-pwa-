@@ -77,6 +77,23 @@ def is_available(card: Card, task_type: TaskType) -> bool:
     return True
 
 
+def task_prompt(card: Card, task_type: TaskType, context: str | None = None, entry=None) -> str:
+    if entry is not None:
+        return entry.prompt
+    if task_type == TaskType.GAP_FILL:
+        return gap_sentence(card) or card.term
+    if task_type == TaskType.COLLOCATION_CHOICE:
+        gap = collocation_gap(card)
+        return gap[0] if gap else card.term
+    if task_type == TaskType.SPELLING_CHOICE:
+        return card.translation_ru
+    if task_type == TaskType.WRITE_TERM:
+        return card.definition_en
+    if task_type == TaskType.COMPOSE_SENTENCE and context:
+        return f"{card.term} - {context}"
+    return card.term
+
+
 def correct_answer(card: Card, task_type: TaskType) -> str:
     if task_type == TaskType.EXPLAIN_MEANING:
         return card.definition_en

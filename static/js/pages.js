@@ -32,3 +32,48 @@ export async function showProgress() {
     failure(error, showProgress);
   }
 }
+
+const HISTORY_PAGE = 30;
+
+export async function showHistory() {
+  let term = "";
+  let items = [];
+  let total = 0;
+  let terms = [];
+
+  async function load(reset) {
+    const offset = reset ? 0 : items.length;
+    const query = `?limit=${HISTORY_PAGE}&offset=${offset}${term ? `&term=${encodeURIComponent(term)}` : ""}`;
+    const data = await api.history(query);
+    items = reset ? data.items : items.concat(data.items);
+    total = data.total;
+    terms = data.terms;
+  }
+
+  const render = () =>
+    show(
+      pageViews.historyView({
+        terms,
+        term,
+        items,
+        total,
+        onTerm: (value) => {
+          term = value;
+          guard(() => load(true));
+        },
+        onMore: () => guard(() => load(false)),
+      }),
+    );
+
+  async function guard(action) {
+    try {
+      await action();
+      render();
+    } catch (error) {
+      failure(error, showHistory);
+    }
+  }
+
+  show(views.loadingView("Загружаем историю…"));
+  await guard(() => load(true));
+}

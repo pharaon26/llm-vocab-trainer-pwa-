@@ -14,7 +14,7 @@ from app.schemas.session import AnswerOut, TaskOut
 from app.services.classification import classify_open_answer
 from app.services.scheduler import ReviewState, next_due_date, review
 from app.services.task_source import get_task
-from app.services.tasks import OPEN_TYPES, correct_answer, evaluate, is_available
+from app.services.tasks import OPEN_TYPES, correct_answer, evaluate, is_available, task_prompt
 
 STAGE_TASKS = (
     TaskType.DEFINITION_MATCH,
@@ -177,6 +177,7 @@ def submit_answer(
 
     classified_by = "task"
     comment = None
+    entry = None
     if task_type in OPEN_TYPES:
         if task_type == TaskType.COMPOSE_SENTENCE and context not in classification_config.situations:
             raise TaskUnavailable
@@ -213,6 +214,7 @@ def submit_answer(
     db.add(
         ReviewHistory(
             user_id=user.id, card_id=card.id, task_type=task_type.value, answer=answer,
+            prompt=task_prompt(card, task_type, context, entry), correct_answer=correct_text,
             is_correct=error is None, error_type=error.value if error else None,
             is_retry=is_retry, answered_on=today, task_bank_id=task_id,
             classified_by=classified_by, comment=comment,
