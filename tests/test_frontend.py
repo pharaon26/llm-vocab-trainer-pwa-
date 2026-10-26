@@ -30,6 +30,11 @@ def test_index_is_served_at_root(web):
     assert "<script>" not in response.text
 
 
+def test_index_has_bottom_navigation_container(web):
+    html = web.get("/").text
+    assert '<nav id="nav"' in html and 'aria-label="Разделы"' in html
+
+
 def test_api_routes_are_not_shadowed_by_static_files(web):
     assert web.get("/health").json() == {"status": "ok"}
     assert web.get("/docs").status_code == 200

@@ -90,5 +90,6 @@ const student = createApi("vt");
 
 export const { getToken, getName, clearSession, login } = student;
 export const me = () => student.request("/auth/me");
+export const progress = () => student.request("/me/progress");
 export const nextTask = () => student.request("/session/next");
 export const answer = (payload) => student.request("/session/answer", { method: "POST", body: payload });

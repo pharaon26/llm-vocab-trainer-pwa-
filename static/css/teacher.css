@@ -30,64 +30,6 @@ body.wide main {
   min-height: 40px;
 }
 
-.list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-}
-
-.row .info {
-  flex: 1 1 260px;
-  min-width: 0;
-}
-
-.row .info .definition {
-  color: var(--muted);
-  font-size: 0.95rem;
-}
-
-.row .buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.row button {
-  min-height: 40px;
-}
-
-.badge {
-  display: inline-block;
-  padding: 0 8px;
-  font-size: 0.85rem;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-}
-
-.badge.ok {
-  color: var(--ok);
-  border-color: var(--ok);
-}
-
-.badge.bad {
-  color: var(--bad);
-  border-color: var(--bad);
-}
-
 button.danger {
   color: var(--bad);
   border-color: var(--bad);
@@ -140,17 +82,3 @@ button.danger {
   fill: var(--primary);
 }
 
-.summary {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-}
-
-.summary div {
-  min-width: 120px;
-}
-
-.summary strong {
-  display: block;
-  font-size: 1.5rem;
-}

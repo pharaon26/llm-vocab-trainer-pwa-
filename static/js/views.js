@@ -1,4 +1,5 @@
 import { el } from "./dom.js";
+import { describeDate } from "./format.js";
 
 export const ERROR_LABELS = {
   form: "форма (написание)",
@@ -193,17 +194,6 @@ export function feedbackView(result, userAnswer, { onNext }) {
     next,
   );
   return { node, focus: () => next.focus() };
-}
-
-function describeDate(isoDate) {
-  const date = new Date(`${isoDate}T00:00:00`);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const days = Math.round((date - today) / 86400000);
-  if (days === 1) {
-    return "завтра";
-  }
-  return date.toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
 }
 
 export function doneView({ answered, correct, info, checkedAt, onRefresh }) {

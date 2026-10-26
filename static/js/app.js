@@ -1,20 +1,63 @@
 import * as api from "./api.js";
-import { clear, el } from "./dom.js";
+import { clear, el, svg } from "./dom.js";
+import { showProgress } from "./pages.js";
+import { resetStats, showStart } from "./session.js";
+import { setLogoutHandler, show } from "./ui.js";
 import * as views from "./views.js";
 
-const root = document.getElementById("app");
 const userBox = document.getElementById("user-box");
-const stats = { answered: 0, correct: 0 };
+const nav = document.getElementById("nav");
 
-function show(node) {
-  clear(root);
-  root.append(node);
-  const heading = root.querySelector("h2");
-  if (heading) {
-    heading.tabIndex = -1;
-    heading.focus({ preventScroll: true });
+const NAV = [
+  ["session", "Повторение", "M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z M8 9h8 M8 13h5", showStart],
+  ["progress", "Прогресс", "M5 20v-6 M12 20V8 M19 20V4", showProgress],
+];
+
+const ROUTES = Object.fromEntries(NAV.map(([id, , , handler]) => [id, handler]));
+
+function icon(path) {
+  return svg("svg", { viewBox: "0 0 24 24", "aria-hidden": "true" }, path.split(" M").map((part, i) => svg("path", { d: i ? `M${part}` : part })));
+}
+
+function currentRoute() {
+  const name = location.hash.replace(/^#\//, "");
+  return ROUTES[name] ? name : "session";
+}
+
+function renderNav(active) {
+  clear(nav);
+  nav.append(
+    el(
+      "ul",
+      {},
+      NAV.map(([id, label, path]) =>
+        el("li", {}, el("a", { href: `#/${id}`, "aria-current": id === active ? "page" : null }, icon(path), label)),
+      ),
+    ),
+  );
+}
+
+function setNavVisible(visible) {
+  nav.hidden = !visible;
+  document.body.classList.toggle("has-nav", visible);
+}
+
+function route() {
+  if (!api.getToken()) {
+    return;
   }
-  window.scrollTo(0, 0);
+  const name = currentRoute();
+  renderNav(name);
+  setNavVisible(true);
+  ROUTES[name]();
+}
+
+function go(name) {
+  if (location.hash === `#/${name}`) {
+    route();
+  } else {
+    location.hash = `#/${name}`;
+  }
 }
 
 function renderUserBox() {
@@ -27,9 +70,9 @@ function renderUserBox() {
 
 function logout(message = "") {
   api.clearSession();
-  stats.answered = 0;
-  stats.correct = 0;
+  resetStats();
   renderUserBox();
+  setNavVisible(false);
   showLogin("", message);
 }
 
@@ -42,7 +85,7 @@ function showLogin(name = "", error = "") {
         try {
           await api.login(value);
           renderUserBox();
-          showStart();
+          go("session");
         } catch (err) {
           showLogin(value, err.message);
         }
@@ -51,104 +94,15 @@ function showLogin(name = "", error = "") {
   );
 }
 
-function showStart() {
-  show(views.startView({ name: api.getName(), onStart: () => loadNext() }));
-}
-
-function showFailure(error) {
-  if (error.status === 401) {
-    logout("Сессия истекла, войдите снова.");
-    return;
-  }
-  show(views.messageView("Не удалось загрузить задание", error.message, "Повторить", () => loadNext()));
-}
-
-async function loadNext(quiet = false) {
-  if (!quiet) {
-    show(views.loadingView("Готовим задание…"));
-  }
-  try {
-    const data = await api.nextTask();
-    if (data.task) {
-      showTask(data.task, data.remaining);
-    } else {
-      const checkedAt = quiet ? new Date().toLocaleTimeString("ru-RU") : "";
-      show(views.doneView({ ...stats, info: data, checkedAt, onRefresh: () => loadNext(true) }));
-    }
-  } catch (error) {
-    showFailure(error);
-  }
-}
-
-const draftKey = (task) => `vt_draft_${task.card_id}_${task.task_type}`;
-
-function readDraft(task) {
-  try {
-    return localStorage.getItem(draftKey(task)) || "";
-  } catch {
-    return "";
-  }
-}
-
-function writeDraft(task, text) {
-  try {
-    if (text) {
-      localStorage.setItem(draftKey(task), text);
-    } else {
-      localStorage.removeItem(draftKey(task));
-    }
-  } catch {
-    // без localStorage ответ сохраняется только пока открыта страница
-  }
-}
-
-function showTask(task, remaining) {
-  const view = views.taskView(task, remaining, {
-    draft: readDraft(task),
-    onDraft: (text) => writeDraft(task, text),
-    onSubmit: (answer) => submit(task, view, answer),
-  });
-  show(view.node);
-}
-
-async function submit(task, view, answer) {
-  view.setBusy(true);
-  try {
-    const result = await api.answer({
-      card_id: task.card_id,
-      task_type: task.task_type,
-      answer,
-      task_id: task.task_id ?? null,
-      context: task.context ?? null,
-    });
-    writeDraft(task, "");
-    stats.answered += 1;
-    if (result.correct) {
-      stats.correct += 1;
-    }
-    const feedback = views.feedbackView(result, answer, { onNext: () => loadNext() });
-    show(feedback.node);
-    feedback.focus();
-  } catch (error) {
-    view.setBusy(false);
-    if (error.status === 401) {
-      logout("Сессия истекла, войдите снова.");
-    } else if (error.status === 503) {
-      view.showError("Не удалось проверить ответ, он не записан. Ваш текст сохранен, нажмите «Ответить» еще раз.");
-    } else if (error.status === 0) {
-      view.showError("Нет соединения. Ваш ответ сохранен, попробуйте еще раз.");
-    } else {
-      view.showError(error.message);
-    }
-  }
-}
-
 async function init() {
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("/sw.js").catch(() => {});
   }
+  setLogoutHandler(logout);
+  window.addEventListener("hashchange", route);
   renderUserBox();
   if (!api.getToken()) {
+    setNavVisible(false);
     showLogin();
     return;
   }
@@ -160,7 +114,7 @@ async function init() {
       return;
     }
   }
-  showStart();
+  route();
 }
 
 init();

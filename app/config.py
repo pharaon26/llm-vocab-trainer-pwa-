@@ -80,3 +80,11 @@ class ClassificationConfig:
 
 
 classification_config = ClassificationConfig()
+
+
+@dataclass(frozen=True)
+class LearningConfig:
+    learned_interval_days: float = 21
+
+
+learning_config = LearningConfig()
