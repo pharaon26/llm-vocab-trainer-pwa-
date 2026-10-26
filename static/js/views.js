@@ -195,19 +195,39 @@ export function feedbackView(result, userAnswer, { onNext }) {
   return { node, focus: () => next.focus() };
 }
 
-export function doneView({ answered, correct, onRefresh }) {
-  if (answered === 0) {
-    return messageView(
-      "На сегодня заданий нет",
-      "Возможно, преподаватель еще не проверил карточки. Загляните позже.",
-      "Проверить снова",
-      onRefresh,
+function describeDate(isoDate) {
+  const date = new Date(`${isoDate}T00:00:00`);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const days = Math.round((date - today) / 86400000);
+  if (days === 1) {
+    return "завтра";
+  }
+  return date.toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
+}
+
+export function doneView({ answered, correct, info, checkedAt, onRefresh }) {
+  const noCards = answered === 0 && !info.next_review_date && info.unseen_cards === 0;
+  if (noCards) {
+    return el(
+      "section",
+      { className: "card" },
+      el("h2", {}, "Заданий пока нет"),
+      el("p", {}, "Возможно, преподаватель еще не проверил карточки. Загляните позже."),
+      checkedAt && el("p", { className: "meta" }, `Проверено в ${checkedAt}: новых заданий нет.`),
+      el("button", { type: "button", className: "primary", onclick: onRefresh }, "Проверить снова"),
     );
   }
-  return messageView(
-    "Сессия завершена",
-    `Верных ответов: ${correct} из ${answered}. Возвращайтесь завтра.`,
-    "Проверить снова",
-    onRefresh,
+  return el(
+    "section",
+    { className: "card" },
+    el("h2", {}, "На сегодня всё"),
+    answered > 0 && el("p", {}, `Верных ответов в этой сессии: ${correct} из ${answered}.`),
+    info.next_review_date && el("p", {}, `Следующее повторение: ${describeDate(info.next_review_date)}.`),
+    info.unseen_cards > 0 &&
+      el("p", {}, `Новые термины открываются по ${info.new_cards_per_day} в день, осталось новых: ${info.unseen_cards}.`),
+    el("p", { className: "meta" }, "Задания на сегодня выполнены, возвращайтесь по расписанию."),
+    checkedAt && el("p", { className: "meta" }, `Проверено в ${checkedAt}: новых заданий нет.`),
+    el("button", { type: "button", className: "secondary", onclick: onRefresh }, "Проверить снова"),
   );
 }

@@ -52,7 +52,7 @@ function showLogin(name = "", error = "") {
 }
 
 function showStart() {
-  show(views.startView({ name: api.getName(), onStart: loadNext }));
+  show(views.startView({ name: api.getName(), onStart: () => loadNext() }));
 }
 
 function showFailure(error) {
@@ -60,17 +60,20 @@ function showFailure(error) {
     logout("Сессия истекла, войдите снова.");
     return;
   }
-  show(views.messageView("Не удалось загрузить задание", error.message, "Повторить", loadNext));
+  show(views.messageView("Не удалось загрузить задание", error.message, "Повторить", () => loadNext()));
 }
 
-async function loadNext() {
-  show(views.loadingView("Готовим задание…"));
+async function loadNext(quiet = false) {
+  if (!quiet) {
+    show(views.loadingView("Готовим задание…"));
+  }
   try {
-    const { task, remaining } = await api.nextTask();
-    if (task) {
-      showTask(task, remaining);
+    const data = await api.nextTask();
+    if (data.task) {
+      showTask(data.task, data.remaining);
     } else {
-      show(views.doneView({ ...stats, onRefresh: loadNext }));
+      const checkedAt = quiet ? new Date().toLocaleTimeString("ru-RU") : "";
+      show(views.doneView({ ...stats, info: data, checkedAt, onRefresh: () => loadNext(true) }));
     }
   } catch (error) {
     showFailure(error);
@@ -123,7 +126,7 @@ async function submit(task, view, answer) {
     if (result.correct) {
       stats.correct += 1;
     }
-    const feedback = views.feedbackView(result, answer, { onNext: loadNext });
+    const feedback = views.feedbackView(result, answer, { onNext: () => loadNext() });
     show(feedback.node);
     feedback.focus();
   } catch (error) {

@@ -2,7 +2,7 @@ import random
 from dataclasses import dataclass
 from datetime import date
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.config import SchedulerConfig, classification_config, scheduler_config
@@ -119,6 +119,19 @@ def next_task(
         task_type = TaskType.WRITE_TERM
     others = list(db.scalars(select(Card).where(Card.id != item.card.id)))
     return get_task(db, provider, item.card, task_type, others, rng), len(queue)
+
+
+def idle_info(db: Session, user: User, today: date) -> tuple[date | None, int]:
+    next_review = db.scalar(
+        select(func.min(CardProgress.due_date))
+        .join(Card, Card.id == CardProgress.card_id)
+        .where(CardProgress.user_id == user.id, Card.verified.is_(True), CardProgress.due_date > today)
+    )
+    known = select(CardProgress.card_id).where(CardProgress.user_id == user.id)
+    unseen = db.scalar(
+        select(func.count()).select_from(Card).where(Card.verified.is_(True), Card.id.not_in(known))
+    )
+    return next_review, unseen
 
 
 def _update_progress(

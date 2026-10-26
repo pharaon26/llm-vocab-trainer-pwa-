@@ -51,14 +51,20 @@ def test_session_requires_login(client):
 
 def test_unverified_cards_are_not_offered(client, db, student_headers):
     load_cards(db)
-    assert next_task(client, student_headers) == {"task": None, "remaining": 0}
+    idle = next_task(client, student_headers)
+    assert (idle["task"], idle["remaining"]) == (None, 0)
+    assert (idle["next_review_date"], idle["unseen_cards"]) == (None, 0)
 
 
 def test_five_new_cards_per_day(client, db, student_headers, verified_cards):
     assert next_task(client, student_headers)["remaining"] == 5
     for _ in range(5):
         answer(client, student_headers, db, next_task(client, student_headers)["task"])
-    assert next_task(client, student_headers) == {"task": None, "remaining": 0}
+    idle = next_task(client, student_headers)
+    assert idle["task"] is None and idle["remaining"] == 0
+    assert idle["next_review_date"] == "2026-01-02"
+    assert idle["unseen_cards"] == 19
+    assert idle["new_cards_per_day"] == 5
 
 
 def test_correct_answer_shows_reference_card(client, db, student_headers, verified_cards):
@@ -357,6 +363,6 @@ def test_failed_retry_is_not_repeated_again_in_session(client, db, student_heade
 
     result = answer(client, student_headers, db, retry["task"], correct=False)
     assert result["retry_in_session"] is True
-    assert next_task(client, student_headers) == {"task": None, "remaining": 0}
+    assert next_task(client, student_headers)["task"] is None
     progress = db.query(CardProgress).filter_by(card_id=first["card_id"]).one()
     assert progress.pending_interval == 1

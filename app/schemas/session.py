@@ -1,3 +1,5 @@
+from datetime import date
+
 from pydantic import BaseModel, Field
 
 from app.enums import ErrorType, TaskType
@@ -17,6 +19,9 @@ class TaskOut(BaseModel):
 class NextOut(BaseModel):
     task: TaskOut | None
     remaining: int
+    next_review_date: date | None = None
+    unseen_cards: int = 0
+    new_cards_per_day: int | None = None
 
 
 class AnswerIn(BaseModel):

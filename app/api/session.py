@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.api.deps import current_user
+from app.config import scheduler_config
 from app.db import get_db
 from app.llm.base import LLMError, LLMProvider
 from app.llm.factory import get_provider
@@ -41,7 +42,13 @@ def next_task(
     provider: LLMProvider | None = Depends(get_llm_provider),
 ):
     task, remaining = session_service.next_task(db, user, today, provider)
-    return NextOut(task=task, remaining=remaining)
+    if task is not None:
+        return NextOut(task=task, remaining=remaining)
+    next_review, unseen = session_service.idle_info(db, user, today)
+    return NextOut(
+        task=None, remaining=0, next_review_date=next_review, unseen_cards=unseen,
+        new_cards_per_day=scheduler_config.new_cards_per_day,
+    )
 
 
 @router.post("/answer", response_model=AnswerOut)
