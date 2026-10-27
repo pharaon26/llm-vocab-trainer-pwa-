@@ -102,7 +102,7 @@ def test_js_imports_resolve_and_shell_modules_are_precached():
         text = module.read_text(encoding="utf-8")
         if module.parent == STATIC / "js":
             assert f'"/js/{module.name}"' in source, module.name
-            assert "teacher" not in " ".join(re.findall(r'from "([^"]+)"', text)), module.name
+            assert "teacher/" not in " ".join(re.findall(r'from "([^"]+)"', text)), module.name
         for imported in re.findall(r'from "(\.{1,2}/[^"]+)"', text):
             assert (module.parent / imported).resolve().is_file(), f"{module.name}: {imported}"
 

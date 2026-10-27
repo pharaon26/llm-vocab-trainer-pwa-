@@ -2,6 +2,7 @@ import * as api from "./api.js";
 import { clear, el, svg } from "./dom.js";
 import { showHistory, showProgress, showSettings, showStats } from "./pages.js";
 import { resetStats, showStart } from "./session.js";
+import { showTeachers } from "./teachers.js";
 import { setLogoutHandler, show } from "./ui.js";
 import * as views from "./views.js";
 import { showDictionary } from "./words.js";
@@ -14,6 +15,7 @@ const NAV = [
   ["progress", "Прогресс", "M5 20v-6 M12 20V8 M19 20V4", showProgress],
   ["dictionary", "Словарь", "M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z M5 17a3 3 0 0 1 3-3h11", showDictionary],
   ["history", "История", "M12 3a9 9 0 1 0 0 18a9 9 0 0 0 0-18z M12 7v5l3 2", showHistory],
+  ["teachers", "Преподаватели", "M12 4a4 4 0 1 0 0 8a4 4 0 0 0 0-8z M4 20a8 8 0 0 1 16 0", showTeachers],
   ["stats", "Статистика", "M12 3a9 9 0 1 0 0 18a9 9 0 0 0 0-18z M12 3v9h9", showStats],
 ];
 

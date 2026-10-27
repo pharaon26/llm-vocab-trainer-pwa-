@@ -1,5 +1,6 @@
 import { createApi } from "../api.js";
 import { clear, el } from "../dom.js";
+import * as studentViews from "./students-views.js";
 import * as views from "./views.js";
 
 const api = createApi();
@@ -7,8 +8,16 @@ const ROLES = ["teacher", "admin"];
 const root = document.getElementById("app");
 const userBox = document.getElementById("user-box");
 
-const state = { tab: "cards", cardFilter: "all", bankFilter: "all", minAnswers: 3, personalOwner: "" };
+const state = { tab: "cards", groupId: null, cardFilter: "all", bankFilter: "all", minAnswers: 3, personalOwner: "" };
 let content = null;
+let role = "admin";
+
+const scope = () => (role === "admin" ? "/admin" : "/teacher");
+
+function enter(me) {
+  role = me.role;
+  state.tab = role === "admin" ? "cards" : "students";
+}
 
 function showPage(node) {
   clear(root);
@@ -53,6 +62,7 @@ function showLogin(name = "", error = "") {
             showLogin(value, "Этот кабинет только для преподавателей. Студентам - главная страница приложения.");
             return;
           }
+          enter(me);
           renderUserBox();
           showShell();
         } catch (err) {
@@ -68,11 +78,15 @@ function showShell() {
   content = el("div", {});
   const renderTabs = () => {
     tabs.replaceChildren(
-      views.tabsView(state.tab, (id) => {
-        state.tab = id;
-        renderTabs();
-        openTab();
-      }),
+      views.tabsView(
+        state.tab,
+        (id) => {
+          state.tab = id;
+          renderTabs();
+          openTab();
+        },
+        role === "admin" ? views.ADMIN_TABS : views.TEACHER_TABS,
+      ),
     );
   };
   renderTabs();
@@ -98,6 +112,9 @@ async function guarded(action) {
 }
 
 function openTab() {
+  if (state.tab === "students") {
+    return guarded(() => showStudents());
+  }
   if (state.tab === "cards") {
     return guarded(showCards);
   }
@@ -114,16 +131,16 @@ function openTab() {
 }
 
 async function showCards() {
-  const query = state.cardFilter === "all" ? "" : `?verified=${state.cardFilter}`;
-  const cards = await api.request(`/admin/cards${query}`);
+  const query = role === "admin" && state.cardFilter !== "all" ? `?verified=${state.cardFilter}` : "";
+  const cards = await api.request(`${scope()}/cards${query}`);
   show(
     views.cardsView({
       cards,
       filter: state.cardFilter,
-      onFilter: (value) => {
+      onFilter: role === "admin" ? (value) => {
         state.cardFilter = value;
         guarded(showCards);
-      },
+      } : null,
       onNew: () => guarded(() => showCardForm(null)),
       onEdit: (card) => guarded(() => showCardForm(card)),
       onVerify: (card) => guarded(async () => {
@@ -134,7 +151,7 @@ async function showCards() {
         const text = `Удалить карточку «${card.term}»? Вместе с ней удалятся прогресс студентов, история ответов и задания из банка.`;
         if (window.confirm(text)) {
           guarded(async () => {
-            await api.request(`/admin/cards/${card.id}`, { method: "DELETE" });
+            await api.request(`${scope()}/cards/${card.id}`, { method: "DELETE" });
             await showCards();
           });
         }
@@ -154,9 +171,9 @@ async function showCardForm(card, error = "", draft = card) {
       onSave: async (data) => {
         try {
           if (card) {
-            await api.request(`/admin/cards/${card.id}`, { method: "PUT", body: data });
+            await api.request(`${scope()}/cards/${card.id}`, { method: "PUT", body: data });
           } else {
-            await api.request("/admin/cards", { method: "POST", body: data });
+            await api.request(`${scope()}/cards`, { method: "POST", body: data });
           }
           await showCards();
         } catch (err) {
@@ -191,10 +208,18 @@ async function showBank() {
 }
 
 async function showAnalytics() {
-  const data = await api.request(`/admin/analytics?min_answers=${state.minAnswers}`);
+  const group = role === "teacher" && state.groupId ? `&group_id=${state.groupId}` : "";
+  const data = await api.request(`${scope()}/analytics?min_answers=${state.minAnswers}${group}`);
+  const groups = role === "teacher" ? await api.request("/teacher/groups") : [];
   show(
     views.analyticsView({
       data,
+      groupFilter: role === "teacher"
+        ? studentViews.groupFilterView(groups, state.groupId, (id) => {
+            state.groupId = id;
+            guarded(showAnalytics);
+          })
+        : null,
       minAnswers: state.minAnswers,
       onMinAnswers: (value) => {
         state.minAnswers = value;
@@ -205,18 +230,18 @@ async function showAnalytics() {
 }
 
 async function init() {
+  let me = null;
   try {
-    const me = await api.me();
-    if (!ROLES.includes(me.role)) {
-      logout();
-      return;
-    }
+    me = await api.me();
   } catch (error) {
-    if (error.status === 401) {
-      showLogin();
-      return;
-    }
+    showLogin("", error.status === 401 ? "" : error.message);
+    return;
   }
+  if (!ROLES.includes(me.role)) {
+    logout();
+    return;
+  }
+  enter(me);
   renderUserBox();
   showShell();
 }
@@ -224,7 +249,7 @@ async function init() {
 init();
 
 async function showDecks(notice = "", error = "") {
-  const [decks, domains] = await Promise.all([api.request("/admin/decks"), api.request("/domains")]);
+  const [decks, domains] = await Promise.all([api.request(`${scope()}/decks`), api.request("/domains")]);
   show(
     views.decksView({
       decks,
@@ -234,15 +259,16 @@ async function showDecks(notice = "", error = "") {
       onNew: () => guarded(() => showDeckForm(null)),
       onEdit: (deck) => guarded(() => showDeckForm(deck)),
       onCards: (deck) => guarded(() => showDeckCards(deck)),
+      onGroups: role === "teacher" ? (deck) => guarded(() => showDeckGroups(deck)) : null,
       onDelete: (deck) => {
         if (window.confirm(`Удалить набор «${deck.name}»? Карточки останутся, но выбор этого набора у студентов пропадет.`)) {
           guarded(async () => {
-            await api.request(`/admin/decks/${deck.id}`, { method: "DELETE" });
+            await api.request(`${scope()}/decks/${deck.id}`, { method: "DELETE" });
             await showDecks("Набор удален.");
           });
         }
       },
-      onNewDomain: (name) => guarded(async () => {
+      onNewDomain: role !== "admin" ? null : (name) => guarded(async () => {
         if (!name) {
           return showDecks("", "Введите название области.");
         }
@@ -271,9 +297,9 @@ async function showDeckForm(deck, error = "", draft = deck) {
       onSave: async (data) => {
         try {
           if (deck) {
-            await api.request(`/admin/decks/${deck.id}`, { method: "PUT", body: data });
+            await api.request(`${scope()}/decks/${deck.id}`, { method: "PUT", body: data });
           } else {
-            await api.request("/admin/decks", { method: "POST", body: data });
+            await api.request(`${scope()}/decks`, { method: "POST", body: data });
           }
           await showDecks("Набор сохранен.");
         } catch (err) {
@@ -289,14 +315,14 @@ async function showDeckForm(deck, error = "", draft = deck) {
 }
 
 async function showDeckCards(deck) {
-  const cards = await api.request("/admin/cards");
+  const cards = await api.request(`${scope()}/cards`);
   show(
     views.deckCardsView({
       deck,
       cards,
       onBack: () => guarded(() => showDecks()),
       onSave: (ids) => guarded(async () => {
-        await api.request(`/admin/decks/${deck.id}/cards`, { method: "PUT", body: { card_ids: ids } });
+        await api.request(`${scope()}/decks/${deck.id}/cards`, { method: "PUT", body: { card_ids: ids } });
         await showDecks(`Состав набора «${deck.name}» сохранен: ${ids.length}.`);
       }),
     }),
@@ -353,6 +379,92 @@ async function showPersonalCard(card, extra = {}) {
           }
           showPersonalCard(card, { error: err.message });
         }
+      },
+    }),
+  );
+}
+
+async function showDeckGroups(deck) {
+  const groups = await api.request("/teacher/groups");
+  show(
+    studentViews.deckGroupsView({
+      deck,
+      groups,
+      onBack: () => guarded(() => showDecks()),
+      onSave: (ids) => guarded(async () => {
+        await api.request(`/teacher/decks/${deck.id}/groups`, { method: "PUT", body: { group_ids: ids } });
+        await showDecks(`Назначение набора «${deck.name}» сохранено: групп ${ids.length}.`);
+      }),
+    }),
+  );
+}
+
+async function showStudents(notice = "", error = "") {
+  const [data, groups, links] = await Promise.all([
+    api.request("/teacher/students"),
+    api.request("/teacher/groups"),
+    api.request("/teacher/links"),
+  ]);
+  const act = (work, message) => guarded(async () => {
+    try {
+      await work();
+      await showStudents(message, "");
+    } catch (err) {
+      if (err.status === 401 || err.status === 403) {
+        throw err;
+      }
+      await showStudents("", err.message);
+    }
+  });
+  show(
+    studentViews.studentsView({
+      data,
+      groups,
+      links,
+      notice,
+      error,
+      handlers: {
+        onInvite: (name, groupId) => {
+          if (!name) {
+            return showStudents("", "Введите ник студента.");
+          }
+          return act(
+            () => api.request("/teacher/invitations", { method: "POST", body: { name, group_id: groupId } }),
+            "Если такой студент есть, ему отправлено приглашение.",
+          );
+        },
+        onAccept: (request, groupId) => act(
+          () => api.request(`/teacher/requests/${request.id}/accept`, { method: "POST", body: { group_id: groupId } }),
+          `Студент ${request.name} добавлен.`,
+        ),
+        onDecline: (request) => act(() => api.request(`/teacher/requests/${request.id}/decline`, { method: "POST" }), "Заявка отклонена."),
+        onCancel: (invitation) => act(() => api.request(`/teacher/invitations/${invitation.id}`, { method: "DELETE" }), "Приглашение отменено."),
+        onNewGroup: (name) => {
+          if (!name) {
+            return showStudents("", "Введите название группы.");
+          }
+          return act(() => api.request("/teacher/groups", { method: "POST", body: { name } }), `Группа «${name}» создана.`);
+        },
+        onRename: (group) => {
+          const name = window.prompt("Новое название группы", group.name);
+          if (name && name.trim() && name.trim() !== group.name) {
+            act(() => api.request(`/teacher/groups/${group.id}`, { method: "PUT", body: { name: name.trim() } }), "Группа переименована.");
+          }
+        },
+        onDeleteGroup: (group) => {
+          if (window.confirm(`Удалить группу «${group.name}»? Студенты останутся, но будут без группы, а назначенные группе наборы перестанут быть доступны.`)) {
+            act(() => api.request(`/teacher/groups/${group.id}`, { method: "DELETE" }), "Группа удалена.");
+          }
+        },
+        onMove: (student, groupId) => act(
+          () => api.request(`/teacher/students/${encodeURIComponent(student.name)}/group`, { method: "PUT", body: { group_id: groupId } }),
+          `Студент ${student.name} перемещен.`,
+        ),
+        onRemove: (student) => {
+          if (window.confirm(`Убрать студента ${student.name}? Вы перестанете видеть его данные.`)) {
+            act(() => api.request(`/teacher/students/${encodeURIComponent(student.name)}`, { method: "DELETE" }), "Студент убран.");
+          }
+        },
       },
     }),
   );

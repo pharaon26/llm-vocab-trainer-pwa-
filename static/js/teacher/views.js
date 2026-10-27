@@ -46,14 +46,22 @@ export function loginView({ name = "", error = "", onSubmit }) {
   );
 }
 
-export function tabsView(active, onSelect) {
-  const tabs = [
-    ["cards", "Карточки"],
-    ["decks", "Наборы"],
-    ["personal", "Личные карточки"],
-    ["bank", "Банк заданий"],
-    ["analytics", "Аналитика"],
-  ];
+export const ADMIN_TABS = [
+  ["cards", "Карточки"],
+  ["decks", "Наборы"],
+  ["personal", "Личные карточки"],
+  ["bank", "Банк заданий"],
+  ["analytics", "Аналитика"],
+];
+
+export const TEACHER_TABS = [
+  ["students", "Мои студенты"],
+  ["analytics", "Аналитика"],
+  ["cards", "Мои карточки"],
+  ["decks", "Мои наборы"],
+];
+
+export function tabsView(active, onSelect, tabs = ADMIN_TABS) {
   return el(
     "div",
     { className: "tabs", role: "tablist" },
@@ -104,7 +112,7 @@ export function cardsView({ cards, filter, onFilter, onNew, onEdit, onVerify, on
     el(
       "div",
       { className: "toolbar" },
-      filterSelect(filter, [["all", "Все карточки"], ["false", "Не проверены"], ["true", "Проверены"]], onFilter),
+      onFilter && filterSelect(filter, [["all", "Все карточки"], ["false", "Не проверены"], ["true", "Проверены"]], onFilter),
       el("button", { type: "button", className: "primary", onclick: onNew }, "Новая карточка"),
       el("span", { className: "meta" }, `Показано: ${cards.length}`),
     ),
@@ -207,7 +215,7 @@ export function bankView({ entries, filter, onFilter, onToggle }) {
   );
 }
 
-export function analyticsView({ data, minAnswers, onMinAnswers }) {
+export function analyticsView({ data, minAnswers, onMinAnswers, groupFilter = null }) {
   const minInput = el("input", { id: "min-answers", type: "number", min: 1, max: 100, value: minAnswers });
   minInput.addEventListener("change", () => onMinAnswers(Math.max(1, Number(minInput.value) || 1)));
   const sources = { task: "по типу задания", rule: "правилами", llm: "моделью" };
@@ -226,6 +234,7 @@ export function analyticsView({ data, minAnswers, onMinAnswers }) {
   return el(
     "section",
     { className: "card" },
+    groupFilter,
     el(
       "div",
       { className: "summary" },
@@ -251,7 +260,7 @@ export function analyticsView({ data, minAnswers, onMinAnswers }) {
   );
 }
 
-export function decksView({ decks, domains, onNew, onEdit, onDelete, onCards, onNewDomain, notice = "", error = "" }) {
+export function decksView({ decks, domains, onNew, onEdit, onDelete, onCards, onNewDomain, onGroups, notice = "", error = "" }) {
   const domainInput = el("input", { id: "new-domain-name", type: "text", maxlength: 50, placeholder: "Новая область, например Aviation" });
   const rows = decks.map((deck) =>
     el(
@@ -271,6 +280,7 @@ export function decksView({ decks, domains, onNew, onEdit, onDelete, onCards, on
         "div",
         { className: "buttons" },
         el("button", { type: "button", onclick: () => onCards(deck) }, "Состав"),
+        onGroups && el("button", { type: "button", onclick: () => onGroups(deck) }, `Группы (${deck.group_ids.length})`),
         el("button", { type: "button", onclick: () => onEdit(deck) }, "Изменить"),
         el("button", { type: "button", className: "danger", onclick: () => onDelete(deck) }, "Удалить"),
       ),
@@ -285,12 +295,13 @@ export function decksView({ decks, domains, onNew, onEdit, onDelete, onCards, on
     decks.length ? el("ul", { className: "list" }, rows) : el("p", {}, "Наборов нет."),
     el("h3", {}, "Области"),
     el("p", { className: "meta" }, domains.map((item) => item.name).join(", ")),
-    el(
-      "div",
-      { className: "toolbar" },
-      domainInput,
-      el("button", { type: "button", onclick: () => onNewDomain(domainInput.value.trim()) }, "Добавить область"),
-    ),
+    onNewDomain &&
+      el(
+        "div",
+        { className: "toolbar" },
+        domainInput,
+        el("button", { type: "button", onclick: () => onNewDomain(domainInput.value.trim()) }, "Добавить область"),
+      ),
   );
 }
 

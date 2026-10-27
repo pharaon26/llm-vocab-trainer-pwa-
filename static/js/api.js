@@ -104,3 +104,9 @@ export const limits = () => student.request("/me/limits");
 export const extract = (text, domain) => student.request("/me/extract", { method: "POST", body: { text, domain } });
 export const nextTask = () => student.request("/session/next");
 export const answer = (payload) => student.request("/session/answer", { method: "POST", body: payload });
+export const myTeachers = () => student.request("/me/teachers");
+export const requestTeacher = (name) => student.request("/me/teachers/requests", { method: "POST", body: { name } });
+export const answerInvitation = (id, accept) =>
+  student.request(`/me/invitations/${id}/${accept ? "accept" : "decline"}`, { method: "POST" });
+export const cancelRequest = (id) => student.request(`/me/requests/${id}`, { method: "DELETE" });
+export const leaveTeacher = (nickname) => student.request(`/me/teachers/${encodeURIComponent(nickname)}`, { method: "DELETE" });
