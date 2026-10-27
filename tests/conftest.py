@@ -107,7 +107,8 @@ class FreshSession(AsyncSession):
         return await super().execute(statement, params, execution_options=options, **kwargs)
 
     async def get(self, entity, ident, **kwargs):
-        return await super().get(entity, ident, populate_existing=True, **kwargs)
+        kwargs.setdefault("populate_existing", True)
+        return await super().get(entity, ident, **kwargs)
 
 
 @pytest.fixture

@@ -13,7 +13,7 @@ from app.schemas.card import CardRead
 from app.schemas.session import AnswerOut, TaskOut
 from app.services.classification import classify_open_answer
 from app.services.scheduler import ReviewState, next_due_date, review
-from app.services.task_source import get_task
+from app.services.task_source import CardGone, get_task
 from app.services.visibility import new_term_pool, usable
 from app.services.tasks import OPEN_TYPES, correct_answer, evaluate, is_available, task_prompt
 
@@ -126,15 +126,20 @@ async def next_task(
     provider: LLMProvider | None = None,
     rng: random.Random | None = None,
 ) -> tuple[TaskOut | None, int]:
-    queue = await build_queue(db, user, today)
-    if not queue:
-        return None, 0
-    item = queue[0]
-    task_type = item.task_type
-    if task_type in OPEN_TYPES and provider is None:
-        task_type = TaskType.WRITE_TERM
-    others = list(await db.scalars(select(Card).where(Card.id != item.card.id, usable(user))))
-    return await get_task(db, provider, item.card, task_type, others, rng), len(queue)
+    for _ in range(2):
+        queue = await build_queue(db, user, today)
+        if not queue:
+            return None, 0
+        item = queue[0]
+        task_type = item.task_type
+        if task_type in OPEN_TYPES and provider is None:
+            task_type = TaskType.WRITE_TERM
+        others = list(await db.scalars(select(Card).where(Card.id != item.card.id, usable(user))))
+        try:
+            return await get_task(db, provider, item.card, task_type, others, rng), len(queue)
+        except CardGone:
+            continue
+    return None, 0
 
 
 async def _opened_card(db: AsyncSession, user: User, card_id: int) -> Card:
@@ -191,6 +196,18 @@ async def _update_progress(
     progress.last_error_type = error.value if error else None
 
 
+async def _session_card(
+    db: AsyncSession, user: User, card_id: int, today: date, config: SchedulerConfig, practice: bool
+) -> Card:
+    if practice:
+        return await _opened_card(db, user, card_id)
+    queue = await build_queue(db, user, today, config)
+    item = next((i for i in queue if i.card.id == card_id), None)
+    if item is None:
+        raise CardNotInSession
+    return item.card
+
+
 async def submit_answer(
     db: AsyncSession,
     user: User,
@@ -204,14 +221,7 @@ async def submit_answer(
     context: str | None = None,
     practice: bool = False,
 ) -> AnswerOut:
-    if practice:
-        card = await _opened_card(db, user, card_id)
-    else:
-        queue = await build_queue(db, user, today, config)
-        item = next((i for i in queue if i.card.id == card_id), None)
-        if item is None:
-            raise CardNotInSession
-        card = item.card
+    card = await _session_card(db, user, card_id, today, config, practice)
 
     classified_by = "task"
     comment = None
@@ -219,7 +229,9 @@ async def submit_answer(
     if task_type in OPEN_TYPES:
         if task_type == TaskType.COMPOSE_SENTENCE and context not in classification_config.situations:
             raise TaskUnavailable
+        await db.commit()  # соединение возвращается в пул на время вызова модели
         result = await classify_open_answer(provider, card, task_type, answer, context)
+        card = await _session_card(db, user, card_id, today, config, practice)  # за это время карточку могли удалить или ответ уже записан
         error, classified_by, comment = result.error_type, result.source, result.comment
         correct_text = correct_answer(card, task_type)
     elif task_id is not None:
@@ -237,6 +249,7 @@ async def submit_answer(
         if task_type == TaskType.WRITE_TERM:
             classified_by = "rule"
 
+    await db.execute(select(func.pg_advisory_xact_lock(user.id, card.id)))
     already_counted = await db.scalar(
         select(ReviewHistory.id).where(
             ReviewHistory.user_id == user.id,

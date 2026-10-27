@@ -3,6 +3,7 @@ from datetime import date
 
 from pydantic import ValidationError
 from sqlalchemy import and_, delete, func, or_, select
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -98,11 +99,8 @@ async def llm_calls_left(db: AsyncSession, user: User, today: date, config: Draf
 
 
 async def register_llm_call(db: AsyncSession, user: User, today: date) -> None:
-    usage = await db.get(LlmUsage, (user.id, today))
-    if usage is None:
-        db.add(LlmUsage(user_id=user.id, day=today, calls=1))
-    else:
-        usage.calls += 1
+    upsert = insert(LlmUsage).values(user_id=user.id, day=today, calls=1)
+    await db.execute(upsert.on_conflict_do_update(index_elements=["user_id", "day"], set_={"calls": LlmUsage.calls + 1}))
     await db.commit()
 
 
@@ -242,6 +240,7 @@ async def create_draft(
     if " " in term:
         notices.append(NOTICE_PHRASE)
     elif dictionary is not None:
+        await db.commit()  # соединение возвращается в пул на время запроса к словарю
         try:
             entry = await dictionary.lookup(term)
         except DictionaryUnavailable as exc:
@@ -273,6 +272,21 @@ async def create_draft(
             general_definition = _merge(data, sources, suggestion, term)
 
     data["audio_url"] = audio_url
+    # пока шли внешние вызовы, слово могли добавить в карточки или в черновики другим запросом
+    await db.execute(select(func.pg_advisory_xact_lock(user.id, func.hashtext(term.lower()))))
+    duplicate = await find_duplicate(db, user, term)
+    if duplicate is not None:
+        raise DuplicateTerm(duplicate)
+    existing = await db.scalar(
+        select(CardDraft).where(CardDraft.owner_id == user.id, func.lower(CardDraft.term) == term.lower())
+    )
+    if existing is not None:
+        return existing
+    open_drafts = await db.scalar(select(func.count()).select_from(CardDraft).where(CardDraft.owner_id == user.id))
+    if open_drafts >= config.max_open_drafts:
+        raise TooManyDrafts
+    if await db.get(Domain, domain.id) is None:
+        raise UnknownDomain
     draft = CardDraft(
         owner_id=user.id, term=term, domain_ref=domain, data=data, sources=sources,
         general_definition=general_definition, notices=notices,

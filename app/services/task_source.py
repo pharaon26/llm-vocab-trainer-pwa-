@@ -36,6 +36,14 @@ async def generate_validated(
     return None
 
 
+class CardGone(Exception):
+    pass
+
+
+def fingerprint(card: Card) -> tuple:
+    return (card.term, card.definition_en, tuple(card.examples), tuple(card.collocations), card.contrast_term, card.verified)
+
+
 def _from_bank(entry: TaskBank, rng: random.Random) -> TaskOut:
     options = list(entry.options)
     rng.shuffle(options)
@@ -64,10 +72,18 @@ async def get_task(
         else:
             generated = None
             if provider is not None:
+                before = fingerprint(card)
+                await db.commit()  # соединение возвращается в пул на время вызовов модели
                 try:
                     generated = await generate_validated(provider, card, task_type, config)
                 except LLMError as exc:
                     logger.warning("LLM unavailable, using bank: %s", exc)
+                current = await db.get(Card, card.id, populate_existing=True)
+                if current is None:
+                    raise CardGone
+                if generated is not None and fingerprint(current) != before:
+                    logger.info("%s changed while the task was generated, result dropped", card.term)
+                    generated = None
             if generated is not None:
                 entry = await bank.get_or_create(db, card, task_type, generated, provider.name)
             if entry is None:

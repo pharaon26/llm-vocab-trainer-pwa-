@@ -10,7 +10,7 @@ from app.models import Card, CardProgress, User
 from app.schemas.session import TaskOut
 from app.services.session import build_queue
 from app.services.student import error_counts
-from app.services.task_source import get_task
+from app.services.task_source import CardGone, get_task
 from app.services.tasks import OPEN_TYPES
 from app.services.visibility import usable
 
@@ -45,9 +45,15 @@ async def practice_next(
 
     errors = await error_counts(db, user)
     candidates = [card for card in opened if card.id != exclude] or opened
-    weights = [1 + sum(errors.get(card.id, {}).values()) for card in candidates]
-    card = rng.choices(candidates, weights)[0]
-
-    task_type = rng.choice(list(TaskType) if provider is not None else CLOSED_TYPES)
-    others = list(await db.scalars(select(Card).where(Card.id != card.id, usable(user))))
-    return await get_task(db, provider, card, task_type, others, rng)
+    for _ in range(2):
+        weights = [1 + sum(errors.get(card.id, {}).values()) for card in candidates]
+        card = rng.choices(candidates, weights)[0]
+        task_type = rng.choice(list(TaskType) if provider is not None else CLOSED_TYPES)
+        others = list(await db.scalars(select(Card).where(Card.id != card.id, usable(user))))
+        try:
+            return await get_task(db, provider, card, task_type, others, rng)
+        except CardGone:
+            candidates = [c for c in candidates if c.id != card.id]
+            if not candidates:
+                return None
+    return None

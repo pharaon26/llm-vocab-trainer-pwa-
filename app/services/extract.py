@@ -93,7 +93,7 @@ async def extract_terms(
     for _ in range(config.max_retries + 1):
         if await llm_calls_left(db, user, today, config) <= 0:
             raise LimitReached
-        await register_llm_call(db, user, today)
+        await register_llm_call(db, user, today)  # фиксирует транзакцию: соединение свободно на время вызова модели
         try:
             terms = parse_model(await provider.complete(system, prompt), ExtractedTerms).terms
             break
