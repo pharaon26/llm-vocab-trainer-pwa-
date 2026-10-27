@@ -481,6 +481,20 @@ fieldset.decks {
   margin-top: 2px;
 }
 
+.check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 400;
+}
+
+.check input[type="checkbox"] {
+  flex: none;
+  width: 24px;
+  min-height: 24px;
+  margin: 0;
+}
+
 .deck-option .definition {
   display: block;
   color: var(--muted);

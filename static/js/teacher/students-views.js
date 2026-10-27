@@ -139,7 +139,7 @@ export function deckGroupsView({ deck, groups, onSave, onBack }) {
     el("h3", {}, `Набор «${deck.name}»: кому назначить`),
     el("p", { className: "meta" }, "Карточки набора появятся у студентов выбранных групп и будут входить в их новые термины."),
     groups.length
-      ? el("ul", { className: "list" }, groups.map((group, index) => el("li", {}, el("label", { for: `group-${group.id}` }, boxes[index], ` ${group.name} (студентов: ${group.students})`))))
+      ? el("ul", { className: "list" }, groups.map((group, index) => el("li", {}, el("label", { className: "check", for: `group-${group.id}` }, boxes[index], ` ${group.name} (студентов: ${group.students})`))))
       : el("p", {}, "Сначала создайте группы в разделе «Мои студенты»."),
     el(
       "div",
