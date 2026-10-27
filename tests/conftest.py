@@ -81,6 +81,11 @@ def audio_domains(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def secure_cookies(monkeypatch):
+    monkeypatch.setattr(settings, "cookie_secure", True)
+
+
+@pytest.fixture(autouse=True)
 def allowed_origins(monkeypatch):
     monkeypatch.setattr(settings, "allowed_origins", ["http://test", "https://test"])
 
