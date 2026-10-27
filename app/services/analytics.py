@@ -10,10 +10,15 @@ def _ratio(part: int, whole: int) -> float:
     return round(part / whole, 3) if whole else 0.0
 
 
-async def build_analytics(db: AsyncSession, min_answers: int = 3, limit: int = 10) -> AnalyticsOut:
+async def build_analytics(
+    db: AsyncSession, min_answers: int = 3, limit: int = 10, users=None, cards=None
+) -> AnalyticsOut:
+    card_scope = cards if cards is not None else Card.owner_id.is_(None)
+    user_scope = (users,) if users is not None else ()
     scope = (
         User.role == Role.STUDENT.value,
-        Card.owner_id.is_(None),
+        card_scope,
+        *user_scope,
         ReviewHistory.is_retry.is_(False),
         ReviewHistory.is_practice.is_(False),
     )
@@ -71,7 +76,7 @@ async def build_analytics(db: AsyncSession, min_answers: int = 3, limit: int = 1
         .select_from(ReviewHistory)
         .join(User, User.id == ReviewHistory.user_id)
         .join(Card, Card.id == ReviewHistory.card_id)
-        .where(User.role == Role.STUDENT.value, Card.owner_id.is_(None), ReviewHistory.is_practice.is_(True))
+        .where(User.role == Role.STUDENT.value, card_scope, *user_scope, ReviewHistory.is_practice.is_(True))
     )
 
     return AnalyticsOut(

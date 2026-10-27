@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,7 +17,11 @@ from app.schemas.links import (
     SentOut,
     TeacherLinksOut,
 )
+from app.schemas.teacher import AnalyticsOut
+from app.schemas.teacher_students import StudentsOut
 from app.services import links
+from app.services.analytics import build_analytics
+from app.services.teacher_students import build_students, linked_students, teacher_card_scope
 
 router = APIRouter(prefix="/teacher", tags=["teacher"])
 
@@ -145,3 +149,23 @@ async def move_student(nickname: str, data: MoveIn, teacher: User = Depends(requ
     except links.NotFound:
         raise HTTPException(404, "Student or group not found")
     return Response(status_code=204)
+
+
+@router.get("/students", response_model=StudentsOut)
+async def students(teacher: User = Depends(require_teacher), db: AsyncSession = Depends(get_db)):
+    return await build_students(db, teacher)
+
+
+@router.get("/analytics", response_model=AnalyticsOut)
+async def analytics(
+    group_id: int | None = None,
+    min_answers: int = Query(3, ge=1),
+    limit: int = Query(10, ge=1, le=50),
+    teacher: User = Depends(require_teacher),
+    db: AsyncSession = Depends(get_db),
+):
+    if group_id is not None:
+        await get_group_or_404(db, teacher, group_id)
+    return await build_analytics(
+        db, min_answers, limit, users=linked_students(teacher, group_id), cards=teacher_card_scope(teacher)
+    )
