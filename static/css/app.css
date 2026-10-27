@@ -33,6 +33,11 @@ a {
   outline-offset: 2px;
 }
 
+[tabindex="-1"]:focus,
+[tabindex="-1"]:focus-visible {
+  outline: none;
+}
+
 /* Макет */
 
 .topbar {

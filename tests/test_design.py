@@ -124,3 +124,9 @@ def test_motion_respects_reduced_motion_preference():
     css = (STATIC / "css/app.css").read_text(encoding="utf-8")
     assert "prefers-reduced-motion: reduce" in css
     assert re.search(r"prefers-reduced-motion: reduce\)\s*\{\s*\*,[^}]*animation: none !important", css, re.S)
+
+
+def test_headings_focused_by_script_have_no_focus_ring():
+    css = (STATIC / "css/app.css").read_text(encoding="utf-8")
+    assert re.search(r'\[tabindex="-1"\]:focus-visible\s*\{\s*outline: none;', css)
+    assert css.index(':focus-visible {') < css.index('[tabindex="-1"]:focus-visible')
