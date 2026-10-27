@@ -47,7 +47,7 @@ function setNavVisible(visible) {
 }
 
 function route() {
-  if (!api.getToken()) {
+  if (!api.getName()) {
     return;
   }
   const name = currentRoute();

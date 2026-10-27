@@ -118,3 +118,9 @@ def test_scripts_do_not_use_eval_or_inline_style_attributes():
         code = path.read_text(encoding="utf-8")
         assert not re.search(r"\beval\s*\(|new\s+Function\s*\(|setTimeout\(\s*[\"'`]|setInterval\(\s*[\"'`]", code), path
         assert not re.search(r"setAttribute\(\s*[\"']style[\"']|\bstyle\s*:\s|cssText|insertAdjacentHTML", code), path
+
+
+def test_frontend_has_no_leftovers_of_token_handling():
+    for path in [*(STATIC / "js").rglob("*.js"), STATIC / "sw.js"]:
+        code = path.read_text(encoding="utf-8")
+        assert not re.search(r"getToken|clearSession|Authorization|Bearer|vt_token|_token", code), path
