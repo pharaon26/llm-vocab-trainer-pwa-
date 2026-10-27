@@ -24,7 +24,7 @@ export function messageView(title, text, buttonText, onClick) {
   );
 }
 
-export function loginView({ name = "", error = "", onSubmit, onRegister }) {
+function nameInput(name) {
   const input = el("input", {
     id: "name",
     type: "text",
@@ -34,37 +34,72 @@ export function loginView({ name = "", error = "", onSubmit, onRegister }) {
     placeholder: "Например, Анна",
   });
   input.value = name;
-  const password = el("input", {
-    id: "password",
+  return input;
+}
+
+function passwordInput(id, autocomplete) {
+  return el("input", {
+    id,
     type: "password",
     minlength: 8,
     maxlength: 128,
     required: true,
-    autocomplete: "current-password",
+    autocomplete,
   });
-  const submit = (handler) => {
-    if (input.reportValidity() && password.reportValidity()) {
-      handler(input.value.trim(), password.value);
-    }
-  };
+}
+
+export function loginView({ name = "", error = "", onSubmit, onShowRegister }) {
+  const input = nameInput(name);
+  const password = passwordInput("password", "current-password");
   return el(
     "form",
     {
       className: "card",
       onsubmit: (event) => {
         event.preventDefault();
-        submit(onSubmit);
+        onSubmit(input.value.trim(), password.value);
       },
     },
     el("h2", {}, "Вход"),
     el("label", { for: "name" }, "Ваше имя"),
     input,
-    el("label", { for: "password" }, "Пароль (не короче 8 символов)"),
+    el("label", { for: "password" }, "Пароль"),
     password,
     error && el("p", { className: "banner error", role: "alert" }, error),
     el("button", { type: "submit", className: "primary" }, "Войти"),
-    " ",
-    el("button", { type: "button", onclick: () => submit(onRegister) }, "Зарегистрироваться"),
+    el("p", {}, "Нет аккаунта? ", el("button", { type: "button", className: "link", onclick: () => onShowRegister(input.value.trim()) }, "Создать аккаунт")),
+  );
+}
+
+export function registerView({ name = "", error = "", onSubmit, onShowLogin }) {
+  const input = nameInput(name);
+  const password = passwordInput("password", "new-password");
+  const confirm = passwordInput("password-confirm", "new-password");
+  const checkMatch = () => confirm.setCustomValidity(confirm.value === password.value ? "" : "Пароли не совпадают");
+  password.addEventListener("input", checkMatch);
+  confirm.addEventListener("input", checkMatch);
+  return el(
+    "form",
+    {
+      className: "card",
+      onsubmit: (event) => {
+        event.preventDefault();
+        checkMatch();
+        if (confirm.reportValidity()) {
+          onSubmit(input.value.trim(), password.value, confirm.value);
+        }
+      },
+    },
+    el("h2", {}, "Регистрация"),
+    el("label", { for: "name" }, "Ваше имя"),
+    input,
+    el("label", { for: "password" }, "Пароль (не короче 8 символов)"),
+    password,
+    el("label", { for: "password-confirm" }, "Повторите пароль"),
+    confirm,
+    error && el("p", { className: "banner error", role: "alert" }, error),
+    el("button", { type: "submit", className: "primary" }, "Зарегистрироваться"),
+    el("p", {}, "Уже есть аккаунт? ", el("button", { type: "button", className: "link", onclick: () => onShowLogin(input.value.trim()) }, "Войти")),
   );
 }
 

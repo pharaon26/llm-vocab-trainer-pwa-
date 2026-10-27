@@ -6,7 +6,7 @@ from app.config import BASE_DIR, settings
 from app.web_security import content_security_policy, origin_of, request_origin_allowed
 from tests.conftest import STUDENT_PASSWORD
 
-CREDENTIALS = {"name": "Anna", "password": STUDENT_PASSWORD}
+CREDENTIALS = {"name": "Anna", "password": STUDENT_PASSWORD, "password_confirm": STUDENT_PASSWORD}
 STATIC = BASE_DIR / "static"
 
 
@@ -42,7 +42,7 @@ async def test_foreign_origin_cannot_use_a_valid_session(client, student_headers
 
 async def test_allowed_origin_passes(plain):
     for origin in ("http://test", "HTTP://TEST", "https://test"):
-        response = await plain.post("/auth/register", json={"name": f"u-{len(origin)}-{origin[0]}", "password": STUDENT_PASSWORD}, headers={"Origin": origin})
+        response = await plain.post("/auth/register", json={"name": f"u-{len(origin)}-{origin[0]}", "password": STUDENT_PASSWORD, "password_confirm": STUDENT_PASSWORD}, headers={"Origin": origin})
         assert response.status_code == 201
 
 

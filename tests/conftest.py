@@ -179,7 +179,7 @@ async def login(client, **body):
     else:
         body.setdefault("password", STUDENT_PASSWORD)
         response = await client.post(
-            "/auth/register", json={"name": body["name"], "password": body["password"]}, headers=anonymous
+            "/auth/register", json={"name": body["name"], "password": body["password"], "password_confirm": body["password"]}, headers=anonymous
         )
         if response.status_code == 409:
             response = await client.post("/auth/login", json=body, headers=anonymous)

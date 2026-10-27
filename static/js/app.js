@@ -86,13 +86,13 @@ function logout(message = "") {
   showLogin("", message);
 }
 
-async function authenticate(name, action) {
+async function authenticate(name, action, showForm) {
   try {
     await action();
     renderUserBox();
     go("session");
   } catch (err) {
-    showLogin(name, err.message);
+    showForm(name, err.message);
   }
 }
 
@@ -101,8 +101,20 @@ function showLogin(name = "", error = "") {
     views.loginView({
       name,
       error,
-      onSubmit: (value, password) => authenticate(value, () => api.login(value, { password })),
-      onRegister: (value, password) => authenticate(value, () => api.register(value, password)),
+      onSubmit: (value, password) => authenticate(value, () => api.login(value, { password }), showLogin),
+      onShowRegister: (value) => showRegister(value),
+    }),
+  );
+}
+
+function showRegister(name = "", error = "") {
+  show(
+    views.registerView({
+      name,
+      error,
+      onSubmit: (value, password, confirm) =>
+        authenticate(value, () => api.register(value, password, confirm), showRegister),
+      onShowLogin: (value) => showLogin(value),
     }),
   );
 }

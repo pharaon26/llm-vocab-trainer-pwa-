@@ -19,7 +19,7 @@ def cookie(value):
 
 
 async def register(client, name="Anna", password=PASSWORD, **kwargs):
-    return await client.post("/auth/register", json={"name": name, "password": password}, **kwargs)
+    return await client.post("/auth/register", json={"name": name, "password": password, "password_confirm": password}, **kwargs)
 
 
 async def attempt(client, name="Anna", password="wrong-password", **extra):
@@ -144,7 +144,7 @@ async def test_login_as_another_user_drops_the_previous_session(client):
 
 async def test_a_session_id_chosen_by_the_attacker_is_never_adopted(client):
     response = await client.post(
-        "/auth/register", json={"name": "Victim", "password": PASSWORD}, headers=cookie("attacker-known-value")
+        "/auth/register", json={"name": "Victim", "password": PASSWORD, "password_confirm": PASSWORD}, headers=cookie("attacker-known-value")
     )
     assert session_cookie_of(response) != "attacker-known-value"
     assert (await client.get("/auth/me", headers=cookie("attacker-known-value"))).status_code == 401
@@ -168,6 +168,14 @@ async def test_password_is_validated_and_stored_as_a_hash(client, db):
     assert (await register(client, "Anna", "пароль-на-русском")).status_code == 201
     stored = await db.scalar(select(User.password_hash).where(User.name == "Anna"))
     assert stored.startswith("$argon2") and "пароль" not in stored
+
+
+async def test_password_must_be_repeated_identically(client):
+    body = {"name": "Anna", "password": PASSWORD}
+    assert (await client.post("/auth/register", json=body)).status_code == 422
+    assert (await client.post("/auth/register", json={**body, "password_confirm": PASSWORD + "x"})).status_code == 422
+    assert (await client.post("/auth/register", json={**body, "password_confirm": ""})).status_code == 422
+    assert (await client.post("/auth/register", json={**body, "password_confirm": PASSWORD})).status_code == 201
 
 
 async def test_name_is_taken(client):
