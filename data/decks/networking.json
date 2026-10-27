@@ -102,7 +102,7 @@
    "collocations": [
     "default gateway",
     "gateway address",
-    "payment gateway"
+    "internet gateway"
    ],
    "examples": [
     "If the default gateway is wrong, the computer cannot reach the internet.",
@@ -505,7 +505,7 @@
     "A VLAN tag marks to which virtual network a frame belongs."
    ],
    "common_mistakes": [
-    "Assuming that two VLANs are separated without any other settings: they still need rules.",
+    "Treating VLANs alone as a security boundary: if a router connects them, traffic between VLANs still needs filtering rules.",
     "Mixing it up with a VPN, which protects traffic between distant networks."
    ],
    "contrast_term": "VPN",

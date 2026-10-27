@@ -307,7 +307,7 @@
     "A fair on-call rotation shares the duty between all team members."
    ],
    "common_mistakes": [
-    "Writing 'on call' as one word or with a hyphen inconsistently: the noun and adjective use a hyphen, 'on call' is the phrase.",
+    "Mixing up 'on-call' before a noun (an on-call engineer) and 'on call' after a verb (she is on call this week).",
     "Expecting one person to be on call all the time."
    ],
    "contrast_term": null,
@@ -515,7 +515,7 @@
    "term": "availability zone",
    "transcription": "/əˌveɪləˈbɪləti zoʊn/",
    "part_of_speech": "noun phrase",
-   "definition_en": "A separate data centre location inside a cloud region, with its own power and network, used to survive local failures.",
+   "definition_en": "A separate data center location inside a cloud region, with its own power and network, used to survive local failures.",
    "translation_ru": "зона доступности",
    "collocations": [
     "multiple availability zones",

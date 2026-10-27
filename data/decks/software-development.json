@@ -550,7 +550,7 @@
    ],
    "common_mistakes": [
     "Mocking everything, so the test no longer checks real behavior.",
-    "Using 'mock' as a verb for a real service: it is the fake that is called a mock."
+    "Confusing a mock with a stub: a stub only returns prepared answers, a mock also checks how it was called."
    ],
    "contrast_term": null,
    "domain": "IT"

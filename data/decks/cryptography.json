@@ -271,7 +271,7 @@
   },
   {
    "term": "nonce",
-   "transcription": "/nɒns/",
+   "transcription": "/nɑːns/",
    "part_of_speech": "noun",
    "definition_en": "A value that must be used only once with a given key in a protocol or encryption mode; repeating it can break security.",
    "translation_ru": "одноразовое число (nonce)",
@@ -322,7 +322,7 @@
    "collocations": [
     "block cipher mode",
     "AES block cipher",
-    "block cipher size"
+    "block cipher algorithm"
    ],
    "examples": [
     "AES is a block cipher that processes sixteen bytes at a time.",
@@ -403,7 +403,7 @@
   },
   {
    "term": "TLS",
-   "transcription": "/ˌti ɛl ˈɛs/",
+   "transcription": "/ˌtiː ɛl ˈɛs/",
    "part_of_speech": "noun",
    "definition_en": "A protocol that encrypts the traffic between two programs and lets the client check the identity of the server; it is what makes HTTPS secure.",
    "translation_ru": "TLS (протокол защиты транспортного уровня)",
@@ -537,7 +537,7 @@
    "term": "key derivation function",
    "transcription": "/ˈkiː ˌdɛrɪˈveɪʃən ˈfʌŋkʃən/",
    "part_of_speech": "noun phrase",
-   "definition_en": "A function that turns a password or other secret into a strong key, deliberately working slowly to make guessing expensive.",
+   "definition_en": "A function that turns a password or another secret into one or more cryptographic keys; password-based ones such as Argon2 work slowly on purpose to make guessing expensive.",
    "translation_ru": "функция формирования ключа",
    "collocations": [
     "password-based key derivation function",

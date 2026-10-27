@@ -307,7 +307,7 @@
     "Patching the kernel closed the privilege escalation hole."
    ],
    "common_mistakes": [
-    "Mixing it up with a promotion at work.",
+    "Confusing it with lateral movement, which means moving to other machines without gaining higher rights.",
     "Thinking it always requires physical access."
    ],
    "contrast_term": null,
@@ -474,7 +474,7 @@
    "definition_en": "Identification based on body features such as fingerprints, the face or the voice.",
    "translation_ru": "биометрия",
    "collocations": [
-    "biometrics login",
+    "use biometrics",
     "facial biometrics",
     "store biometrics"
    ],

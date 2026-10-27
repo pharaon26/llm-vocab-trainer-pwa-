@@ -518,7 +518,7 @@
    "definition_en": "The step that makes all the changes of a transaction permanent and visible to others.",
    "translation_ru": "фиксация транзакции (commit)",
    "collocations": [
-    "commit a transaction",
+    "transaction commit",
     "commit succeeds",
     "commit and rollback"
    ],

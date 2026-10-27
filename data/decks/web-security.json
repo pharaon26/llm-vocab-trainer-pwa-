@@ -62,7 +62,7 @@
    ],
    "examples": [
     "A hidden form on another page triggered cross-site request forgery and changed the user's email.",
-    "The framework adds an anti-token to stop cross-site request forgery."
+    "The framework adds an anti-CSRF token to every form to stop cross-site request forgery."
    ],
    "common_mistakes": [
     "Mixing it up with cross-site scripting: here the attacker does not run code on your site.",
@@ -110,7 +110,7 @@
    ],
    "common_mistakes": [
     "Using it as a synonym of validation: validation rejects bad data, sanitization changes it.",
-    "Confusing it with disinfecting hardware; here it concerns data."
+    "Sanitizing data once for every context: the same text needs different handling in HTML, SQL and URLs."
    ],
    "contrast_term": "input validation",
    "domain": "Information security"
@@ -440,7 +440,7 @@
    ],
    "common_mistakes": [
     "Thinking it means assigning many tasks to many users.",
-    "Binding the whole request body to the model without a whitelist."
+    "Binding the whole request body to the model without an allow-list of fields."
    ],
    "contrast_term": null,
    "domain": "Information security"
