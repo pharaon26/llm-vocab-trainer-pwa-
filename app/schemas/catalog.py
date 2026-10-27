@@ -22,6 +22,8 @@ class DeckOut(BaseModel):
     is_default: bool
     cards: int
     selected: bool
+    teacher: str | None = None
+    assigned: bool = False
 
 
 class DeckSelectionIn(BaseModel):
@@ -37,6 +39,7 @@ class TeacherDeckOut(BaseModel):
     cards: int
     cards_total: int
     card_ids: list[int]
+    group_ids: list[int] = []
 
 
 class DeckIn(BaseModel):
@@ -48,3 +51,7 @@ class DeckIn(BaseModel):
 
 class DeckCardsIn(BaseModel):
     card_ids: list[int]
+
+
+class DeckGroupsIn(BaseModel):
+    group_ids: list[int]

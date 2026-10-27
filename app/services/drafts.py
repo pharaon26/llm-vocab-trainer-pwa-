@@ -370,7 +370,7 @@ async def shared_duplicate(db: AsyncSession, card: Card) -> Card | None:
 
 async def promote_card(db: AsyncSession, card: Card, deck_ids: list[int]) -> Card:
     ids = set(deck_ids)
-    decks = (await db.scalars(select(Deck).where(Deck.id.in_(ids)))).all()
+    decks = (await db.scalars(select(Deck).where(Deck.id.in_(ids), Deck.owner_id.is_(None)))).all()
     if len(decks) != len(ids):
         raise UnknownDecksForPromotion
     if await shared_duplicate(db, card) is not None:

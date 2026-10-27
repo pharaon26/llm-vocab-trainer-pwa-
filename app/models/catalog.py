@@ -1,6 +1,6 @@
 from datetime import date, datetime
 
-from sqlalchemy import JSON, Boolean, Date, DateTime, ForeignKey, String, Text, false, func
+from sqlalchemy import JSON, Boolean, Date, DateTime, ForeignKey, Index, String, Text, false, func, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
@@ -15,9 +15,14 @@ class Domain(Base):
 
 class Deck(Base):
     __tablename__ = "decks"
+    __table_args__ = (
+        Index("uq_decks_name_shared", text("lower(name)"), unique=True, postgresql_where=text("owner_id IS NULL")),
+        Index("uq_decks_owner_name", "owner_id", text("lower(name)"), unique=True),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(100), unique=True)
+    name: Mapped[str] = mapped_column(String(100))
+    owner_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     description: Mapped[str] = mapped_column(Text, default="", server_default="")
     domain_id: Mapped[int] = mapped_column(ForeignKey("domains.id"))
     is_default: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
@@ -35,6 +40,13 @@ class DeckCard(Base):
 
     deck_id: Mapped[int] = mapped_column(ForeignKey("decks.id", ondelete="CASCADE"), primary_key=True)
     card_id: Mapped[int] = mapped_column(ForeignKey("cards.id", ondelete="CASCADE"), primary_key=True)
+
+
+class GroupDeck(Base):
+    __tablename__ = "group_decks"
+
+    group_id: Mapped[int] = mapped_column(ForeignKey("teacher_groups.id", ondelete="CASCADE"), primary_key=True)
+    deck_id: Mapped[int] = mapped_column(ForeignKey("decks.id", ondelete="CASCADE"), primary_key=True, index=True)
 
 
 class UserDeck(Base):

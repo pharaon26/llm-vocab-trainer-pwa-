@@ -53,7 +53,7 @@ async def duplicate_out(db: AsyncSession, user: User, card: Card) -> DuplicateOu
     selected = set(await selected_deck_ids(db, user))
     decks = (
         await db.execute(
-            select(Deck.id, Deck.name).join(DeckCard, DeckCard.deck_id == Deck.id).where(DeckCard.card_id == card.id)
+            select(Deck.id, Deck.name).join(DeckCard, DeckCard.deck_id == Deck.id).where(DeckCard.card_id == card.id, Deck.owner_id.is_(None))
         )
     ).all()
     return DuplicateOut(

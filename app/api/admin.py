@@ -75,21 +75,21 @@ async def create_domain(data: DomainIn, db: AsyncSession = Depends(get_db)):
 
 
 async def get_deck_or_404(db: AsyncSession, deck_id: int) -> Deck:
-    deck = await db.get(Deck, deck_id)
+    deck = await db.scalar(select(Deck).where(Deck.id == deck_id, Deck.owner_id.is_(None)))
     if deck is None:
         raise HTTPException(404, "Deck not found")
     return deck
 
 
 async def ensure_deck_name_free(db: AsyncSession, name: str, exclude_id: int | None = None) -> None:
-    existing = await db.scalar(select(Deck).where(func.lower(Deck.name) == name.lower()))
+    existing = await db.scalar(select(Deck).where(func.lower(Deck.name) == name.lower(), Deck.owner_id.is_(None)))
     if existing and existing.id != exclude_id:
         raise HTTPException(409, "Deck with this name already exists")
 
 
 @router.get("/decks", response_model=list[TeacherDeckOut])
 async def list_decks(db: AsyncSession = Depends(get_db)):
-    decks = await db.scalars(select(Deck).order_by(func.lower(Deck.name), Deck.name))
+    decks = await db.scalars(select(Deck).where(Deck.owner_id.is_(None)).order_by(func.lower(Deck.name), Deck.name))
     return [await decks_service.teacher_deck(db, deck) for deck in decks]
 
 
