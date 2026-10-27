@@ -2,7 +2,7 @@ import { createApi } from "../api.js";
 import { clear, el } from "../dom.js";
 import * as views from "./views.js";
 
-const api = createApi("vt_teacher");
+const api = createApi();
 const root = document.getElementById("app");
 const userBox = document.getElementById("user-box");
 
@@ -34,7 +34,7 @@ function renderUserBox() {
 }
 
 function logout(message = "") {
-  api.clearSession();
+  api.logout();
   renderUserBox();
   showLogin("", message);
 }
@@ -50,8 +50,7 @@ function showLogin(name = "", error = "") {
           renderUserBox();
           showShell();
         } catch (err) {
-          const hint = err.status === 403 ? "Неверный пароль или вход преподавателя отключен (не задан TEACHER_PASSWORD)." : err.message;
-          showLogin(value, hint);
+          const hint = err.status === 403 ? "Неверный пароль или вход преподавателя отключен (не задан TEACHER_PASSWORD)." : err.message;          showLogin(value, hint);
         }
       },
     }),
@@ -200,23 +199,19 @@ async function showAnalytics() {
 }
 
 async function init() {
-  renderUserBox();
-  if (!api.getToken()) {
-    showLogin();
-    return;
-  }
   try {
-    const me = await api.request("/auth/me");
+    const me = await api.me();
     if (me.role !== "teacher") {
       logout();
       return;
     }
   } catch (error) {
     if (error.status === 401) {
-      logout();
+      showLogin();
       return;
     }
   }
+  renderUserBox();
   showShell();
 }
 

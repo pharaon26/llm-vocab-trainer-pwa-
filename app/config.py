@@ -1,8 +1,9 @@
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import field_validator
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 from app.enums import ErrorType
 
@@ -26,9 +27,33 @@ class Settings(BaseSettings):
     dictionary_provider: Literal["dictionaryapi", "none"] = "dictionaryapi"
     dictionary_url: str = "https://api.dictionaryapi.dev/api/v2/entries/en"
     teacher_password: str = ""
+    session_ttl_days: int = 30
+    session_cookie_name: str = "session"
+    cookie_secure: bool = True
+    allowed_origins: Annotated[list[str], NoDecode] = ["http://localhost:8000", "http://127.0.0.1:8000"]
+    trusted_proxies: Annotated[list[str], NoDecode] = []
+    dictionary_audio_domains: Annotated[list[str], NoDecode] = ["api.dictionaryapi.dev", "ssl.gstatic.com"]
+
+    @field_validator("trusted_proxies", "dictionary_audio_domains", "allowed_origins", mode="before")
+    @classmethod
+    def split_list(cls, value):
+        if isinstance(value, str):
+            return [item.strip() for item in value.split(",") if item.strip()]
+        return value
 
 
 settings = Settings()
+
+
+@dataclass(frozen=True)
+class AuthConfig:
+    password_min_length: int = 8
+    password_max_length: int = 128
+    login_max_failures: int = 5
+    login_window_minutes: int = 15
+
+
+auth_config = AuthConfig()
 
 
 @dataclass(frozen=True)

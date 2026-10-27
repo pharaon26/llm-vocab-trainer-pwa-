@@ -24,7 +24,7 @@ export function messageView(title, text, buttonText, onClick) {
   );
 }
 
-export function loginView({ name = "", error = "", onSubmit }) {
+export function loginView({ name = "", error = "", onSubmit, onRegister }) {
   const input = el("input", {
     id: "name",
     type: "text",
@@ -34,20 +34,37 @@ export function loginView({ name = "", error = "", onSubmit }) {
     placeholder: "Например, Анна",
   });
   input.value = name;
+  const password = el("input", {
+    id: "password",
+    type: "password",
+    minlength: 8,
+    maxlength: 128,
+    required: true,
+    autocomplete: "current-password",
+  });
+  const submit = (handler) => {
+    if (input.reportValidity() && password.reportValidity()) {
+      handler(input.value.trim(), password.value);
+    }
+  };
   return el(
     "form",
     {
       className: "card",
       onsubmit: (event) => {
         event.preventDefault();
-        onSubmit(input.value.trim());
+        submit(onSubmit);
       },
     },
     el("h2", {}, "Вход"),
     el("label", { for: "name" }, "Ваше имя"),
     input,
+    el("label", { for: "password" }, "Пароль (не короче 8 символов)"),
+    password,
     error && el("p", { className: "banner error", role: "alert" }, error),
     el("button", { type: "submit", className: "primary" }, "Войти"),
+    " ",
+    el("button", { type: "button", onclick: () => submit(onRegister) }, "Зарегистрироваться"),
   );
 }
 

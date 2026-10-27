@@ -25,7 +25,7 @@ def _audio(value) -> str | None:
     value = value.strip()
     if value.startswith("//"):
         value = f"https:{value}"
-    return value if value.startswith(("http://", "https://")) else None
+    return value if value.startswith("https://") else None
 
 
 def parse_entries(payload, word: str) -> DictionaryEntry | None:

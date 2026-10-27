@@ -11,6 +11,9 @@ from sqlalchemy.engine import URL, make_url
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
 
+from argon2 import PasswordHasher
+
+from app import security
 from app.api.deps import get_today
 from app.api.personal import get_dictionary_provider
 from app.api.session import get_llm_provider
@@ -72,6 +75,23 @@ def teacher_password(monkeypatch):
     monkeypatch.setattr(settings, "teacher_password", "secret")
 
 
+@pytest.fixture(autouse=True)
+def audio_domains(monkeypatch):
+    monkeypatch.setattr(settings, "dictionary_audio_domains", ["audio.test"])
+
+
+@pytest.fixture(autouse=True)
+def allowed_origins(monkeypatch):
+    monkeypatch.setattr(settings, "allowed_origins", ["http://test", "https://test"])
+
+
+@pytest.fixture(autouse=True)
+def cheap_password_hashing(monkeypatch):
+    hasher = PasswordHasher(time_cost=1, memory_cost=8, parallelism=1)
+    monkeypatch.setattr(security, "_hasher", hasher)
+    monkeypatch.setattr(security, "_DUMMY_HASH", hasher.hash("dummy"))
+
+
 class FreshSession(AsyncSession):
     """Сессия теста: всегда перечитывает объекты из базы, чтобы видеть изменения, сделанные запросами к API."""
 
@@ -128,14 +148,38 @@ async def client(connection, clock, llm, dictionary):
     app.dependency_overrides[get_today] = lambda: clock.today
     app.dependency_overrides[get_llm_provider] = lambda: llm.provider
     app.dependency_overrides[get_dictionary_provider] = lambda: dictionary.provider
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as http:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test", headers={"Origin": "http://test"}
+    ) as http:
         yield http
     app.dependency_overrides.clear()
 
 
+STUDENT_PASSWORD = "student-pass-1"
+
+
+def session_cookie_of(response) -> str | None:
+    for header in response.headers.get_list("set-cookie"):
+        pair = header.split(";", 1)[0]
+        name, _, value = pair.partition("=")
+        if name == settings.session_cookie_name and value:
+            return value
+    return None
+
+
 async def login(client, **body):
-    response = await client.post("/auth/login", json=body)
-    return {"Authorization": f"Bearer {response.json()['token']}"}
+    anonymous = {"Cookie": ""}
+    if body.get("role") == "teacher":
+        response = await client.post("/auth/login", json=body, headers=anonymous)
+    else:
+        body.setdefault("password", STUDENT_PASSWORD)
+        response = await client.post(
+            "/auth/register", json={"name": body["name"], "password": body["password"]}, headers=anonymous
+        )
+        if response.status_code == 409:
+            response = await client.post("/auth/login", json=body, headers=anonymous)
+    client.cookies.clear()
+    return {"Cookie": f"{settings.session_cookie_name}={session_cookie_of(response)}"}
 
 
 @pytest.fixture

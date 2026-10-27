@@ -79,11 +79,21 @@ function renderUserBox() {
 }
 
 function logout(message = "") {
-  api.clearSession();
+  api.logout();
   resetStats();
   renderUserBox();
   setNavVisible(false);
   showLogin("", message);
+}
+
+async function authenticate(name, action) {
+  try {
+    await action();
+    renderUserBox();
+    go("session");
+  } catch (err) {
+    showLogin(name, err.message);
+  }
 }
 
 function showLogin(name = "", error = "") {
@@ -91,15 +101,8 @@ function showLogin(name = "", error = "") {
     views.loginView({
       name,
       error,
-      onSubmit: async (value) => {
-        try {
-          await api.login(value);
-          renderUserBox();
-          go("session");
-        } catch (err) {
-          showLogin(value, err.message);
-        }
-      },
+      onSubmit: (value, password) => authenticate(value, () => api.login(value, { password })),
+      onRegister: (value, password) => authenticate(value, () => api.register(value, password)),
     }),
   );
 }
@@ -110,20 +113,16 @@ async function init() {
   }
   setLogoutHandler(logout);
   window.addEventListener("hashchange", route);
-  renderUserBox();
-  if (!api.getToken()) {
-    setNavVisible(false);
-    showLogin();
-    return;
-  }
   try {
     await api.me();
   } catch (error) {
     if (error.status === 401) {
-      logout();
+      setNavVisible(false);
+      showLogin();
       return;
     }
   }
+  renderUserBox();
   route();
 }
 

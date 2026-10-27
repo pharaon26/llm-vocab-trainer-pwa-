@@ -3,6 +3,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import require_teacher
+from app.dictionary.audio import safe_audio_url
 from app.db import get_db
 from app.enums import TaskType
 from app.models import Card, Deck, Domain, TaskBank, User
@@ -131,7 +132,7 @@ async def personal_for_teacher(db: AsyncSession, card: Card, owner: str) -> Pers
         id=card.id, term=card.term, domain=card.domain, owner=owner, transcription=card.transcription,
         part_of_speech=card.part_of_speech, definition_en=card.definition_en,
         translation_ru=card.translation_ru, collocations=card.collocations, examples=card.examples,
-        common_mistakes=card.common_mistakes, contrast_term=card.contrast_term, audio_url=card.audio_url,
+        common_mistakes=card.common_mistakes, contrast_term=card.contrast_term, audio_url=safe_audio_url(card.audio_url),
         sources=dict(card.field_sources or {}),
         shared_duplicate=await drafts_service.shared_duplicate(db, card) is not None,
     )

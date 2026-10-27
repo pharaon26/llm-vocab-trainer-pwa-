@@ -7,6 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import DraftConfig, draft_config
+from app.dictionary.audio import safe_audio_url
 from app.dictionary.base import DictionaryProvider, DictionaryUnavailable
 from app.dictionary.dictionaryapi import contains_word
 from app.llm.base import LLMError, LLMProvider
@@ -201,7 +202,7 @@ async def draft_out(db: AsyncSession, draft: CardDraft, user: User, today: date,
         term=draft.term,
         domain=draft.domain_ref.name,
         fields=DraftFields(**{field: data[field] for field in FIELDS}),
-        audio_url=draft.data.get("audio_url"),
+        audio_url=safe_audio_url(draft.data.get("audio_url")),
         sources=dict(draft.sources),
         general_definition=draft.general_definition,
         notices=list(draft.notices),
@@ -260,7 +261,7 @@ async def create_draft(
                 if value:
                     data[field] = value
                     sources[field] = "dictionary"
-            audio_url = entry.audio_url
+            audio_url = safe_audio_url(entry.audio_url)
 
     general_definition = None
     if provider is None:
@@ -327,7 +328,7 @@ async def confirm_draft(db: AsyncSession, user: User, draft: CardDraft) -> Card:
     card = Card(
         **await card_values(db, validated.model_dump()),
         verified=False, owner_id=user.id, confirmed_by_owner=True,
-        audio_url=data.get("audio_url"), field_sources=dict(draft.sources),
+        audio_url=safe_audio_url(data.get("audio_url")), field_sources=dict(draft.sources),
     )
     db.add(card)
     await db.delete(draft)

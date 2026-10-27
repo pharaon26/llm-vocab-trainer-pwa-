@@ -67,3 +67,22 @@ def test_all_endpoints_and_dependencies_are_coroutines():
 
 
 SYNC_DEPENDENCIES = {"get_today", "get_llm_provider", "get_dictionary_provider"}
+
+
+def test_auth_migration_replaces_tokens_with_sessions_and_leaves_old_accounts_without_passwords(scratch_database):
+    url, config = scratch_database
+    command.upgrade(config, "c1d2e3f40a11")
+    engine = create_engine(url)
+    with engine.begin() as conn:
+        conn.execute(text("INSERT INTO users (name, role) VALUES ('anna', 'student'), ('boss', 'teacher')"))
+        conn.execute(text("INSERT INTO auth_tokens (token, user_id) SELECT 'plain-text-token', id FROM users WHERE name = 'anna'"))
+    command.upgrade(config, "head")
+    with engine.connect() as conn:
+        assert conn.execute(text("SELECT COUNT(*) FROM sessions")).scalar() == 0
+        assert conn.execute(text("SELECT name, password_hash FROM users ORDER BY name")).all() == [("anna", None), ("boss", None)]
+        tables = set(conn.execute(text("SELECT tablename FROM pg_tables WHERE schemaname = 'public'")).scalars())
+        assert "auth_tokens" not in tables and {"sessions", "login_attempts"} <= tables
+    command.downgrade(config, "c1d2e3f40a11")
+    with engine.connect() as conn:
+        assert conn.execute(text("SELECT COUNT(*) FROM auth_tokens")).scalar() == 0
+    engine.dispose()

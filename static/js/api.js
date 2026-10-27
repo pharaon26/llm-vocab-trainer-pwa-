@@ -15,51 +15,25 @@ function describe(detail, status) {
   return `Ошибка ${status}`;
 }
 
-export function createApi(prefix) {
-  const tokenKey = `${prefix}_token`;
-  const nameKey = `${prefix}_name`;
+export function createApi() {
+  let name = null;
 
-  const read = (key) => {
-    try {
-      return localStorage.getItem(key);
-    } catch {
-      return null;
-    }
-  };
-
-  const write = (key, value) => {
-    try {
-      if (value) {
-        localStorage.setItem(key, value);
-      } else {
-        localStorage.removeItem(key);
-      }
-    } catch {
-      // localStorage может быть недоступен (приватный режим): работаем без сохранения
-    }
-  };
-
-  const getToken = () => read(tokenKey);
-  const getName = () => read(nameKey);
-
-  function clearSession() {
-    write(tokenKey, null);
-    write(nameKey, null);
-  }
+  const getName = () => name;
 
   async function request(path, { method = "GET", body } = {}) {
     const headers = {};
     if (body) {
       headers["Content-Type"] = "application/json";
     }
-    const token = getToken();
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
-    }
 
     let response;
     try {
-      response = await fetch(path, { method, headers, body: body ? JSON.stringify(body) : undefined });
+      response = await fetch(path, {
+        method,
+        headers,
+        credentials: "same-origin",
+        body: body ? JSON.stringify(body) : undefined,
+      });
     } catch {
       throw new ApiError(0, "Нет соединения с сервером");
     }
@@ -76,20 +50,36 @@ export function createApi(prefix) {
     return response.status === 204 ? null : response.json();
   }
 
-  async function login(name, extra = {}) {
-    const data = await request("/auth/login", { method: "POST", body: { name, ...extra } });
-    write(tokenKey, data.token);
-    write(nameKey, data.name);
+  async function authenticate(path, body) {
+    const data = await request(path, { method: "POST", body });
+    name = data.name;
     return data;
   }
 
-  return { getToken, getName, clearSession, request, login };
+  const login = (loginName, extra = {}) => authenticate("/auth/login", { name: loginName, ...extra });
+  const register = (registerName, password) => authenticate("/auth/register", { name: registerName, password });
+
+  async function me() {
+    const data = await request("/auth/me");
+    name = data.name;
+    return data;
+  }
+
+  async function logout() {
+    name = null;
+    try {
+      await request("/auth/logout", { method: "POST" });
+    } catch {
+      // сессия на сервере истечет сама, если он недоступен
+    }
+  }
+
+  return { getName, request, login, register, me, logout };
 }
 
-const student = createApi("vt");
+const student = createApi();
 
-export const { getToken, getName, clearSession, login } = student;
-export const me = () => student.request("/auth/me");
+export const { getName, login, register, me, logout } = student;
 export const progress = () => student.request("/me/progress");
 export const history = (query) => student.request(`/me/history${query}`);
 export const dictionary = () => student.request("/me/dictionary");

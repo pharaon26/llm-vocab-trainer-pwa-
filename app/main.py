@@ -6,8 +6,10 @@ from app.api import auth, cards, catalog, health, me, personal, practice, sessio
 from sqlalchemy.exc import DataError
 
 from app.config import BASE_DIR
+from app.web_security import security_middleware
 
 app = FastAPI(title="LLM Vocab Trainer")
+app.middleware("http")(security_middleware)
 
 
 @app.exception_handler(DataError)
