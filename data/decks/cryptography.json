@@ -1,0 +1,559 @@
+{
+ "deck": {
+  "name": "Cryptography",
+  "description": "Шифрование, ключи, подписи и хеши",
+  "domain": "Information security"
+ },
+ "cards": [
+  {
+   "term": "symmetric encryption",
+   "transcription": "/sɪˈmɛtrɪk ɪnˈkrɪpʃən/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A way of protecting data in which the same secret key is used both to lock it and to unlock it.",
+   "translation_ru": "симметричное шифрование",
+   "collocations": [
+    "symmetric encryption algorithm",
+    "fast symmetric encryption",
+    "symmetric encryption key"
+   ],
+   "examples": [
+    "Symmetric encryption is fast, so it protects the bulk of the data in a connection.",
+    "Both sides need the same key for symmetric encryption, which is the hard part."
+   ],
+   "common_mistakes": [
+    "Thinking symmetric means the data is encrypted twice.",
+    "Sending the shared key over the same insecure channel as the data."
+   ],
+   "contrast_term": "asymmetric encryption",
+   "domain": "Information security"
+  },
+  {
+   "term": "asymmetric encryption",
+   "transcription": "/ˌeɪsɪˈmɛtrɪk ɪnˈkrɪpʃən/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A way of protecting data with a pair of linked keys: what one key locks, only the other key can unlock.",
+   "translation_ru": "асимметричное шифрование",
+   "collocations": [
+    "asymmetric encryption algorithm",
+    "asymmetric encryption key pair",
+    "slow asymmetric encryption"
+   ],
+   "examples": [
+    "Asymmetric encryption lets strangers send secrets without agreeing on a password first.",
+    "Because asymmetric encryption is slow, it is mostly used to exchange a symmetric key."
+   ],
+   "common_mistakes": [
+    "Saying that the private key is used to encrypt for others: others use the public key.",
+    "Believing it is always better than symmetric encryption: it is slower."
+   ],
+   "contrast_term": "symmetric encryption",
+   "domain": "Information security"
+  },
+  {
+   "term": "public key",
+   "transcription": "/ˌpʌblɪk ˈkiː/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "The half of a key pair that its owner can share with anyone, used to lock data for the owner or to check the owner's signatures.",
+   "translation_ru": "открытый ключ",
+   "collocations": [
+    "share a public key",
+    "public key infrastructure",
+    "verify with the public key"
+   ],
+   "examples": [
+    "Anyone can encrypt a message with her public key, but only she can read it.",
+    "The server sends its public key during the handshake."
+   ],
+   "common_mistakes": [
+    "Thinking a public key must be kept secret.",
+    "Using 'open key' as a translation from Russian."
+   ],
+   "contrast_term": "private key",
+   "domain": "Information security"
+  },
+  {
+   "term": "private key",
+   "transcription": "/ˌpraɪvət ˈkiː/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "The secret half of a key pair that its owner never shares, used to unlock data or to create signatures.",
+   "translation_ru": "закрытый (секретный) ключ",
+   "collocations": [
+    "protect the private key",
+    "leaked private key",
+    "private key file"
+   ],
+   "examples": [
+    "If the private key leaks, every message sent to its owner can be read.",
+    "The private key never leaves the hardware token."
+   ],
+   "common_mistakes": [
+    "Emailing the private key to a colleague for convenience.",
+    "Mixing it up with the shared secret of symmetric encryption."
+   ],
+   "contrast_term": "public key",
+   "domain": "Information security"
+  },
+  {
+   "term": "cipher",
+   "transcription": "/ˈsaɪfər/",
+   "part_of_speech": "noun",
+   "definition_en": "A defined method for turning readable data into unreadable data and back again using a key.",
+   "translation_ru": "шифр",
+   "collocations": [
+    "strong cipher",
+    "weak cipher",
+    "cipher suite"
+   ],
+   "examples": [
+    "Old servers still offered a weak cipher that attackers could break.",
+    "AES is a widely used cipher."
+   ],
+   "common_mistakes": [
+    "Using it as a synonym of the process of encrypting: the cipher is the algorithm, encryption is the action.",
+    "Misspelling it as 'ciper' or 'sipher'."
+   ],
+   "contrast_term": "encryption",
+   "domain": "Information security"
+  },
+  {
+   "term": "plaintext",
+   "transcription": "/ˈpleɪnˌtɛkst/",
+   "part_of_speech": "noun",
+   "definition_en": "Data in its readable form before it is encrypted or after it is decrypted; it does not have to be text.",
+   "translation_ru": "открытый текст",
+   "collocations": [
+    "encrypt the plaintext",
+    "plaintext password",
+    "recover the plaintext"
+   ],
+   "examples": [
+    "Storing a plaintext password in the database is a serious mistake.",
+    "The cipher turns plaintext into unreadable data."
+   ],
+   "common_mistakes": [
+    "Thinking plaintext must be a text file: it can be an image or any data.",
+    "Writing it as two words, 'plain text', for the cryptographic term."
+   ],
+   "contrast_term": "ciphertext",
+   "domain": "Information security"
+  },
+  {
+   "term": "ciphertext",
+   "transcription": "/ˈsaɪfərˌtɛkst/",
+   "part_of_speech": "noun",
+   "definition_en": "The unreadable result of encrypting data, which cannot be understood without the right key.",
+   "translation_ru": "шифротекст",
+   "collocations": [
+    "intercept the ciphertext",
+    "ciphertext length",
+    "decrypt the ciphertext"
+   ],
+   "examples": [
+    "An observer who sees only the ciphertext should learn nothing about the message.",
+    "The ciphertext is stored together with the initialization vector."
+   ],
+   "common_mistakes": [
+    "Treating it as a hash: ciphertext can be turned back into the original with the key.",
+    "Assuming ciphertext is always printable text: it is usually binary data."
+   ],
+   "contrast_term": "plaintext",
+   "domain": "Information security"
+  },
+  {
+   "term": "key exchange",
+   "transcription": "/ˈkiː ɪksˌtʃeɪndʒ/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A procedure in which two parties agree on a shared secret over a channel that others may be watching.",
+   "translation_ru": "обмен ключами",
+   "collocations": [
+    "secure key exchange",
+    "key exchange protocol",
+    "Diffie-Hellman key exchange"
+   ],
+   "examples": [
+    "The key exchange happens at the start of every secure connection.",
+    "A signed key exchange prevents an attacker from taking part in the middle."
+   ],
+   "common_mistakes": [
+    "Imagining that the key itself is sent in clear text.",
+    "Skipping authentication, which lets an attacker take part in the exchange."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "digital signature",
+   "transcription": "/ˌdɪdʒɪtl ˈsɪɡnətʃər/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A value made with a private key that shows who created some data and that the data has not been changed.",
+   "translation_ru": "цифровая подпись",
+   "collocations": [
+    "create a digital signature",
+    "verify a digital signature",
+    "valid digital signature"
+   ],
+   "examples": [
+    "The installer carries a digital signature from the software vendor.",
+    "Changing even one byte makes the digital signature invalid."
+   ],
+   "common_mistakes": [
+    "Thinking it is an image of a handwritten signature.",
+    "Believing it encrypts the whole document: it proves origin and integrity."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "certificate",
+   "transcription": "/sərˈtɪfɪkət/",
+   "part_of_speech": "noun",
+   "definition_en": "A digital document that links a public key to the identity of its owner and is vouched for by a trusted organization.",
+   "translation_ru": "сертификат (цифровой)",
+   "collocations": [
+    "server certificate",
+    "expired certificate",
+    "install a certificate"
+   ],
+   "examples": [
+    "The browser warned that the certificate had expired yesterday.",
+    "The certificate contains the public key and the domain name of the site."
+   ],
+   "common_mistakes": [
+    "Spelling it 'sertificate' or 'certifcate'.",
+    "Confusing a certificate with a private key: it holds only public information."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "certificate authority",
+   "transcription": "/sərˈtɪfɪkət əˈθɔːrəti/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "An organization that browsers and systems trust to check who owns a domain or key and to issue a certificate for it.",
+   "translation_ru": "удостоверяющий центр",
+   "collocations": [
+    "trusted certificate authority",
+    "certificate authority root",
+    "issued by a certificate authority"
+   ],
+   "examples": [
+    "A certificate authority issued the certificate after checking control of the domain.",
+    "If a certificate authority is compromised, fake certificates can be created."
+   ],
+   "common_mistakes": [
+    "Confusing the certificate authority with the owner of the website.",
+    "Thinking that the authority stores the private keys of its customers."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "salt",
+   "transcription": "/sɔːlt/",
+   "part_of_speech": "noun",
+   "definition_en": "Random data added to a password before it is hashed, so equal passwords give different results and prepared lookup tables are useless.",
+   "translation_ru": "соль (при хешировании)",
+   "collocations": [
+    "random salt",
+    "unique salt",
+    "store the salt"
+   ],
+   "examples": [
+    "Each user gets a different salt, so two identical passwords do not share a hash.",
+    "The salt is stored next to the hash and does not need to be secret."
+   ],
+   "common_mistakes": [
+    "Thinking the salt must be secret.",
+    "Using one fixed salt for all users."
+   ],
+   "contrast_term": "nonce",
+   "domain": "Information security"
+  },
+  {
+   "term": "nonce",
+   "transcription": "/nɒns/",
+   "part_of_speech": "noun",
+   "definition_en": "A value that must be used only once with a given key in a protocol or encryption mode; repeating it can break security.",
+   "translation_ru": "одноразовое число (nonce)",
+   "collocations": [
+    "unique nonce",
+    "reuse a nonce",
+    "random nonce"
+   ],
+   "examples": [
+    "Reusing a nonce with the same key can reveal the secret message.",
+    "The server sends a fresh nonce for every login attempt."
+   ],
+   "common_mistakes": [
+    "Mixing it up with salt: a salt makes password hashes different, a nonce protects a single operation.",
+    "Thinking that a nonce has to be secret."
+   ],
+   "contrast_term": "salt",
+   "domain": "Information security"
+  },
+  {
+   "term": "initialization vector",
+   "transcription": "/ɪˌnɪʃəlaɪˈzeɪʃən ˈvɛktər/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A starting value for certain encryption modes that makes the same plaintext produce different ciphertext each time.",
+   "translation_ru": "вектор инициализации",
+   "collocations": [
+    "random initialization vector",
+    "initialization vector reuse",
+    "store the initialization vector"
+   ],
+   "examples": [
+    "A new initialization vector is generated for every message.",
+    "The initialization vector is sent along with the ciphertext in the clear."
+   ],
+   "common_mistakes": [
+    "Treating the initialization vector as a secret key.",
+    "Using the same initialization vector for every message."
+   ],
+   "contrast_term": "nonce",
+   "domain": "Information security"
+  },
+  {
+   "term": "block cipher",
+   "transcription": "/ˈblɑːk ˈsaɪfər/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "An encryption method that works on data in fixed-size chunks, such as 128 bits at a time.",
+   "translation_ru": "блочный шифр",
+   "collocations": [
+    "block cipher mode",
+    "AES block cipher",
+    "block cipher size"
+   ],
+   "examples": [
+    "AES is a block cipher that processes sixteen bytes at a time.",
+    "A block cipher needs a mode of operation to handle long messages safely."
+   ],
+   "common_mistakes": [
+    "Using a block cipher in the simplest mode, which reveals repeated patterns.",
+    "Thinking a block cipher encrypts the whole file in one step."
+   ],
+   "contrast_term": "stream cipher",
+   "domain": "Information security"
+  },
+  {
+   "term": "stream cipher",
+   "transcription": "/ˈstriːm ˈsaɪfər/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "An encryption method that mixes data with a continuous flow of pseudo-random bits, one piece at a time.",
+   "translation_ru": "потоковый шифр",
+   "collocations": [
+    "stream cipher keystream",
+    "fast stream cipher",
+    "use a stream cipher"
+   ],
+   "examples": [
+    "A stream cipher is convenient when data arrives continuously.",
+    "Reusing the key and nonce in a stream cipher exposes the messages."
+   ],
+   "common_mistakes": [
+    "Assuming a stream cipher is safe with any reused key.",
+    "Calling every cipher that handles long messages a stream cipher."
+   ],
+   "contrast_term": "block cipher",
+   "domain": "Information security"
+  },
+  {
+   "term": "checksum",
+   "transcription": "/ˈtʃɛkˌsʌm/",
+   "part_of_speech": "noun",
+   "definition_en": "A small value calculated from data and used to notice accidental changes such as transmission errors.",
+   "translation_ru": "контрольная сумма",
+   "collocations": [
+    "verify the checksum",
+    "checksum mismatch",
+    "calculate a checksum"
+   ],
+   "examples": [
+    "The download failed because the checksum did not match.",
+    "A simple checksum detects random errors but not deliberate tampering."
+   ],
+   "common_mistakes": [
+    "Trusting a simple checksum to prove that no one altered a file on purpose.",
+    "Writing 'check sum' as two words."
+   ],
+   "contrast_term": "hashing",
+   "domain": "Information security"
+  },
+  {
+   "term": "hash collision",
+   "transcription": "/ˈhæʃ kəˌlɪʒən/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A situation in which two different inputs produce exactly the same hash value.",
+   "translation_ru": "коллизия хеша",
+   "collocations": [
+    "find a hash collision",
+    "hash collision attack",
+    "resist hash collisions"
+   ],
+   "examples": [
+    "Researchers found a hash collision in an old algorithm, so it is no longer trusted.",
+    "A secure hash function makes a hash collision practically impossible to find."
+   ],
+   "common_mistakes": [
+    "Believing that collisions cannot exist: they always exist in theory, but must be hard to find.",
+    "Writing 'colission' or 'collition'."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "TLS",
+   "transcription": "/ˌti ɛl ˈɛs/",
+   "part_of_speech": "noun",
+   "definition_en": "A protocol that encrypts the traffic between two programs and lets the client check the identity of the server; it is what makes HTTPS secure.",
+   "translation_ru": "TLS (протокол защиты транспортного уровня)",
+   "collocations": [
+    "TLS handshake",
+    "TLS version",
+    "TLS certificate"
+   ],
+   "examples": [
+    "The server accepts only modern versions of TLS.",
+    "A TLS handshake takes place before any web page is sent."
+   ],
+   "common_mistakes": [
+    "Calling it SSL: SSL is the old, insecure predecessor.",
+    "Thinking TLS protects data stored on the server."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "end-to-end encryption",
+   "transcription": "/ˌɛnd tə ˌɛnd ɪnˈkrɪpʃən/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "Protection of messages so that only the people communicating hold the keys, and even the service in between cannot read them.",
+   "translation_ru": "сквозное шифрование",
+   "collocations": [
+    "end-to-end encryption by default",
+    "enable end-to-end encryption",
+    "messenger with end-to-end encryption"
+   ],
+   "examples": [
+    "With end-to-end encryption the provider only stores unreadable data.",
+    "Backups can weaken end-to-end encryption if they are not protected."
+   ],
+   "common_mistakes": [
+    "Thinking that an HTTPS connection to a server is end-to-end encryption.",
+    "Assuming the service can still recover messages after you forget the key."
+   ],
+   "contrast_term": "TLS",
+   "domain": "Information security"
+  },
+  {
+   "term": "key rotation",
+   "transcription": "/ˈkiː roʊˌteɪʃən/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "Replacing cryptographic keys with new ones on a schedule or after a suspected leak.",
+   "translation_ru": "ротация ключей",
+   "collocations": [
+    "automatic key rotation",
+    "key rotation policy",
+    "schedule key rotation"
+   ],
+   "examples": [
+    "Key rotation limits how much data an attacker gets from one stolen key.",
+    "The team performs key rotation every ninety days."
+   ],
+   "common_mistakes": [
+    "Changing the key but keeping the old one active forever.",
+    "Forgetting to re-encrypt old data when it is required."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "entropy",
+   "transcription": "/ˈɛntrəpi/",
+   "part_of_speech": "noun",
+   "definition_en": "A measure of how unpredictable a secret is; the more of it a password or key has, the harder it is to guess.",
+   "translation_ru": "энтропия",
+   "collocations": [
+    "high entropy",
+    "low entropy",
+    "source of entropy"
+   ],
+   "examples": [
+    "A long random passphrase has more entropy than a short word with digits.",
+    "Virtual machines can lack entropy right after they start."
+   ],
+   "common_mistakes": [
+    "Thinking that adding a digit to a common word gives high entropy.",
+    "Judging entropy by length alone: a long but predictable password still has low entropy."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "man-in-the-middle attack",
+   "transcription": "/ˌmæn ɪn ðə ˈmɪdl əˈtæk/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "An attack in which someone secretly places themselves between two parties and can read or change what they send.",
+   "translation_ru": "атака «человек посередине»",
+   "collocations": [
+    "prevent a man-in-the-middle attack",
+    "man-in-the-middle attack on public Wi-Fi",
+    "detect a man-in-the-middle attack"
+   ],
+   "examples": [
+    "Certificate checks protect users from a man-in-the-middle attack.",
+    "A man-in-the-middle attack is easy on an open wireless network without encryption."
+   ],
+   "common_mistakes": [
+    "Thinking the attacker must be physically inside the building.",
+    "Ignoring a browser warning about a certificate and letting the attack succeed."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "forward secrecy",
+   "transcription": "/ˈfɔːrwərd ˈsiːkrəsi/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A property of a connection that keeps old sessions private even if a long-term key is stolen later, because each session uses its own temporary keys.",
+   "translation_ru": "прямая секретность",
+   "collocations": [
+    "perfect forward secrecy",
+    "enable forward secrecy",
+    "forward secrecy cipher suite"
+   ],
+   "examples": [
+    "Thanks to forward secrecy, the stolen server key cannot decrypt last year's traffic.",
+    "Modern TLS configurations require forward secrecy."
+   ],
+   "common_mistakes": [
+    "Thinking it protects against a stolen current session key.",
+    "Expecting it to help when the attacker already controls the server during the session."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "key derivation function",
+   "transcription": "/ˈkiː ˌdɛrɪˈveɪʃən ˈfʌŋkʃən/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A function that turns a password or other secret into a strong key, deliberately working slowly to make guessing expensive.",
+   "translation_ru": "функция формирования ключа",
+   "collocations": [
+    "password-based key derivation function",
+    "slow key derivation function",
+    "choose a key derivation function"
+   ],
+   "examples": [
+    "A key derivation function with many iterations slows down password guessing.",
+    "Argon2 is a modern key derivation function."
+   ],
+   "common_mistakes": [
+    "Using a fast general-purpose hash instead of a key derivation function for passwords.",
+    "Thinking it makes a weak password strong."
+   ],
+   "contrast_term": "hashing",
+   "domain": "Information security"
+  }
+ ]
+}

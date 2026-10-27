@@ -1,0 +1,559 @@
+{
+ "deck": {
+  "name": "DevOps & Cloud",
+  "description": "Доставка, инфраструктура и облака",
+  "domain": "IT"
+ },
+ "cards": [
+  {
+   "term": "container",
+   "transcription": "/kənˈteɪnər/",
+   "part_of_speech": "noun",
+   "definition_en": "A lightweight, isolated package that holds an application together with everything it needs to run, sharing the operating system of the host.",
+   "translation_ru": "контейнер",
+   "collocations": [
+    "run a container",
+    "container runtime",
+    "stop a container"
+   ],
+   "examples": [
+    "Each service runs in its own container, so updates do not affect the others.",
+    "The container starts in a second because it does not boot a whole system."
+   ],
+   "common_mistakes": [
+    "Thinking a container contains a full separate operating system: it shares the host kernel.",
+    "Storing important data only inside a container that will be deleted."
+   ],
+   "contrast_term": "virtual machine",
+   "domain": "IT"
+  },
+  {
+   "term": "container image",
+   "transcription": "/kənˈteɪnər ˈɪmɪdʒ/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A read-only template, built in layers, from which containers are started.",
+   "translation_ru": "образ контейнера",
+   "collocations": [
+    "build a container image",
+    "pull a container image",
+    "container image registry"
+   ],
+   "examples": [
+    "The pipeline builds a new container image after every change.",
+    "A small container image downloads and starts faster."
+   ],
+   "common_mistakes": [
+    "Confusing a container image with a running container.",
+    "Using the 'latest' tag in production and getting unexpected versions."
+   ],
+   "contrast_term": "container",
+   "domain": "IT"
+  },
+  {
+   "term": "orchestration",
+   "transcription": "/ˌɔːrkɪˈstreɪʃən/",
+   "part_of_speech": "noun",
+   "definition_en": "Automatic management of many containers: starting them, restarting failed ones, scaling and connecting them.",
+   "translation_ru": "оркестрация",
+   "collocations": [
+    "container orchestration",
+    "orchestration platform",
+    "orchestration tool"
+   ],
+   "examples": [
+    "Kubernetes is a popular orchestration platform.",
+    "Orchestration restarts a crashed service without human help."
+   ],
+   "common_mistakes": [
+    "Mixing it up with a deployment script that runs one command.",
+    "Spelling it 'orchestation'."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "pipeline",
+   "transcription": "/ˈpaɪplaɪn/",
+   "part_of_speech": "noun",
+   "definition_en": "An automated chain of steps, such as build, test and deploy, that runs whenever code changes.",
+   "translation_ru": "конвейер (пайплайн)",
+   "collocations": [
+    "CI/CD pipeline",
+    "pipeline stage",
+    "pipeline fails"
+   ],
+   "examples": [
+    "The pipeline failed at the test stage, so nothing was deployed.",
+    "Adding a security scan to the pipeline catches problems early."
+   ],
+   "common_mistakes": [
+    "Thinking a pipeline is only a tool for deployment: it also builds and tests.",
+    "Ignoring a red pipeline and merging anyway."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "continuous integration",
+   "transcription": "/kənˈtɪnjuəs ɪnˌtɛɡˈreɪʃən/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A practice in which developers merge their changes into the shared code many times a day and every merge is built and tested automatically.",
+   "translation_ru": "непрерывная интеграция",
+   "collocations": [
+    "continuous integration server",
+    "continuous integration build",
+    "set up continuous integration"
+   ],
+   "examples": [
+    "Continuous integration found the broken test within minutes of the merge.",
+    "Without continuous integration, problems appear only when releases are assembled."
+   ],
+   "common_mistakes": [
+    "Merging once a month and calling it continuous integration.",
+    "Mixing it up with continuous delivery, which is about releasing."
+   ],
+   "contrast_term": "continuous delivery",
+   "domain": "IT"
+  },
+  {
+   "term": "continuous delivery",
+   "transcription": "/kənˈtɪnjuəs dɪˈlɪvəri/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A practice of keeping software always in a state that can be released, with the release steps automated and the final decision made by people.",
+   "translation_ru": "непрерывная поставка",
+   "collocations": [
+    "continuous delivery pipeline",
+    "practice continuous delivery",
+    "continuous delivery to production"
+   ],
+   "examples": [
+    "With continuous delivery the team can release on any weekday.",
+    "Continuous delivery needs a reliable set of automated tests."
+   ],
+   "common_mistakes": [
+    "Confusing it with continuous deployment, where every change goes live automatically.",
+    "Releasing manually from a developer's laptop."
+   ],
+   "contrast_term": "continuous integration",
+   "domain": "IT"
+  },
+  {
+   "term": "infrastructure as code",
+   "transcription": "/ˈɪnfrəˌstrʌktʃər æz ˈkoʊd/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "Describing servers, networks and other resources in files kept in version control, so they can be created and changed automatically.",
+   "translation_ru": "инфраструктура как код",
+   "collocations": [
+    "infrastructure as code tool",
+    "practice infrastructure as code",
+    "infrastructure as code template"
+   ],
+   "examples": [
+    "With infrastructure as code a new environment is created from a file in minutes.",
+    "Reviewing infrastructure as code changes works like reviewing application code."
+   ],
+   "common_mistakes": [
+    "Creating servers by hand and only documenting them afterwards.",
+    "Storing passwords in the infrastructure as code files."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "provisioning",
+   "transcription": "/prəˈvɪʒənɪŋ/",
+   "part_of_speech": "noun",
+   "definition_en": "Creating and preparing resources such as servers, databases or user accounts so that they are ready for use.",
+   "translation_ru": "подготовка (развёртывание) ресурсов",
+   "collocations": [
+    "automated provisioning",
+    "server provisioning",
+    "user provisioning"
+   ],
+   "examples": [
+    "Automated provisioning gives every new employee an account on the first day.",
+    "Provisioning a test server takes only a few minutes in the cloud."
+   ],
+   "common_mistakes": [
+    "Mixing it up with deployment, which puts an application on resources that already exist.",
+    "Spelling it 'provisionning'."
+   ],
+   "contrast_term": "deployment",
+   "domain": "IT"
+  },
+  {
+   "term": "autoscaling",
+   "transcription": "/ˈɔːtoʊˌskeɪlɪŋ/",
+   "part_of_speech": "noun",
+   "definition_en": "Automatic adding or removing of computing resources according to how busy a system is.",
+   "translation_ru": "автомасштабирование",
+   "collocations": [
+    "enable autoscaling",
+    "autoscaling group",
+    "autoscaling rule"
+   ],
+   "examples": [
+    "Autoscaling added more servers during the sale and removed them at night.",
+    "A wrong autoscaling rule can create a large bill."
+   ],
+   "common_mistakes": [
+    "Expecting autoscaling to fix a slow database query.",
+    "Setting no upper limit for the number of servers."
+   ],
+   "contrast_term": "scalability",
+   "domain": "IT"
+  },
+  {
+   "term": "monitoring",
+   "transcription": "/ˈmɑːnɪtərɪŋ/",
+   "part_of_speech": "noun",
+   "definition_en": "Continuously collecting and checking numbers about a system, such as load and errors, to know whether it is healthy.",
+   "translation_ru": "мониторинг",
+   "collocations": [
+    "system monitoring",
+    "monitoring tool",
+    "monitoring dashboard"
+   ],
+   "examples": [
+    "Monitoring showed that memory use grew every hour.",
+    "Without monitoring, the team learns about outages from angry customers."
+   ],
+   "common_mistakes": [
+    "Watching only whether the server is on and ignoring errors.",
+    "Mixing it up with observability, which is about understanding why something happens."
+   ],
+   "contrast_term": "observability",
+   "domain": "IT"
+  },
+  {
+   "term": "observability",
+   "transcription": "/əbˌzɜːrvəˈbɪləti/",
+   "part_of_speech": "noun",
+   "definition_en": "How well you can understand what happens inside a system by looking at its logs, metrics and traces.",
+   "translation_ru": "наблюдаемость",
+   "collocations": [
+    "improve observability",
+    "observability platform",
+    "lack of observability"
+   ],
+   "examples": [
+    "Good observability helped to find the slow step in the request.",
+    "Tracing is an important part of observability for services that call each other."
+   ],
+   "common_mistakes": [
+    "Using it as a synonym of monitoring.",
+    "Collecting logs but never connecting them to requests."
+   ],
+   "contrast_term": "monitoring",
+   "domain": "IT"
+  },
+  {
+   "term": "logging",
+   "transcription": "/ˈlɔːɡɪŋ/",
+   "part_of_speech": "noun",
+   "definition_en": "Recording messages about what an application is doing, so problems can be investigated later.",
+   "translation_ru": "логирование",
+   "collocations": [
+    "centralized logging",
+    "logging level",
+    "enable logging"
+   ],
+   "examples": [
+    "Centralized logging lets engineers search the logs of all servers in one place.",
+    "Never write passwords into logging output."
+   ],
+   "common_mistakes": [
+    "Writing sensitive data into logs.",
+    "Keeping logs only on the server that fails."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "alerting",
+   "transcription": "/əˈlɜːrtɪŋ/",
+   "part_of_speech": "noun",
+   "definition_en": "Automatically notifying people when a measured value crosses a limit or something goes wrong.",
+   "translation_ru": "оповещение (алертинг)",
+   "collocations": [
+    "alerting rule",
+    "alerting threshold",
+    "configure alerting"
+   ],
+   "examples": [
+    "Alerting woke the engineer when the error rate doubled.",
+    "Too many alerting rules cause alert fatigue."
+   ],
+   "common_mistakes": [
+    "Sending an alert for every small fluctuation.",
+    "Sending alerts to a mailbox nobody reads."
+   ],
+   "contrast_term": "monitoring",
+   "domain": "IT"
+  },
+  {
+   "term": "on-call",
+   "transcription": "/ˌɑːn ˈkɔːl/",
+   "part_of_speech": "noun",
+   "definition_en": "The duty of being available to respond to incidents outside normal working hours, according to a schedule.",
+   "translation_ru": "дежурство",
+   "collocations": [
+    "on-call engineer",
+    "on-call rotation",
+    "on-call schedule"
+   ],
+   "examples": [
+    "The on-call engineer received an alert at three in the morning.",
+    "A fair on-call rotation shares the duty between all team members."
+   ],
+   "common_mistakes": [
+    "Writing 'on call' as one word or with a hyphen inconsistently: the noun and adjective use a hyphen, 'on call' is the phrase.",
+    "Expecting one person to be on call all the time."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "uptime",
+   "transcription": "/ˈʌpˌtaɪm/",
+   "part_of_speech": "noun",
+   "definition_en": "The share of time during which a service or computer is working and available.",
+   "translation_ru": "время бесперебойной работы (аптайм)",
+   "collocations": [
+    "high uptime",
+    "uptime percentage",
+    "measure uptime"
+   ],
+   "examples": [
+    "The provider promises an uptime of 99.9 percent.",
+    "Planned maintenance is usually excluded from uptime figures."
+   ],
+   "common_mistakes": [
+    "Confusing uptime with speed: a service can be up but slow.",
+    "Counting a partly broken service as fully up."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "service level agreement",
+   "transcription": "/ˈsɜːrvɪs ˈlɛvl əˈɡriːmənt/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A formal promise to a customer about the quality of a service, for example how much of the time it will be available.",
+   "translation_ru": "соглашение об уровне сервиса (SLA)",
+   "collocations": [
+    "sign a service level agreement",
+    "service level agreement penalty",
+    "breach the service level agreement"
+   ],
+   "examples": [
+    "The service level agreement guarantees that the system is available 99.9 percent of the time.",
+    "The customer received a refund because of a broken service level agreement."
+   ],
+   "common_mistakes": [
+    "Treating the promised number as the real result.",
+    "Confusing an agreement with a customer and an internal target."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "blue-green deployment",
+   "transcription": "/ˌbluː ˈɡriːn dɪˈplɔɪmənt/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A release method with two identical environments: the new version is prepared in the idle one and traffic is switched to it all at once.",
+   "translation_ru": "развёртывание «сине-зелёное»",
+   "collocations": [
+    "blue-green deployment strategy",
+    "use a blue-green deployment",
+    "blue-green deployment rollback"
+   ],
+   "examples": [
+    "With a blue-green deployment the old version stays ready for a quick return.",
+    "Switching traffic in a blue-green deployment takes seconds."
+   ],
+   "common_mistakes": [
+    "Mixing it up with a canary release, where traffic moves gradually.",
+    "Forgetting that both environments need the same database changes."
+   ],
+   "contrast_term": "canary release",
+   "domain": "IT"
+  },
+  {
+   "term": "canary release",
+   "transcription": "/kəˈnɛri rɪˈliːs/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A way of publishing a new version to a small group of users first and to everyone only if no problems appear.",
+   "translation_ru": "канареечный релиз",
+   "collocations": [
+    "canary release strategy",
+    "start a canary release",
+    "canary release metrics"
+   ],
+   "examples": [
+    "A canary release sent the new version to five percent of the users.",
+    "The team stopped the canary release when errors increased."
+   ],
+   "common_mistakes": [
+    "Releasing to the whole user base and calling it a canary.",
+    "Not watching metrics during the canary phase."
+   ],
+   "contrast_term": "blue-green deployment",
+   "domain": "IT"
+  },
+  {
+   "term": "feature flag",
+   "transcription": "/ˈfiːtʃər flæɡ/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A setting that turns a feature on or off without releasing new code.",
+   "translation_ru": "флаг функциональности",
+   "collocations": [
+    "enable a feature flag",
+    "feature flag service",
+    "remove a feature flag"
+   ],
+   "examples": [
+    "A feature flag let the team switch off the broken search in seconds.",
+    "Old feature flags should be removed from the code."
+   ],
+   "common_mistakes": [
+    "Leaving old feature flags in the code for years.",
+    "Hiding a security fix behind a flag that nobody enables."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "staging",
+   "transcription": "/ˈsteɪdʒɪŋ/",
+   "part_of_speech": "noun",
+   "definition_en": "An environment that copies the production system as closely as possible, used for final checks before release.",
+   "translation_ru": "тестовое окружение, приближенное к боевому (стейджинг)",
+   "collocations": [
+    "staging environment",
+    "deploy to staging",
+    "staging server"
+   ],
+   "examples": [
+    "The change worked in staging, but production had different data.",
+    "Staging should use the same configuration as production, but not real customer data."
+   ],
+   "common_mistakes": [
+    "Using real customer data in staging without protection.",
+    "Confusing staging with the developer's laptop."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "secrets management",
+   "transcription": "/ˈsiːkrəts ˈmænɪdʒmənt/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "Safely storing, handing out and renewing passwords, keys and tokens so they are not kept in code or in plain files.",
+   "translation_ru": "управление секретами",
+   "collocations": [
+    "secrets management tool",
+    "centralized secrets management",
+    "secrets management policy"
+   ],
+   "examples": [
+    "Secrets management keeps database passwords out of the repository.",
+    "The vault issues short-lived credentials as part of secrets management."
+   ],
+   "common_mistakes": [
+    "Committing a key to the repository 'just for now'.",
+    "Using the same secret for development and production."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "virtual machine",
+   "transcription": "/ˈvɜːrtʃuəl məˈʃiːn/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A software imitation of a whole computer, with its own operating system, running on a physical machine.",
+   "translation_ru": "виртуальная машина",
+   "collocations": [
+    "run a virtual machine",
+    "virtual machine image",
+    "virtual machine snapshot"
+   ],
+   "examples": [
+    "Each customer receives a separate virtual machine in the cloud.",
+    "A virtual machine takes longer to start than a container."
+   ],
+   "common_mistakes": [
+    "Mixing it up with a container, which shares the host kernel.",
+    "Thinking a virtual machine uses no real resources."
+   ],
+   "contrast_term": "container",
+   "domain": "IT"
+  },
+  {
+   "term": "serverless",
+   "transcription": "/ˈsɜːrvərləs/",
+   "part_of_speech": "noun",
+   "definition_en": "A cloud model in which the provider runs your code on demand and manages the servers, and you pay only for the time it runs.",
+   "translation_ru": "бессерверные вычисления",
+   "collocations": [
+    "serverless function",
+    "serverless architecture",
+    "serverless platform"
+   ],
+   "examples": [
+    "A serverless function resizes the picture each time a user uploads one.",
+    "Serverless can be cheap for rare tasks and costly for constant load."
+   ],
+   "common_mistakes": [
+    "Believing there are no servers at all: they exist, but you do not manage them.",
+    "Expecting no delay when a rarely used function starts."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "availability zone",
+   "transcription": "/əˌveɪləˈbɪləti zoʊn/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A separate data centre location inside a cloud region, with its own power and network, used to survive local failures.",
+   "translation_ru": "зона доступности",
+   "collocations": [
+    "multiple availability zones",
+    "availability zone failure",
+    "deploy across availability zones"
+   ],
+   "examples": [
+    "The database is replicated across two availability zones.",
+    "When one availability zone failed, the service stayed online."
+   ],
+   "common_mistakes": [
+    "Putting all servers into one availability zone.",
+    "Confusing an availability zone with a region, which contains several zones."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "configuration drift",
+   "transcription": "/ˌkɑːnfɪɡjəˈreɪʃən drɪft/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "Gradual differences between the real settings of servers and their intended settings, caused by manual changes.",
+   "translation_ru": "дрейф конфигурации",
+   "collocations": [
+    "detect configuration drift",
+    "prevent configuration drift",
+    "configuration drift between servers"
+   ],
+   "examples": [
+    "Manual fixes on one server caused configuration drift, and the next release failed there.",
+    "Infrastructure as code helps to reduce configuration drift."
+   ],
+   "common_mistakes": [
+    "Changing settings by hand on production servers.",
+    "Thinking the drift is a software bug and not a process problem."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  }
+ ]
+}

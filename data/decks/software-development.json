@@ -1,0 +1,559 @@
+{
+ "deck": {
+  "name": "Software Development",
+  "description": "Разработка ПО: процесс, тестирование и архитектура",
+  "domain": "IT"
+ },
+ "cards": [
+  {
+   "term": "refactoring",
+   "transcription": "/ˌriːˈfæktərɪŋ/",
+   "part_of_speech": "noun",
+   "definition_en": "Changing the internal structure of code to make it easier to read and maintain, without changing what the program does.",
+   "translation_ru": "рефакторинг",
+   "collocations": [
+    "refactoring of the module",
+    "safe refactoring",
+    "refactoring step"
+   ],
+   "examples": [
+    "Refactoring made the payment code much shorter and easier to test.",
+    "Good tests give confidence during refactoring."
+   ],
+   "common_mistakes": [
+    "Changing behavior and calling it refactoring.",
+    "Refactoring a large area without any tests."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "technical debt",
+   "transcription": "/ˈtɛknɪkl dɛt/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "The extra future work that builds up when quick, imperfect solutions are chosen now instead of better ones.",
+   "translation_ru": "технический долг",
+   "collocations": [
+    "accumulate technical debt",
+    "pay down technical debt",
+    "technical debt backlog"
+   ],
+   "examples": [
+    "Shortcuts before the deadline created technical debt that slowed the team later.",
+    "The team spends every fifth sprint on reducing technical debt."
+   ],
+   "common_mistakes": [
+    "Thinking technical debt is the money the project owes.",
+    "Never writing down the debt, so nobody plans to repay it."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "code review",
+   "transcription": "/ˈkoʊd rɪˌvjuː/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "Examination of changes by another developer before they are merged, to find mistakes and share knowledge.",
+   "translation_ru": "ревью кода",
+   "collocations": [
+    "code review comment",
+    "request a code review",
+    "pass the code review"
+   ],
+   "examples": [
+    "A code review caught a missing check on user input.",
+    "Small changes are easier to handle in a code review."
+   ],
+   "common_mistakes": [
+    "Treating a code review as criticism of the person.",
+    "Approving a change without reading it."
+   ],
+   "contrast_term": "pull request",
+   "domain": "IT"
+  },
+  {
+   "term": "pull request",
+   "transcription": "/ˈpʊl rɪˌkwɛst/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A proposal to merge a set of changes into a shared branch, which others can discuss and review first.",
+   "translation_ru": "запрос на слияние (pull request)",
+   "collocations": [
+    "open a pull request",
+    "merge a pull request",
+    "pull request description"
+   ],
+   "examples": [
+    "She opened a pull request with the fix and asked two colleagues to review it.",
+    "The tests run automatically on every pull request."
+   ],
+   "common_mistakes": [
+    "Thinking it means asking someone to download code: it is a request to merge.",
+    "Opening a huge pull request that nobody can review."
+   ],
+   "contrast_term": "code review",
+   "domain": "IT"
+  },
+  {
+   "term": "merge conflict",
+   "transcription": "/ˈmɜːrdʒ ˈkɑːnflɪkt/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A situation in which the version control system cannot combine two sets of changes automatically because they touch the same lines.",
+   "translation_ru": "конфликт слияния",
+   "collocations": [
+    "resolve a merge conflict",
+    "merge conflict marker",
+    "avoid a merge conflict"
+   ],
+   "examples": [
+    "Two developers changed the same line, which caused a merge conflict.",
+    "The conflict markers must be removed after the merge conflict is resolved."
+   ],
+   "common_mistakes": [
+    "Choosing one side without reading the other change.",
+    "Leaving the conflict markers in the file and committing them."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "branch",
+   "transcription": "/bræntʃ/",
+   "part_of_speech": "noun",
+   "definition_en": "A separate line of development in version control, used to work on a change without affecting the main code.",
+   "translation_ru": "ветка",
+   "collocations": [
+    "create a branch",
+    "feature branch",
+    "main branch"
+   ],
+   "examples": [
+    "She created a branch for the new login page.",
+    "Long-lived branches make merging painful."
+   ],
+   "common_mistakes": [
+    "Mixing several tasks in one branch.",
+    "Working directly on the main branch by mistake."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "version control",
+   "transcription": "/ˈvɜːrʒən kənˌtroʊl/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A system that records every change to files, so you can see the history, return to older versions and work together without overwriting each other.",
+   "translation_ru": "система контроля версий",
+   "collocations": [
+    "use version control",
+    "version control system",
+    "put under version control"
+   ],
+   "examples": [
+    "Git is the most widely used version control system.",
+    "Without version control it is hard to know who changed a file and why."
+   ],
+   "common_mistakes": [
+    "Copying folders named 'final', 'final2' and 'really final' instead of using version control.",
+    "Committing passwords and keys to version control."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "unit test",
+   "transcription": "/ˈjuːnɪt ˌtɛst/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "An automated check of one small part of the code, such as a single function, in isolation from the rest.",
+   "translation_ru": "модульный тест",
+   "collocations": [
+    "write a unit test",
+    "unit test fails",
+    "unit test suite"
+   ],
+   "examples": [
+    "The unit test checks that the discount function never returns a negative price.",
+    "A fast unit test can run hundreds of times a day."
+   ],
+   "common_mistakes": [
+    "Calling a test that needs a real database a unit test.",
+    "Testing the implementation details instead of the behavior."
+   ],
+   "contrast_term": "integration test",
+   "domain": "IT"
+  },
+  {
+   "term": "integration test",
+   "transcription": "/ˌɪntɪˈɡreɪʃən ˌtɛst/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "An automated check that several parts of a system work correctly together, for example the code and a real database.",
+   "translation_ru": "интеграционный тест",
+   "collocations": [
+    "run an integration test",
+    "integration test environment",
+    "slow integration test"
+   ],
+   "examples": [
+    "The integration test starts a database and calls the real endpoints.",
+    "An integration test found that two services used different date formats."
+   ],
+   "common_mistakes": [
+    "Replacing every part with fakes and still calling it an integration test.",
+    "Running integration tests against the production database."
+   ],
+   "contrast_term": "unit test",
+   "domain": "IT"
+  },
+  {
+   "term": "regression",
+   "transcription": "/rɪˈɡrɛʃən/",
+   "part_of_speech": "noun",
+   "definition_en": "A fault in which something that used to work stops working after a change.",
+   "translation_ru": "регрессия (ошибка, вернувшаяся после изменения)",
+   "collocations": [
+    "introduce a regression",
+    "regression test",
+    "regression bug"
+   ],
+   "examples": [
+    "The new release introduced a regression in the search function.",
+    "A regression test makes sure that an old bug does not return."
+   ],
+   "common_mistakes": [
+    "Using 'regression' only in its statistical meaning.",
+    "Fixing a regression without adding a test for it."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "dependency",
+   "transcription": "/dɪˈpɛndənsi/",
+   "part_of_speech": "noun",
+   "definition_en": "An external library or component that a program needs in order to work.",
+   "translation_ru": "зависимость",
+   "collocations": [
+    "update a dependency",
+    "vulnerable dependency",
+    "dependency tree"
+   ],
+   "examples": [
+    "The project has fifty dependencies, and one of them contained a vulnerability.",
+    "Pinning the version of each dependency makes builds repeatable."
+   ],
+   "common_mistakes": [
+    "Adding a large dependency for one small function.",
+    "Never updating dependencies, so security fixes are missed."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "API",
+   "transcription": "/ˌeɪ piː ˈaɪ/",
+   "part_of_speech": "noun",
+   "definition_en": "A defined way for one program to ask another to do something or provide data.",
+   "translation_ru": "API (программный интерфейс)",
+   "collocations": [
+    "public API",
+    "call an API",
+    "API documentation"
+   ],
+   "examples": [
+    "The mobile app talks to the server through an API.",
+    "Changing an API without warning breaks everyone who uses it."
+   ],
+   "common_mistakes": [
+    "Saying 'API interface': the I already stands for interface.",
+    "Confusing an API with a user interface for people."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "REST",
+   "transcription": "/rɛst/",
+   "part_of_speech": "noun",
+   "definition_en": "A common style for designing web APIs in which resources have addresses and are handled with standard HTTP methods, without the server remembering the client between requests.",
+   "translation_ru": "REST (архитектурный стиль веб-API)",
+   "collocations": [
+    "REST API",
+    "RESTful service",
+    "REST endpoint"
+   ],
+   "examples": [
+    "The REST API uses GET to read an order and DELETE to remove it.",
+    "Each REST request carries everything the server needs to answer it."
+   ],
+   "common_mistakes": [
+    "Thinking REST is a protocol or a library: it is a style.",
+    "Putting verbs in the address, such as /getUser, in a REST design."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "idempotency",
+   "transcription": "/ˌaɪdɛmˈpoʊtənsi/",
+   "part_of_speech": "noun",
+   "definition_en": "The property of an operation that gives the same result whether it is performed once or many times.",
+   "translation_ru": "идемпотентность",
+   "collocations": [
+    "idempotency key",
+    "ensure idempotency",
+    "idempotency of the request"
+   ],
+   "examples": [
+    "Idempotency lets a client retry a payment request safely after a timeout.",
+    "Deleting a resource is usually idempotent: the second call changes nothing."
+   ],
+   "common_mistakes": [
+    "Mixing it up with safety: a safe request does not change data, an idempotent one can.",
+    "Spelling it 'idempotence' in one place and 'idempotency' in another."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "exception",
+   "transcription": "/ɪkˈsɛpʃən/",
+   "part_of_speech": "noun",
+   "definition_en": "An object or signal that a program raises when something goes wrong, which other code can catch and handle.",
+   "translation_ru": "исключение",
+   "collocations": [
+    "throw an exception",
+    "catch an exception",
+    "unhandled exception"
+   ],
+   "examples": [
+    "The program raised an exception when the file did not exist.",
+    "An unhandled exception stopped the whole service."
+   ],
+   "common_mistakes": [
+    "Catching every exception and ignoring it silently.",
+    "Using exceptions for normal flow of the program."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "debugging",
+   "transcription": "/diːˈbʌɡɪŋ/",
+   "part_of_speech": "noun",
+   "definition_en": "The process of finding the cause of a fault in a program and fixing it.",
+   "translation_ru": "отладка",
+   "collocations": [
+    "debugging session",
+    "start debugging",
+    "debugging tool"
+   ],
+   "examples": [
+    "Debugging took longer than writing the feature.",
+    "Printing variables is a simple form of debugging."
+   ],
+   "common_mistakes": [
+    "Changing code at random until the error disappears.",
+    "Writing 'debuging' with one g."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "stack trace",
+   "transcription": "/ˈstæk treɪs/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A list of the function calls that were active when an error happened, showing the path the program took to get there.",
+   "translation_ru": "трассировка стека",
+   "collocations": [
+    "read a stack trace",
+    "stack trace shows",
+    "print the stack trace"
+   ],
+   "examples": [
+    "The stack trace pointed to line 42 of the payment module.",
+    "Please attach the full stack trace to the bug report."
+   ],
+   "common_mistakes": [
+    "Showing the stack trace to end users: it can reveal internal details.",
+    "Reading it from the top and ignoring the part that belongs to your own code."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "race condition",
+   "transcription": "/ˈreɪs kənˌdɪʃən/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A fault in which the result depends on the unpredictable order or timing of operations that run at the same time.",
+   "translation_ru": "состояние гонки",
+   "collocations": [
+    "cause a race condition",
+    "fix a race condition",
+    "race condition bug"
+   ],
+   "examples": [
+    "A race condition let two users buy the last ticket.",
+    "The race condition appeared only under heavy load."
+   ],
+   "common_mistakes": [
+    "Thinking a race condition needs a competition between programs.",
+    "Assuming that a bug that appears rarely does not exist."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "memory leak",
+   "transcription": "/ˈmɛməri liːk/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A fault in which a program keeps memory it no longer needs, so its memory use grows over time.",
+   "translation_ru": "утечка памяти",
+   "collocations": [
+    "cause a memory leak",
+    "find a memory leak",
+    "memory leak in the service"
+   ],
+   "examples": [
+    "A memory leak made the server crash after three days of running.",
+    "Profiling tools help to locate a memory leak."
+   ],
+   "common_mistakes": [
+    "Restarting the service every night instead of finding the leak.",
+    "Confusing it with a data leak, which is about exposing information."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "cache",
+   "transcription": "/kæʃ/",
+   "part_of_speech": "noun",
+   "definition_en": "A place where copies of frequently used data are kept so that they can be read faster than from the original source.",
+   "translation_ru": "кэш",
+   "collocations": [
+    "clear the cache",
+    "cache hit",
+    "in-memory cache"
+   ],
+   "examples": [
+    "The cache stores the results of the slowest database queries.",
+    "An outdated entry in the cache showed the old price."
+   ],
+   "common_mistakes": [
+    "Pronouncing it like 'cash-ay'.",
+    "Forgetting to remove cached data when the original changes."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "abstraction",
+   "transcription": "/æbˈstrækʃən/",
+   "part_of_speech": "noun",
+   "definition_en": "Hiding complicated details behind a simple interface, so users of the code only need to know what it does, not how.",
+   "translation_ru": "абстракция",
+   "collocations": [
+    "level of abstraction",
+    "leaky abstraction",
+    "layer of abstraction"
+   ],
+   "examples": [
+    "The storage class is an abstraction over files and cloud buckets.",
+    "A leaky abstraction forces you to understand the details underneath."
+   ],
+   "common_mistakes": [
+    "Using 'abstract' as a noun in this meaning.",
+    "Adding layers of abstraction that nobody needs."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "design pattern",
+   "transcription": "/dɪˈzaɪn ˈpætərn/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A well-known, reusable solution idea for a common problem in software design, not a ready piece of code.",
+   "translation_ru": "паттерн проектирования",
+   "collocations": [
+    "apply a design pattern",
+    "singleton design pattern",
+    "design pattern catalog"
+   ],
+   "examples": [
+    "The observer design pattern lets objects subscribe to events.",
+    "Using a design pattern where it is not needed only adds complexity."
+   ],
+   "common_mistakes": [
+    "Copying a design pattern as ready code.",
+    "Using patterns just to show knowledge."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "static analysis",
+   "transcription": "/ˈstætɪk əˈnæləsɪs/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "Examining program code without running it, to find bugs, risky constructions or style problems.",
+   "translation_ru": "статический анализ",
+   "collocations": [
+    "static analysis tool",
+    "run static analysis",
+    "static analysis warning"
+   ],
+   "examples": [
+    "Static analysis found a variable that was used before it was set.",
+    "The pipeline fails when static analysis reports a serious warning."
+   ],
+   "common_mistakes": [
+    "Ignoring all warnings because some are false.",
+    "Thinking static analysis replaces testing."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "code coverage",
+   "transcription": "/ˈkoʊd ˈkʌvərɪdʒ/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "The share of the program's code that is executed when the automated tests run.",
+   "translation_ru": "покрытие кода тестами",
+   "collocations": [
+    "measure code coverage",
+    "code coverage report",
+    "high code coverage"
+   ],
+   "examples": [
+    "The code coverage report shows that the error handling was never tested.",
+    "A team can reach high code coverage with tests that check nothing."
+   ],
+   "common_mistakes": [
+    "Believing that 100 percent coverage means there are no bugs.",
+    "Writing tests only to raise the percentage."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "mock",
+   "transcription": "/mɑːk/",
+   "part_of_speech": "noun",
+   "definition_en": "A fake object that stands in for a real component during a test and can record how it was used.",
+   "translation_ru": "мок (заглушка для тестов)",
+   "collocations": [
+    "create a mock",
+    "mock object",
+    "mock the database"
+   ],
+   "examples": [
+    "The test uses a mock instead of the real payment service.",
+    "The mock confirms that the email function was called exactly once."
+   ],
+   "common_mistakes": [
+    "Mocking everything, so the test no longer checks real behavior.",
+    "Using 'mock' as a verb for a real service: it is the fake that is called a mock."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  }
+ ]
+}

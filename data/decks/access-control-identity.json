@@ -1,0 +1,559 @@
+{
+ "deck": {
+  "name": "Access Control & Identity",
+  "description": "Доступ, идентификация и учётные записи",
+  "domain": "Information security"
+ },
+ "cards": [
+  {
+   "term": "least privilege",
+   "transcription": "/ˌliːst ˈprɪvəlɪdʒ/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "The rule of giving every user or program only the permissions that it needs for its task, and nothing more.",
+   "translation_ru": "принцип наименьших привилегий",
+   "collocations": [
+    "principle of least privilege",
+    "apply least privilege",
+    "least privilege access"
+   ],
+   "examples": [
+    "Following least privilege, the report tool can read the data but not change it.",
+    "Under least privilege a support agent cannot see payment details."
+   ],
+   "common_mistakes": [
+    "Giving everyone administrator rights to avoid support requests.",
+    "Thinking it is a one-time setting: permissions should be reviewed regularly."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "role-based access control",
+   "transcription": "/ˌroʊl beɪst ˈækses kənˈtroʊl/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A way of managing permissions in which rights are attached to roles, and people get rights by being given a role.",
+   "translation_ru": "ролевое управление доступом",
+   "collocations": [
+    "role-based access control model",
+    "implement role-based access control",
+    "role-based access control policy"
+   ],
+   "examples": [
+    "With role-based access control a new accountant only needs the accountant role.",
+    "The number of roles in role-based access control tends to grow over time."
+   ],
+   "common_mistakes": [
+    "Giving permissions to individual users directly while calling it role-based.",
+    "Creating one role for every person."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "multi-factor authentication",
+   "transcription": "/ˌmʌlti ˈfæktər ɔːˌθɛntɪˈkeɪʃən/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "Checking a person's identity with two or more different kinds of proof, such as a password plus a code from a phone.",
+   "translation_ru": "многофакторная аутентификация",
+   "collocations": [
+    "enable multi-factor authentication",
+    "multi-factor authentication code",
+    "enforce multi-factor authentication"
+   ],
+   "examples": [
+    "Multi-factor authentication stopped the attacker who had a stolen password.",
+    "The bank asks for multi-factor authentication when you log in from a new device."
+   ],
+   "common_mistakes": [
+    "Counting two passwords as two factors: they are the same kind of proof.",
+    "Thinking it makes a weak password unimportant."
+   ],
+   "contrast_term": "authentication",
+   "domain": "Information security"
+  },
+  {
+   "term": "single sign-on",
+   "transcription": "/ˌsɪŋɡl saɪn ˈɑːn/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A setup where a person logs in once and can then use several separate applications without logging in again.",
+   "translation_ru": "единый вход (SSO)",
+   "collocations": [
+    "single sign-on service",
+    "enable single sign-on",
+    "single sign-on provider"
+   ],
+   "examples": [
+    "Thanks to single sign-on, staff use one account for mail, chat and the wiki.",
+    "If the single sign-on account is stolen, every connected application is at risk."
+   ],
+   "common_mistakes": [
+    "Using one shared password for many services and calling it single sign-on.",
+    "Writing 'single sign-in'; the usual term is 'sign-on'."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "OAuth",
+   "transcription": "/ˈoʊ ɔːθ/",
+   "part_of_speech": "noun",
+   "definition_en": "A standard that lets an application get limited access to a user's data on another service without receiving the user's password.",
+   "translation_ru": "OAuth (протокол делегирования доступа)",
+   "collocations": [
+    "OAuth flow",
+    "OAuth client",
+    "OAuth scope"
+   ],
+   "examples": [
+    "The calendar app uses OAuth to read your events without knowing your password.",
+    "Each OAuth scope describes what the application may do."
+   ],
+   "common_mistakes": [
+    "Treating OAuth as a way to log users in: it is about authorization, not identity.",
+    "Writing it as 'O-Auth' or 'Oauth'."
+   ],
+   "contrast_term": "authentication",
+   "domain": "Information security"
+  },
+  {
+   "term": "OpenID Connect",
+   "transcription": "/ˌoʊpən aɪ ˈdiː kəˈnɛkt/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A layer on top of OAuth that lets an application find out who the user is after they log in at an identity provider.",
+   "translation_ru": "OpenID Connect (протокол аутентификации)",
+   "collocations": [
+    "OpenID Connect provider",
+    "log in with OpenID Connect",
+    "OpenID Connect identity token"
+   ],
+   "examples": [
+    "The site lets you sign in with OpenID Connect through your company account.",
+    "OpenID Connect adds an identity token to the OAuth flow."
+   ],
+   "common_mistakes": [
+    "Mixing it up with OAuth: OAuth grants access, OpenID Connect proves identity.",
+    "Confusing it with the old OpenID standard."
+   ],
+   "contrast_term": "OAuth",
+   "domain": "Information security"
+  },
+  {
+   "term": "SAML",
+   "transcription": "/ˈsæməl/",
+   "part_of_speech": "noun",
+   "definition_en": "An XML-based standard for passing login and permission information between an identity provider and an application, common in company single sign-on.",
+   "translation_ru": "SAML (язык разметки утверждений безопасности)",
+   "collocations": [
+    "SAML assertion",
+    "SAML login",
+    "SAML identity provider"
+   ],
+   "examples": [
+    "The university portal logs students in with SAML.",
+    "The SAML assertion tells the application who the user is and for how long."
+   ],
+   "common_mistakes": [
+    "Thinking SAML is mainly for mobile apps: it is typical for web single sign-on.",
+    "Pronouncing every letter separately: it is usually said as a word."
+   ],
+   "contrast_term": "OpenID Connect",
+   "domain": "Information security"
+  },
+  {
+   "term": "access token",
+   "transcription": "/ˈækses ˈtoʊkən/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A short-lived credential that an application shows to an API to prove it has permission to act.",
+   "translation_ru": "токен доступа",
+   "collocations": [
+    "issue an access token",
+    "access token lifetime",
+    "expired access token"
+   ],
+   "examples": [
+    "The API rejected the request because the access token had expired.",
+    "A stolen access token is dangerous only until it expires."
+   ],
+   "common_mistakes": [
+    "Storing an access token in a public repository.",
+    "Giving access tokens a lifetime of many months."
+   ],
+   "contrast_term": "refresh token",
+   "domain": "Information security"
+  },
+  {
+   "term": "refresh token",
+   "transcription": "/rɪˈfrɛʃ ˈtoʊkən/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A long-lived credential that lets an application obtain new access tokens without asking the user to log in again.",
+   "translation_ru": "токен обновления",
+   "collocations": [
+    "use a refresh token",
+    "refresh token rotation",
+    "revoke a refresh token"
+   ],
+   "examples": [
+    "The app quietly gets a new access token with its refresh token.",
+    "Refresh token rotation makes a stolen token useless after the next use."
+   ],
+   "common_mistakes": [
+    "Sending the refresh token to the API with every request.",
+    "Confusing it with an access token."
+   ],
+   "contrast_term": "access token",
+   "domain": "Information security"
+  },
+  {
+   "term": "JSON Web Token",
+   "transcription": "/ˌdʒeɪsən wɛb ˈtoʊkən/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A compact token that carries information such as a user identifier and an expiry time in JSON, protected by a signature that the server can check.",
+   "translation_ru": "веб-токен JSON (JWT)",
+   "collocations": [
+    "sign a JSON Web Token",
+    "validate a JSON Web Token",
+    "JSON Web Token claim"
+   ],
+   "examples": [
+    "The server checks the signature of the JSON Web Token before trusting its claims.",
+    "A JSON Web Token is easy to read, so it must not contain secrets."
+   ],
+   "common_mistakes": [
+    "Assuming the content is encrypted: it is only encoded and signed.",
+    "Accepting a token without checking the signature and the expiry."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "password policy",
+   "transcription": "/ˈpæswɜːrd ˈpɑːləsi/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A set of rules about passwords, such as minimum length, checks against known leaked passwords and what to do after a leak.",
+   "translation_ru": "парольная политика",
+   "collocations": [
+    "strong password policy",
+    "enforce a password policy",
+    "password policy requirements"
+   ],
+   "examples": [
+    "Our password policy requires at least twelve characters.",
+    "A good password policy helps people choose long passphrases instead of tricks."
+   ],
+   "common_mistakes": [
+    "Forcing frequent changes, which often leads to weaker passwords.",
+    "Writing the rules only for users and not checking them on the server."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "brute-force attack",
+   "transcription": "/ˈbruːt fɔːrs əˈtæk/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "An attack that tries a very large number of passwords or keys one after another until one works.",
+   "translation_ru": "атака полным перебором",
+   "collocations": [
+    "brute-force attack on a login page",
+    "stop a brute-force attack",
+    "offline brute-force attack"
+   ],
+   "examples": [
+    "Rate limiting makes a brute-force attack on the login form slow and noisy.",
+    "A short password falls quickly to a brute-force attack."
+   ],
+   "common_mistakes": [
+    "Thinking it needs cleverness: it simply tries many guesses.",
+    "Mixing it up with credential stuffing, which uses real leaked pairs."
+   ],
+   "contrast_term": "credential stuffing",
+   "domain": "Information security"
+  },
+  {
+   "term": "credential stuffing",
+   "transcription": "/krəˈdɛnʃəl ˈstʌfɪŋ/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "An attack that tries username and password pairs leaked from one service on many other services, hoping people reused them.",
+   "translation_ru": "подстановка учётных данных",
+   "collocations": [
+    "credential stuffing attack",
+    "prevent credential stuffing",
+    "credential stuffing bot"
+   ],
+   "examples": [
+    "Credential stuffing succeeded because many customers reused the same password.",
+    "Multi-factor authentication blocks most credential stuffing attempts."
+   ],
+   "common_mistakes": [
+    "Confusing it with a brute-force attack: here the passwords are not guessed.",
+    "Writing 'credentials stuffing'."
+   ],
+   "contrast_term": "brute-force attack",
+   "domain": "Information security"
+  },
+  {
+   "term": "privilege escalation",
+   "transcription": "/ˈprɪvəlɪdʒ ˌɛskəˈleɪʃən/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "Gaining more rights than one was meant to have, for example when an ordinary user becomes an administrator.",
+   "translation_ru": "повышение привилегий",
+   "collocations": [
+    "privilege escalation vulnerability",
+    "local privilege escalation",
+    "prevent privilege escalation"
+   ],
+   "examples": [
+    "A bug in the service allowed privilege escalation from a normal account to root.",
+    "Patching the kernel closed the privilege escalation hole."
+   ],
+   "common_mistakes": [
+    "Mixing it up with a promotion at work.",
+    "Thinking it always requires physical access."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "identity provider",
+   "transcription": "/aɪˈdɛntəti prəˈvaɪdər/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A service that stores users' accounts and confirms who they are for other applications.",
+   "translation_ru": "поставщик удостоверений (IdP)",
+   "collocations": [
+    "external identity provider",
+    "identity provider login",
+    "configure an identity provider"
+   ],
+   "examples": [
+    "The app trusts the identity provider to check the user's password.",
+    "When the identity provider is down, nobody can log in."
+   ],
+   "common_mistakes": [
+    "Confusing it with the application that the user wants to use.",
+    "Writing 'identification provider'."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "access control list",
+   "transcription": "/ˈækses kənˈtroʊl lɪst/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A list attached to a resource that says which users or systems may do what with it.",
+   "translation_ru": "список контроля доступа (ACL)",
+   "collocations": [
+    "configure an access control list",
+    "access control list entry",
+    "network access control list"
+   ],
+   "examples": [
+    "An access control list on the folder allows only the finance team to read the files.",
+    "Each entry in the access control list names a user and a permission."
+   ],
+   "common_mistakes": [
+    "Leaving the default entry that allows everyone.",
+    "Thinking the list controls who can log in: it controls access to a specific resource."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "account lockout",
+   "transcription": "/əˈkaʊnt ˈlɑːkaʊt/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "Temporarily blocking an account after several wrong password attempts, to slow down guessing.",
+   "translation_ru": "блокировка учётной записи",
+   "collocations": [
+    "account lockout policy",
+    "trigger an account lockout",
+    "account lockout threshold"
+   ],
+   "examples": [
+    "Account lockout stops an attacker from trying thousands of passwords.",
+    "A strict account lockout can be abused to block real users."
+   ],
+   "common_mistakes": [
+    "Locking the account forever instead of for a limited time.",
+    "Ignoring that attackers can lock other people's accounts on purpose."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "passkey",
+   "transcription": "/ˈpæskiː/",
+   "part_of_speech": "noun",
+   "definition_en": "A password-free login method based on a key pair stored on the user's device and unlocked with a fingerprint, face or device code.",
+   "translation_ru": "ключ доступа (passkey)",
+   "collocations": [
+    "create a passkey",
+    "sign in with a passkey",
+    "passkey on the phone"
+   ],
+   "examples": [
+    "With a passkey you unlock the login with your fingerprint instead of typing a password.",
+    "A passkey cannot be handed over to a fake website."
+   ],
+   "common_mistakes": [
+    "Thinking a passkey is a long password.",
+    "Believing the fingerprint itself is sent to the website."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "separation of duties",
+   "transcription": "/ˌsɛpəˈreɪʃən əv ˈduːtiz/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "Splitting an important task between several people so that nobody can complete a risky action alone.",
+   "translation_ru": "разделение обязанностей",
+   "collocations": [
+    "enforce separation of duties",
+    "separation of duties policy",
+    "lack of separation of duties"
+   ],
+   "examples": [
+    "Separation of duties means one person writes the payment and another approves it.",
+    "The audit found a lack of separation of duties in the accounting team."
+   ],
+   "common_mistakes": [
+    "Dividing work only for convenience, without any control purpose.",
+    "Giving two people the same account."
+   ],
+   "contrast_term": "least privilege",
+   "domain": "Information security"
+  },
+  {
+   "term": "audit log",
+   "transcription": "/ˈɔːdɪt lɔːɡ/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A time-ordered record of who did what in a system and when it happened.",
+   "translation_ru": "журнал аудита",
+   "collocations": [
+    "review the audit log",
+    "audit log entry",
+    "tamper-proof audit log"
+   ],
+   "examples": [
+    "The audit log showed that the file was deleted at midnight.",
+    "Administrators must not be able to edit the audit log."
+   ],
+   "common_mistakes": [
+    "Storing the audit log only on the server that may be attacked.",
+    "Recording actions without the user and the time."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "session timeout",
+   "transcription": "/ˈsɛʃən ˈtaɪmaʊt/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "The automatic end of a login session after a period of inactivity or after a maximum time.",
+   "translation_ru": "тайм-аут сессии",
+   "collocations": [
+    "short session timeout",
+    "session timeout setting",
+    "extend the session timeout"
+   ],
+   "examples": [
+    "The banking site applies a short session timeout for safety.",
+    "After the session timeout the user has to log in again."
+   ],
+   "common_mistakes": [
+    "Setting a session timeout of several weeks for a sensitive application.",
+    "Ending the session only in the browser and not on the server."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "biometrics",
+   "transcription": "/ˌbaɪoʊˈmɛtrɪks/",
+   "part_of_speech": "noun",
+   "definition_en": "Identification based on body features such as fingerprints, the face or the voice.",
+   "translation_ru": "биометрия",
+   "collocations": [
+    "biometrics login",
+    "facial biometrics",
+    "store biometrics"
+   ],
+   "examples": [
+    "The phone unlocks with biometrics instead of a code.",
+    "Biometrics cannot be changed if they leak, unlike a password."
+   ],
+   "common_mistakes": [
+    "Writing 'biometry' for the technology: the usual word is 'biometrics'.",
+    "Thinking biometrics are secret like passwords."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "one-time password",
+   "transcription": "/ˌwʌn taɪm ˈpæswɜːrd/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A password that works only for a single login or for a very short time.",
+   "translation_ru": "одноразовый пароль",
+   "collocations": [
+    "send a one-time password",
+    "one-time password app",
+    "enter the one-time password"
+   ],
+   "examples": [
+    "The bank sends a one-time password by text message.",
+    "A one-time password expires after thirty seconds."
+   ],
+   "common_mistakes": [
+    "Reusing a one-time password.",
+    "Sharing the code with a caller who claims to be from support."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "federation",
+   "transcription": "/ˌfɛdəˈreɪʃən/",
+   "part_of_speech": "noun",
+   "definition_en": "An arrangement in which several organizations trust each other's login systems, so a user can access different services with one identity.",
+   "translation_ru": "федерация (удостоверений)",
+   "collocations": [
+    "identity federation",
+    "federation agreement",
+    "federation between universities"
+   ],
+   "examples": [
+    "Federation lets visiting researchers use their home university account.",
+    "The federation depends on trust between the identity providers."
+   ],
+   "common_mistakes": [
+    "Using it only for countries: in IT it also names a trust arrangement between systems.",
+    "Confusing it with single sign-on inside one organization."
+   ],
+   "contrast_term": "single sign-on",
+   "domain": "Information security"
+  },
+  {
+   "term": "zero trust",
+   "transcription": "/ˌzɪroʊ ˈtrʌst/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A security approach that does not trust a request just because it comes from the internal network, and checks every user and device each time.",
+   "translation_ru": "нулевое доверие",
+   "collocations": [
+    "zero trust model",
+    "zero trust architecture",
+    "adopt zero trust"
+   ],
+   "examples": [
+    "Under zero trust, even a laptop in the office must prove who it is.",
+    "Zero trust assumes that an attacker may already be inside."
+   ],
+   "common_mistakes": [
+    "Thinking it is a product that can be bought and switched on.",
+    "Trusting everything inside the company network."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  }
+ ]
+}

@@ -1,0 +1,559 @@
+{
+ "deck": {
+  "name": "Databases",
+  "description": "Реляционные базы данных и работа с ними",
+  "domain": "IT"
+ },
+ "cards": [
+  {
+   "term": "query",
+   "transcription": "/ˈkwɪri/",
+   "part_of_speech": "noun",
+   "definition_en": "A request to a database to read or change data, written in a language such as SQL.",
+   "translation_ru": "запрос",
+   "collocations": [
+    "run a query",
+    "slow query",
+    "query result"
+   ],
+   "examples": [
+    "The query returned all orders from the last week.",
+    "A slow query kept the whole page waiting."
+   ],
+   "common_mistakes": [
+    "Pronouncing it like 'queue-ry'.",
+    "Using 'request' and 'query' as the same thing: a query concerns the data store."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "index",
+   "transcription": "/ˈɪndɛks/",
+   "part_of_speech": "noun",
+   "definition_en": "A separate structure that helps the database find rows quickly without reading the whole table.",
+   "translation_ru": "индекс",
+   "collocations": [
+    "create an index",
+    "index scan",
+    "composite index"
+   ],
+   "examples": [
+    "Adding an index on the email column made the search instant.",
+    "Every index speeds up reading but slows down writing a little."
+   ],
+   "common_mistakes": [
+    "Adding an index on every column.",
+    "Believing an index is free: it uses disk space and slows down writes."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "transaction",
+   "transcription": "/trænˈzækʃən/",
+   "part_of_speech": "noun",
+   "definition_en": "A group of database operations that are treated as one unit: either all of them succeed or none of them take effect.",
+   "translation_ru": "транзакция",
+   "collocations": [
+    "start a transaction",
+    "transaction log",
+    "long-running transaction"
+   ],
+   "examples": [
+    "The transfer runs in one transaction, so money never disappears halfway.",
+    "A transaction that stays open too long can block other users."
+   ],
+   "common_mistakes": [
+    "Using 'transaction' only for payments.",
+    "Forgetting to end the transaction after an error."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "ACID",
+   "transcription": "/ˈæsɪd/",
+   "part_of_speech": "noun",
+   "definition_en": "A set of four properties - atomicity, consistency, isolation and durability - that describe reliable database transactions.",
+   "translation_ru": "ACID (атомарность, согласованность, изолированность, долговечность)",
+   "collocations": [
+    "ACID properties",
+    "ACID compliant",
+    "ACID transaction"
+   ],
+   "examples": [
+    "The bank requires a database with ACID guarantees.",
+    "Durability, the D in ACID, means committed data survives a crash."
+   ],
+   "common_mistakes": [
+    "Reading the A as 'accuracy': it stands for atomicity.",
+    "Thinking every database provides ACID in every mode."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "primary key",
+   "transcription": "/ˈpraɪmɛri ˈkiː/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A column or set of columns whose value is unique for every row and identifies that row.",
+   "translation_ru": "первичный ключ",
+   "collocations": [
+    "define a primary key",
+    "composite primary key",
+    "primary key column"
+   ],
+   "examples": [
+    "The user table uses the id column as its primary key.",
+    "Two rows cannot have the same primary key."
+   ],
+   "common_mistakes": [
+    "Allowing empty values in a primary key.",
+    "Using a value that changes, such as a phone number, as a primary key."
+   ],
+   "contrast_term": "foreign key",
+   "domain": "IT"
+  },
+  {
+   "term": "foreign key",
+   "transcription": "/ˈfɔːrən ˈkiː/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A column that points to the primary key of another table and so links the rows of two tables.",
+   "translation_ru": "внешний ключ",
+   "collocations": [
+    "foreign key constraint",
+    "add a foreign key",
+    "foreign key column"
+   ],
+   "examples": [
+    "The orders table has a foreign key pointing to the customers table.",
+    "The database refused the insert because the foreign key did not match any customer."
+   ],
+   "common_mistakes": [
+    "Thinking a foreign key comes from another database.",
+    "Mixing it up with a primary key."
+   ],
+   "contrast_term": "primary key",
+   "domain": "IT"
+  },
+  {
+   "term": "schema",
+   "transcription": "/ˈskiːmə/",
+   "part_of_speech": "noun",
+   "definition_en": "The description of how a database is organized: its tables, columns, types and relations.",
+   "translation_ru": "схема (базы данных)",
+   "collocations": [
+    "database schema",
+    "change the schema",
+    "schema design"
+   ],
+   "examples": [
+    "The team reviewed the schema before adding the new table.",
+    "A change in the schema must be applied to every environment."
+   ],
+   "common_mistakes": [
+    "Writing 'scheme' for the database term.",
+    "Changing the schema by hand on production."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "normalization",
+   "transcription": "/ˌnɔːrməlaɪˈzeɪʃən/",
+   "part_of_speech": "noun",
+   "definition_en": "Organizing tables so that each fact is stored in only one place, which avoids repeated and contradictory data.",
+   "translation_ru": "нормализация",
+   "collocations": [
+    "database normalization",
+    "normalization rules",
+    "normalization to third normal form"
+   ],
+   "examples": [
+    "After normalization the customer address is stored once and not in every order.",
+    "Too much normalization can make queries need many joins."
+   ],
+   "common_mistakes": [
+    "Confusing it with the normalizing of text or numbers.",
+    "Thinking it always makes queries faster."
+   ],
+   "contrast_term": "denormalization",
+   "domain": "IT"
+  },
+  {
+   "term": "denormalization",
+   "transcription": "/diːˌnɔːrməlaɪˈzeɪʃən/",
+   "part_of_speech": "noun",
+   "definition_en": "Deliberately storing some data in more than one place to make reading faster, accepting extra work to keep copies consistent.",
+   "translation_ru": "денормализация",
+   "collocations": [
+    "denormalization for speed",
+    "apply denormalization",
+    "denormalization trade-off"
+   ],
+   "examples": [
+    "Denormalization saved the report from joining five tables.",
+    "Each denormalization adds a risk that copies disagree."
+   ],
+   "common_mistakes": [
+    "Treating it as a mistake in every case.",
+    "Doing it before measuring a real performance problem."
+   ],
+   "contrast_term": "normalization",
+   "domain": "IT"
+  },
+  {
+   "term": "join",
+   "transcription": "/dʒɔɪn/",
+   "part_of_speech": "noun",
+   "definition_en": "An operation that combines rows from two or more tables according to a related column.",
+   "translation_ru": "соединение (JOIN)",
+   "collocations": [
+    "inner join",
+    "left join",
+    "join condition"
+   ],
+   "examples": [
+    "The query uses a join to show each order with the customer's name.",
+    "A missing join condition produced millions of rows."
+   ],
+   "common_mistakes": [
+    "Forgetting the join condition.",
+    "Mixing up the left join and the inner join."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "stored procedure",
+   "transcription": "/ˈstɔːrd prəˈsiːdʒər/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A named set of commands saved inside the database that applications can run with one call.",
+   "translation_ru": "хранимая процедура",
+   "collocations": [
+    "call a stored procedure",
+    "write a stored procedure",
+    "stored procedure parameter"
+   ],
+   "examples": [
+    "The application calls a stored procedure to close the month.",
+    "Putting a lot of logic into a stored procedure makes testing harder."
+   ],
+   "common_mistakes": [
+    "Thinking it is stored outside the database.",
+    "Building the call by joining text with user input."
+   ],
+   "contrast_term": "trigger",
+   "domain": "IT"
+  },
+  {
+   "term": "replication",
+   "transcription": "/ˌrɛplɪˈkeɪʃən/",
+   "part_of_speech": "noun",
+   "definition_en": "Automatically copying data from one database server to others so that copies stay in sync.",
+   "translation_ru": "репликация",
+   "collocations": [
+    "database replication",
+    "replication lag",
+    "synchronous replication"
+   ],
+   "examples": [
+    "Replication keeps a second server ready in case the first one fails.",
+    "Replication lag made the replica show old data for a few seconds."
+   ],
+   "common_mistakes": [
+    "Treating replication as a backup: a mistaken deletion is copied too.",
+    "Reading from a replica and expecting the very latest write."
+   ],
+   "contrast_term": "backup",
+   "domain": "IT"
+  },
+  {
+   "term": "sharding",
+   "transcription": "/ˈʃɑːrdɪŋ/",
+   "part_of_speech": "noun",
+   "definition_en": "Splitting a large database into parts, each stored on a different server, according to some rule such as the user's identifier.",
+   "translation_ru": "шардирование",
+   "collocations": [
+    "database sharding",
+    "sharding key",
+    "horizontal sharding"
+   ],
+   "examples": [
+    "Sharding spreads the users across ten servers.",
+    "A poor sharding key sends most traffic to one server."
+   ],
+   "common_mistakes": [
+    "Mixing it up with replication, which copies the same data.",
+    "Choosing a sharding key that changes over time."
+   ],
+   "contrast_term": "replication",
+   "domain": "IT"
+  },
+  {
+   "term": "deadlock",
+   "transcription": "/ˈdɛdlɑːk/",
+   "part_of_speech": "noun",
+   "definition_en": "A situation in which two transactions each wait for a resource held by the other, so neither can continue.",
+   "translation_ru": "взаимная блокировка",
+   "collocations": [
+    "detect a deadlock",
+    "deadlock error",
+    "avoid a deadlock"
+   ],
+   "examples": [
+    "The database canceled one transaction to break the deadlock.",
+    "Updating tables in the same order reduces the chance of a deadlock."
+   ],
+   "common_mistakes": [
+    "Treating a deadlock as a crash of the server.",
+    "Retrying the transaction without changing its order."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "isolation level",
+   "transcription": "/ˌaɪsəˈleɪʃən ˈlɛvl/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A setting that decides how much one running transaction can see of the changes made by others.",
+   "translation_ru": "уровень изоляции",
+   "collocations": [
+    "transaction isolation level",
+    "set the isolation level",
+    "default isolation level"
+   ],
+   "examples": [
+    "A higher isolation level gives safer results but allows less parallel work.",
+    "The report ran with a lower isolation level and saw changes from other transactions."
+   ],
+   "common_mistakes": [
+    "Raising the isolation level for every query without a reason.",
+    "Thinking all databases use the same default."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "migration",
+   "transcription": "/maɪˈɡreɪʃən/",
+   "part_of_speech": "noun",
+   "definition_en": "A versioned script that changes the structure of a database from one state to the next, so every environment can be updated the same way.",
+   "translation_ru": "миграция",
+   "collocations": [
+    "database migration",
+    "run a migration",
+    "migration script"
+   ],
+   "examples": [
+    "The deployment runs the migration before starting the new version.",
+    "A migration that locks a big table can stop the service."
+   ],
+   "common_mistakes": [
+    "Editing an old migration after it was applied elsewhere.",
+    "Using 'migration' for moving to another provider only."
+   ],
+   "contrast_term": "schema",
+   "domain": "IT"
+  },
+  {
+   "term": "view",
+   "transcription": "/vjuː/",
+   "part_of_speech": "noun",
+   "definition_en": "A saved query that behaves like a virtual table.",
+   "translation_ru": "представление (view)",
+   "collocations": [
+    "create a view",
+    "materialized view",
+    "query a view"
+   ],
+   "examples": [
+    "The reporting view hides the columns with personal data.",
+    "A materialized view stores the result and must be refreshed."
+   ],
+   "common_mistakes": [
+    "Thinking an ordinary view stores a copy of the data.",
+    "Confusing the database term with the view in an interface."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "trigger",
+   "transcription": "/ˈtrɪɡər/",
+   "part_of_speech": "noun",
+   "definition_en": "Code stored in the database that runs automatically when a certain change happens in a table.",
+   "translation_ru": "триггер",
+   "collocations": [
+    "database trigger",
+    "create a trigger",
+    "trigger fires"
+   ],
+   "examples": [
+    "A trigger writes a record to the audit table whenever a salary is changed.",
+    "Hidden triggers can surprise developers who do not know they exist."
+   ],
+   "common_mistakes": [
+    "Mixing it up with a stored procedure, which has to be called explicitly.",
+    "Putting heavy logic into a trigger."
+   ],
+   "contrast_term": "stored procedure",
+   "domain": "IT"
+  },
+  {
+   "term": "constraint",
+   "transcription": "/kənˈstreɪnt/",
+   "part_of_speech": "noun",
+   "definition_en": "A rule enforced by the database, such as a value being unique, not empty or within a range.",
+   "translation_ru": "ограничение (целостности)",
+   "collocations": [
+    "unique constraint",
+    "check constraint",
+    "violate a constraint"
+   ],
+   "examples": [
+    "A unique constraint on the email column prevents duplicate accounts.",
+    "The insert failed because it violated a constraint."
+   ],
+   "common_mistakes": [
+    "Relying only on the application to check rules.",
+    "Disabling constraints to speed up an import and forgetting to enable them."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "connection pool",
+   "transcription": "/kəˈnɛkʃən puːl/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A set of ready database connections that an application reuses instead of opening a new one for every request.",
+   "translation_ru": "пул соединений",
+   "collocations": [
+    "connection pool size",
+    "exhaust the connection pool",
+    "configure a connection pool"
+   ],
+   "examples": [
+    "The connection pool has twenty connections shared by all requests.",
+    "Slow queries can exhaust the connection pool."
+   ],
+   "common_mistakes": [
+    "Opening a new connection for each request.",
+    "Setting the pool larger than the database allows."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "object-relational mapping",
+   "transcription": "/ˈɑːbdʒɛkt rɪˈleɪʃənl ˈmæpɪŋ/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A technique that lets a program work with database rows as objects, hiding most of the SQL.",
+   "translation_ru": "объектно-реляционное отображение (ORM)",
+   "collocations": [
+    "object-relational mapping library",
+    "object-relational mapping layer",
+    "use object-relational mapping"
+   ],
+   "examples": [
+    "Object-relational mapping saves time on simple queries.",
+    "The object-relational mapping produced hundreds of queries for one page."
+   ],
+   "common_mistakes": [
+    "Expecting it to remove the need to understand SQL.",
+    "Ignoring the queries that the tool generates."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "NoSQL",
+   "transcription": "/ˌɛn oʊ ɛs kjuː ˈɛl/",
+   "part_of_speech": "noun",
+   "definition_en": "A group of databases that do not use tables and the SQL language in the traditional way, such as document or key-value stores.",
+   "translation_ru": "NoSQL (нереляционные базы данных)",
+   "collocations": [
+    "NoSQL database",
+    "NoSQL store",
+    "switch to NoSQL"
+   ],
+   "examples": [
+    "The team chose a NoSQL database for flexible documents.",
+    "Many NoSQL systems trade strict consistency for scalability."
+   ],
+   "common_mistakes": [
+    "Reading it as 'no SQL' meaning that SQL is forbidden: it is often read as 'not only SQL'.",
+    "Assuming it is always faster than a relational database."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "execution plan",
+   "transcription": "/ˌɛksɪˈkjuːʃən plæn/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "The step-by-step strategy the database chooses to carry out a query, which can be inspected to understand why it is slow.",
+   "translation_ru": "план выполнения запроса",
+   "collocations": [
+    "view the execution plan",
+    "execution plan shows",
+    "optimize the execution plan"
+   ],
+   "examples": [
+    "The execution plan showed a full table scan instead of using the index.",
+    "Developers read the execution plan before rewriting a slow query."
+   ],
+   "common_mistakes": [
+    "Guessing why a query is slow without reading the plan.",
+    "Confusing the plan with the result of the query."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "commit",
+   "transcription": "/kəˈmɪt/",
+   "part_of_speech": "noun",
+   "definition_en": "The step that makes all the changes of a transaction permanent and visible to others.",
+   "translation_ru": "фиксация транзакции (commit)",
+   "collocations": [
+    "commit a transaction",
+    "commit succeeds",
+    "commit and rollback"
+   ],
+   "examples": [
+    "The changes become permanent only after the commit.",
+    "A crash before the commit leaves the data as it was."
+   ],
+   "common_mistakes": [
+    "Confusing a database commit with a commit in version control.",
+    "Calling commit before all the operations are finished."
+   ],
+   "contrast_term": "rollback",
+   "domain": "IT"
+  },
+  {
+   "term": "snapshot",
+   "transcription": "/ˈsnæpʃɑːt/",
+   "part_of_speech": "noun",
+   "definition_en": "A frozen copy of the state of a database or disk at one moment in time.",
+   "translation_ru": "снимок (snapshot)",
+   "collocations": [
+    "take a snapshot",
+    "restore from a snapshot",
+    "database snapshot"
+   ],
+   "examples": [
+    "A snapshot of the volume was taken before the upgrade.",
+    "Restoring the snapshot returned the database to yesterday's state."
+   ],
+   "common_mistakes": [
+    "Confusing a snapshot with replication, which keeps copying changes continuously.",
+    "Writing 'snap shot' as two words."
+   ],
+   "contrast_term": "backup",
+   "domain": "IT"
+  }
+ ]
+}

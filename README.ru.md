@@ -28,6 +28,7 @@ docker compose up --build   # PostgreSQL + приложение, миграци�
 docker compose exec app python -m app.seed          # 24 стартовые карточки
 docker compose exec app python -m app.verify_seed   # пометить проверенными после просмотра data/cards.json
 docker compose exec app python -m app.create_admin ВАШ_НИК
+docker compose exec app python -m app.seed --decks   # по желанию: 8 тематических наборов (200 карточек), загружаются непроверенными
 ```
 
 Приложение: <http://localhost:8000>, кабинет преподавателя: `/teacher.html`. Регистрация как преподавателя - галочка «Я преподаватель».

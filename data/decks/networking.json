@@ -1,0 +1,559 @@
+{
+ "deck": {
+  "name": "Networking",
+  "description": "Сети, адреса, протоколы и устройства",
+  "domain": "IT"
+ },
+ "cards": [
+  {
+   "term": "IP address",
+   "transcription": "/ˌaɪ ˈpiː əˈdrɛs/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A number that identifies a device on a network so that other devices can send data to it.",
+   "translation_ru": "IP-адрес",
+   "collocations": [
+    "static IP address",
+    "public IP address",
+    "assign an IP address"
+   ],
+   "examples": [
+    "Each device on the office network receives an IP address automatically.",
+    "The log shows the IP address of every failed login."
+   ],
+   "common_mistakes": [
+    "Thinking an IP address never changes for a laptop: many are assigned temporarily.",
+    "Mixing it up with a MAC address, which belongs to the network card."
+   ],
+   "contrast_term": "MAC address",
+   "domain": "IT"
+  },
+  {
+   "term": "subnet",
+   "transcription": "/ˈsʌbˌnɛt/",
+   "part_of_speech": "noun",
+   "definition_en": "A smaller part of a larger network, with its own range of addresses.",
+   "translation_ru": "подсеть",
+   "collocations": [
+    "private subnet",
+    "subnet mask",
+    "divide into subnets"
+   ],
+   "examples": [
+    "The servers live in a separate subnet from the office computers.",
+    "A subnet mask shows which part of an address identifies the network."
+   ],
+   "common_mistakes": [
+    "Using 'subnetwork' and 'subnet' as different things.",
+    "Thinking that devices in different subnets can never talk to each other."
+   ],
+   "contrast_term": "VLAN",
+   "domain": "IT"
+  },
+  {
+   "term": "router",
+   "transcription": "/ˈruːtər/",
+   "part_of_speech": "noun",
+   "definition_en": "A device that forwards data between different networks and decides which way each packet should go.",
+   "translation_ru": "маршрутизатор",
+   "collocations": [
+    "home router",
+    "edge router",
+    "router configuration"
+   ],
+   "examples": [
+    "The router connects the office network to the internet.",
+    "A misconfigured router sent traffic to the wrong place."
+   ],
+   "common_mistakes": [
+    "Mixing it up with a modem: a modem links to the provider's line, a router directs traffic between networks.",
+    "Confusing it with a switch, which connects devices inside one network."
+   ],
+   "contrast_term": "switch",
+   "domain": "IT"
+  },
+  {
+   "term": "switch",
+   "transcription": "/swɪtʃ/",
+   "part_of_speech": "noun",
+   "definition_en": "A device that connects computers inside one local network and passes data only to the port where the destination is.",
+   "translation_ru": "коммутатор",
+   "collocations": [
+    "network switch",
+    "managed switch",
+    "switch port"
+   ],
+   "examples": [
+    "Every computer in the lab is plugged into a switch.",
+    "A managed switch lets administrators split the network into virtual parts."
+   ],
+   "common_mistakes": [
+    "Mixing it up with a router, which links different networks.",
+    "Calling every box with many ports a switch: a hub repeats data to all ports, a switch does not."
+   ],
+   "contrast_term": "router",
+   "domain": "IT"
+  },
+  {
+   "term": "gateway",
+   "transcription": "/ˈɡeɪtweɪ/",
+   "part_of_speech": "noun",
+   "definition_en": "A device or address that traffic leaves through to reach other networks, usually the router of the local network.",
+   "translation_ru": "шлюз",
+   "collocations": [
+    "default gateway",
+    "gateway address",
+    "payment gateway"
+   ],
+   "examples": [
+    "If the default gateway is wrong, the computer cannot reach the internet.",
+    "The gateway forwards packets to the provider."
+   ],
+   "common_mistakes": [
+    "Confusing a gateway with a firewall: it forwards traffic, it does not decide what is allowed.",
+    "Writing 'gate way' as two words."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "DNS",
+   "transcription": "/ˌdiː ɛn ˈɛs/",
+   "part_of_speech": "noun",
+   "definition_en": "The system that turns human-readable website names into the numeric addresses that computers use.",
+   "translation_ru": "DNS (система доменных имён)",
+   "collocations": [
+    "DNS server",
+    "DNS record",
+    "DNS lookup"
+   ],
+   "examples": [
+    "The site was unreachable because the DNS record pointed to an old server.",
+    "A DNS lookup happens before the browser connects to the site."
+   ],
+   "common_mistakes": [
+    "Saying 'DNS system': the S already stands for system.",
+    "Thinking that DNS carries the web page itself."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "DHCP",
+   "transcription": "/ˌdiː eɪtʃ siː ˈpiː/",
+   "part_of_speech": "noun",
+   "definition_en": "A service that automatically gives devices an IP address and other network settings when they join a network.",
+   "translation_ru": "DHCP (протокол динамической настройки узла)",
+   "collocations": [
+    "DHCP server",
+    "DHCP lease",
+    "enable DHCP"
+   ],
+   "examples": [
+    "The router acts as a DHCP server for the whole house.",
+    "A DHCP lease expires after a set time and is renewed."
+   ],
+   "common_mistakes": [
+    "Entering every address by hand when DHCP is available.",
+    "Confusing DHCP with DNS: one hands out addresses, the other translates names."
+   ],
+   "contrast_term": "DNS",
+   "domain": "IT"
+  },
+  {
+   "term": "NAT",
+   "transcription": "/næt/",
+   "part_of_speech": "noun",
+   "definition_en": "A technique in which a router replaces the private addresses of internal devices with its own public address.",
+   "translation_ru": "NAT (трансляция сетевых адресов)",
+   "collocations": [
+    "NAT table",
+    "behind NAT",
+    "NAT gateway"
+   ],
+   "examples": [
+    "Hundreds of students share one public address because of NAT.",
+    "Devices behind NAT cannot be reached directly from the internet."
+   ],
+   "common_mistakes": [
+    "Thinking NAT is a firewall: it hides addresses but does not inspect traffic.",
+    "Pronouncing it letter by letter: it is usually said as a word."
+   ],
+   "contrast_term": "firewall",
+   "domain": "IT"
+  },
+  {
+   "term": "packet",
+   "transcription": "/ˈpækɪt/",
+   "part_of_speech": "noun",
+   "definition_en": "A small unit of data sent over a network, made of a header with addressing information and a part carrying the actual data.",
+   "translation_ru": "пакет",
+   "collocations": [
+    "network packet",
+    "packet header",
+    "capture a packet"
+   ],
+   "examples": [
+    "The file was split into thousands of packets before it was sent.",
+    "The analyst captured a packet to see the request."
+   ],
+   "common_mistakes": [
+    "Using 'package' for the network unit.",
+    "Thinking that all packets of one file take the same route."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "protocol",
+   "transcription": "/ˈproʊtəˌkɔːl/",
+   "part_of_speech": "noun",
+   "definition_en": "An agreed set of rules that defines how two programs or devices exchange data.",
+   "translation_ru": "протокол",
+   "collocations": [
+    "network protocol",
+    "protocol version",
+    "implement a protocol"
+   ],
+   "examples": [
+    "HTTP is the protocol that web browsers use to ask for pages.",
+    "Both ends must support the same protocol version."
+   ],
+   "common_mistakes": [
+    "Confusing a protocol with the program that implements it.",
+    "Stressing the second syllable: the stress falls on the first one."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "bandwidth",
+   "transcription": "/ˈbændˌwɪdθ/",
+   "part_of_speech": "noun",
+   "definition_en": "The maximum amount of data that a connection can carry in a given time.",
+   "translation_ru": "пропускная способность канала",
+   "collocations": [
+    "high bandwidth",
+    "limited bandwidth",
+    "bandwidth usage"
+   ],
+   "examples": [
+    "The video call stutters because the bandwidth is shared by many users.",
+    "The provider sells connections with higher bandwidth for a fee."
+   ],
+   "common_mistakes": [
+    "Treating it as the same as the real speed you get: that is throughput.",
+    "Thinking more bandwidth always means lower latency."
+   ],
+   "contrast_term": "throughput",
+   "domain": "IT"
+  },
+  {
+   "term": "packet loss",
+   "transcription": "/ˈpækɪt ˈlɔːs/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A situation in which some packets sent over a network never arrive at their destination.",
+   "translation_ru": "потеря пакетов",
+   "collocations": [
+    "high packet loss",
+    "packet loss rate",
+    "reduce packet loss"
+   ],
+   "examples": [
+    "Packet loss made the voice call sound broken.",
+    "The monitoring system alerts the team when packet loss exceeds one percent."
+   ],
+   "common_mistakes": [
+    "Saying 'packets losing' instead of the noun phrase.",
+    "Assuming lost packets are always resent: it depends on the protocol."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "jitter",
+   "transcription": "/ˈdʒɪtər/",
+   "part_of_speech": "noun",
+   "definition_en": "Variation in the time it takes packets to arrive, which spoils real-time audio and video.",
+   "translation_ru": "джиттер",
+   "collocations": [
+    "network jitter",
+    "jitter buffer",
+    "low jitter"
+   ],
+   "examples": [
+    "High jitter makes the video call freeze and then jump forward.",
+    "A jitter buffer smooths out uneven packet arrival."
+   ],
+   "common_mistakes": [
+    "Confusing jitter with latency: latency is the delay, jitter is its variation.",
+    "Spelling it 'gitter' or 'jiter'."
+   ],
+   "contrast_term": "latency",
+   "domain": "IT"
+  },
+  {
+   "term": "load balancer",
+   "transcription": "/ˈloʊd ˌbælənsər/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A component that spreads incoming requests across several servers so that none of them is overloaded.",
+   "translation_ru": "балансировщик нагрузки",
+   "collocations": [
+    "configure a load balancer",
+    "load balancer health check",
+    "load balancer algorithm"
+   ],
+   "examples": [
+    "The load balancer sends each new request to the least busy server.",
+    "If a server fails its health check, the load balancer stops using it."
+   ],
+   "common_mistakes": [
+    "Thinking a load balancer makes a single server faster.",
+    "Writing 'load ballancer' with a double l."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "proxy",
+   "transcription": "/ˈprɑːksi/",
+   "part_of_speech": "noun",
+   "definition_en": "A server that makes requests on behalf of another computer, so the destination sees this server and not the original sender.",
+   "translation_ru": "прокси-сервер",
+   "collocations": [
+    "proxy server",
+    "HTTP proxy",
+    "go through a proxy"
+   ],
+   "examples": [
+    "Employees reach the internet through a company proxy.",
+    "The proxy hides the address of the real client."
+   ],
+   "common_mistakes": [
+    "Mixing it up with a reverse proxy, which stands in front of servers.",
+    "Assuming a proxy always encrypts traffic."
+   ],
+   "contrast_term": "reverse proxy",
+   "domain": "IT"
+  },
+  {
+   "term": "reverse proxy",
+   "transcription": "/rɪˈvɜːrs ˈprɑːksi/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A server placed in front of one or more web servers that receives client requests and passes them on, hiding the servers behind it.",
+   "translation_ru": "обратный прокси-сервер",
+   "collocations": [
+    "reverse proxy server",
+    "behind a reverse proxy",
+    "configure a reverse proxy"
+   ],
+   "examples": [
+    "The reverse proxy terminates the encrypted connection and forwards plain requests inside the network.",
+    "Clients never talk to the application servers directly because of the reverse proxy."
+   ],
+   "common_mistakes": [
+    "Confusing it with a normal proxy, which works for the client, not the server.",
+    "Thinking it is only used for caching."
+   ],
+   "contrast_term": "proxy",
+   "domain": "IT"
+  },
+  {
+   "term": "VPN",
+   "transcription": "/ˌviː piː ˈɛn/",
+   "part_of_speech": "noun",
+   "definition_en": "A service that creates an encrypted tunnel between your device and another network, so traffic passes through it privately.",
+   "translation_ru": "VPN (виртуальная частная сеть)",
+   "collocations": [
+    "connect to a VPN",
+    "corporate VPN",
+    "VPN tunnel"
+   ],
+   "examples": [
+    "Employees must turn on the VPN before opening internal tools.",
+    "A VPN protects traffic on public Wi-Fi from other users of the network."
+   ],
+   "common_mistakes": [
+    "Thinking a VPN makes you completely anonymous.",
+    "Saying 'VPN network': the N already stands for network."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "port",
+   "transcription": "/pɔːrt/",
+   "part_of_speech": "noun",
+   "definition_en": "A numbered entry point on a computer that lets different services receive network connections separately.",
+   "translation_ru": "порт",
+   "collocations": [
+    "open port",
+    "close a port",
+    "port number"
+   ],
+   "examples": [
+    "Web servers usually listen on port 443 for encrypted traffic.",
+    "The scan showed an unexpected open port on the server."
+   ],
+   "common_mistakes": [
+    "Confusing a software port (a number) with a hardware port (a socket).",
+    "Believing that closing a port removes the program listening on it."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "TCP",
+   "transcription": "/ˌtiː siː ˈpiː/",
+   "part_of_speech": "noun",
+   "definition_en": "A protocol that delivers data reliably and in the right order by confirming that packets have arrived.",
+   "translation_ru": "TCP (протокол управления передачей)",
+   "collocations": [
+    "TCP connection",
+    "TCP port",
+    "TCP handshake"
+   ],
+   "examples": [
+    "Web pages are normally delivered over a TCP connection.",
+    "TCP resends packets that were not acknowledged."
+   ],
+   "common_mistakes": [
+    "Thinking TCP is faster than UDP: it is more reliable, but it adds overhead.",
+    "Mixing it up with IP, which only addresses and routes packets."
+   ],
+   "contrast_term": "UDP",
+   "domain": "IT"
+  },
+  {
+   "term": "UDP",
+   "transcription": "/ˌjuː diː ˈpiː/",
+   "part_of_speech": "noun",
+   "definition_en": "A simple protocol that sends data without checking whether it arrives, which makes it fast and suitable for live audio and games.",
+   "translation_ru": "UDP (протокол пользовательских датаграмм)",
+   "collocations": [
+    "UDP packet",
+    "UDP port",
+    "send over UDP"
+   ],
+   "examples": [
+    "Voice calls often use UDP because a late packet is useless anyway.",
+    "DNS queries are usually sent over UDP."
+   ],
+   "common_mistakes": [
+    "Expecting UDP to resend lost data.",
+    "Thinking UDP is insecure by definition; it simply gives no delivery guarantee."
+   ],
+   "contrast_term": "TCP",
+   "domain": "IT"
+  },
+  {
+   "term": "three-way handshake",
+   "transcription": "/ˌθriː weɪ ˈhændʃeɪk/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "The three messages that two computers exchange to set up a TCP connection before sending data.",
+   "translation_ru": "трёхстороннее рукопожатие",
+   "collocations": [
+    "complete the three-way handshake",
+    "three-way handshake in TCP",
+    "failed three-way handshake"
+   ],
+   "examples": [
+    "A client starts the three-way handshake by sending a SYN message.",
+    "The server did not answer, so the three-way handshake never finished."
+   ],
+   "common_mistakes": [
+    "Thinking it needs three computers.",
+    "Mixing it up with the handshake of TLS, which comes after the TCP one."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "MAC address",
+   "transcription": "/ˈmæk əˈdrɛs/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A hardware identifier assigned to a network card, used to deliver data inside a local network.",
+   "translation_ru": "MAC-адрес",
+   "collocations": [
+    "MAC address filtering",
+    "spoof a MAC address",
+    "unique MAC address"
+   ],
+   "examples": [
+    "The switch learns the MAC address of every connected device.",
+    "MAC address filtering is easy to bypass because addresses can be changed."
+   ],
+   "common_mistakes": [
+    "Confusing it with the Mac computer or with an IP address.",
+    "Believing it travels across the internet: it is only used inside a local network."
+   ],
+   "contrast_term": "IP address",
+   "domain": "IT"
+  },
+  {
+   "term": "VLAN",
+   "transcription": "/ˈviː læn/",
+   "part_of_speech": "noun",
+   "definition_en": "A way of splitting one physical network into separate logical networks, so groups of devices cannot see each other's traffic.",
+   "translation_ru": "VLAN (виртуальная локальная сеть)",
+   "collocations": [
+    "separate VLAN",
+    "VLAN tag",
+    "assign a VLAN"
+   ],
+   "examples": [
+    "Guest devices are placed in a different VLAN from the staff computers.",
+    "A VLAN tag marks to which virtual network a frame belongs."
+   ],
+   "common_mistakes": [
+    "Assuming that two VLANs are separated without any other settings: they still need rules.",
+    "Mixing it up with a VPN, which protects traffic between distant networks."
+   ],
+   "contrast_term": "VPN",
+   "domain": "IT"
+  },
+  {
+   "term": "network segmentation",
+   "transcription": "/ˈnɛtwɜːrk ˌsɛɡmənˈteɪʃən/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "Dividing a network into separate zones with controlled links between them, so a problem in one zone does not spread everywhere.",
+   "translation_ru": "сегментация сети",
+   "collocations": [
+    "implement network segmentation",
+    "network segmentation policy",
+    "lack of network segmentation"
+   ],
+   "examples": [
+    "Network segmentation kept the infection inside the guest zone.",
+    "The audit recommended better network segmentation of the payment systems."
+   ],
+   "common_mistakes": [
+    "Thinking segmentation is the same as installing a single firewall.",
+    "Writing 'segmantation'."
+   ],
+   "contrast_term": null,
+   "domain": "IT"
+  },
+  {
+   "term": "ping",
+   "transcription": "/pɪŋ/",
+   "part_of_speech": "noun",
+   "definition_en": "A simple test that sends a small message to another computer and measures how long the reply takes.",
+   "translation_ru": "пинг",
+   "collocations": [
+    "ping time",
+    "ping a server",
+    "ping response"
+   ],
+   "examples": [
+    "A high ping to the game server makes the game hard to play.",
+    "The server does not answer a ping, but the website still works."
+   ],
+   "common_mistakes": [
+    "Thinking no reply to a ping means the server is down: pings may be blocked.",
+    "Using 'pinging' as a noun for the test itself."
+   ],
+   "contrast_term": "latency",
+   "domain": "IT"
+  }
+ ]
+}

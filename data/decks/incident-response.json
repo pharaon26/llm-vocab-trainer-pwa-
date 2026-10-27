@@ -1,0 +1,559 @@
+{
+ "deck": {
+  "name": "Incident Response",
+  "description": "Реагирование на инциденты информационной безопасности",
+  "domain": "Information security"
+ },
+ "cards": [
+  {
+   "term": "incident",
+   "transcription": "/ˈɪnsɪdənt/",
+   "part_of_speech": "noun",
+   "definition_en": "An event that harms, or threatens to harm, the security of systems or data and needs a planned response.",
+   "translation_ru": "инцидент",
+   "collocations": [
+    "security incident",
+    "report an incident",
+    "incident response"
+   ],
+   "examples": [
+    "The team declared an incident when the database server started sending data to an unknown address.",
+    "Every incident is recorded in the ticket system."
+   ],
+   "common_mistakes": [
+    "Treating every alert as an incident: many alerts turn out to be harmless.",
+    "Writing 'incedent'."
+   ],
+   "contrast_term": "breach",
+   "domain": "Information security"
+  },
+  {
+   "term": "triage",
+   "transcription": "/ˈtriːɑːʒ/",
+   "part_of_speech": "noun",
+   "definition_en": "Quickly judging which alerts or incidents matter most, so the most serious ones are handled first.",
+   "translation_ru": "первичная сортировка (триаж)",
+   "collocations": [
+    "alert triage",
+    "triage process",
+    "perform triage"
+   ],
+   "examples": [
+    "During triage the analyst decided that the alert was a false alarm.",
+    "Good triage keeps the team from drowning in low-priority alerts."
+   ],
+   "common_mistakes": [
+    "Starting a deep investigation before checking how serious the alert is.",
+    "Thinking it is only a medical term."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "containment",
+   "transcription": "/kənˈteɪnmənt/",
+   "part_of_speech": "noun",
+   "definition_en": "Actions that stop an incident from spreading, for example by cutting an infected computer off from the network.",
+   "translation_ru": "сдерживание (локализация)",
+   "collocations": [
+    "containment strategy",
+    "short-term containment",
+    "incident containment"
+   ],
+   "examples": [
+    "Containment started with disconnecting the infected laptops from the network.",
+    "Wiping the machines too early would have destroyed evidence before containment was complete."
+   ],
+   "common_mistakes": [
+    "Switching a compromised server off immediately and losing the evidence in memory.",
+    "Mixing it up with eradication, which removes the cause."
+   ],
+   "contrast_term": "eradication",
+   "domain": "Information security"
+  },
+  {
+   "term": "eradication",
+   "transcription": "/ɪˌrædɪˈkeɪʃən/",
+   "part_of_speech": "noun",
+   "definition_en": "Removing the cause of an incident from the environment, such as malware, rogue accounts or the flaw that was used.",
+   "translation_ru": "устранение причины (искоренение)",
+   "collocations": [
+    "eradication of the malware",
+    "eradication phase",
+    "complete eradication"
+   ],
+   "examples": [
+    "Eradication included deleting the attacker's accounts and closing the hole in the web server.",
+    "Without proper eradication the intruder may come back."
+   ],
+   "common_mistakes": [
+    "Restoring systems before the cause has been removed.",
+    "Spelling it 'eradiction'."
+   ],
+   "contrast_term": "containment",
+   "domain": "Information security"
+  },
+  {
+   "term": "recovery",
+   "transcription": "/rɪˈkʌvəri/",
+   "part_of_speech": "noun",
+   "definition_en": "Bringing affected systems back to normal operation and watching them closely to be sure the problem is gone.",
+   "translation_ru": "восстановление",
+   "collocations": [
+    "recovery plan",
+    "disaster recovery",
+    "recovery time"
+   ],
+   "examples": [
+    "Recovery began with restoring the servers from clean backups.",
+    "The team monitored the systems for a week after recovery."
+   ],
+   "common_mistakes": [
+    "Declaring the incident closed right after systems start working.",
+    "Restoring from a backup that may already contain the infection."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "post-mortem",
+   "transcription": "/ˌpoʊst ˈmɔːrtəm/",
+   "part_of_speech": "noun",
+   "definition_en": "A meeting and report after an incident that explains what happened and what should change, usually without blaming individuals.",
+   "translation_ru": "разбор инцидента (постмортем)",
+   "collocations": [
+    "blameless post-mortem",
+    "post-mortem report",
+    "hold a post-mortem"
+   ],
+   "examples": [
+    "The post-mortem showed that the alert was ignored because of too much noise.",
+    "Everyone attended the post-mortem and agreed on three improvements."
+   ],
+   "common_mistakes": [
+    "Using the post-mortem to find someone to blame.",
+    "Skipping it when the incident was short."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "root cause",
+   "transcription": "/ˈruːt kɔːz/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "The underlying reason for a problem which, once fixed, prevents the same problem from happening again.",
+   "translation_ru": "первопричина",
+   "collocations": [
+    "identify the root cause",
+    "root cause analysis",
+    "root cause of the outage"
+   ],
+   "examples": [
+    "The root cause was a password that had never been changed after an employee left.",
+    "Fixing the symptom without finding the root cause leads to repeated incidents."
+   ],
+   "common_mistakes": [
+    "Stopping at the first visible reason instead of asking why again.",
+    "Confusing the root cause with the trigger of the incident."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "indicator of compromise",
+   "transcription": "/ˈɪndɪkeɪtər əv ˈkɑːmprəmaɪz/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A piece of evidence, such as a file fingerprint, an address or a domain name, that suggests a system has been broken into.",
+   "translation_ru": "индикатор компрометации",
+   "collocations": [
+    "known indicator of compromise",
+    "indicator of compromise list",
+    "search for an indicator of compromise"
+   ],
+   "examples": [
+    "The analyst searched all computers for the indicator of compromise from the report.",
+    "A strange outgoing connection can be an indicator of compromise."
+   ],
+   "common_mistakes": [
+    "Thinking one indicator proves a breach: it only suggests it.",
+    "Treating old indicators as always valid, though attackers change addresses quickly."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "digital forensics",
+   "transcription": "/ˈdɪdʒɪtl fəˈrɛnsɪks/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "Collecting and examining electronic evidence carefully, so that it can be trusted and used to understand an incident or in court.",
+   "translation_ru": "цифровая криминалистика",
+   "collocations": [
+    "digital forensics expert",
+    "digital forensics investigation",
+    "digital forensics tool"
+   ],
+   "examples": [
+    "Digital forensics showed which files the attacker had opened.",
+    "A copy of the disk was made for digital forensics before any repair."
+   ],
+   "common_mistakes": [
+    "Working on the original disk instead of a copy.",
+    "Using 'forensic' as a noun for the whole field."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "chain of custody",
+   "transcription": "/ˈtʃeɪn əv ˈkʌstədi/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A written record of everyone who handled a piece of evidence and when, proving that it was not altered.",
+   "translation_ru": "цепочка хранения доказательств",
+   "collocations": [
+    "maintain the chain of custody",
+    "break the chain of custody",
+    "chain of custody form"
+   ],
+   "examples": [
+    "The laptop was sealed and signed over to keep the chain of custody intact.",
+    "A gap in the chain of custody can make evidence useless in court."
+   ],
+   "common_mistakes": [
+    "Mixing it up with a supply chain.",
+    "Forgetting to record who held the device overnight."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "playbook",
+   "transcription": "/ˈpleɪbʊk/",
+   "part_of_speech": "noun",
+   "definition_en": "A written, step-by-step procedure that tells the team what to do for a certain type of incident.",
+   "translation_ru": "сценарий реагирования (плейбук)",
+   "collocations": [
+    "incident response playbook",
+    "follow the playbook",
+    "update a playbook"
+   ],
+   "examples": [
+    "The ransomware playbook says to isolate the machine first.",
+    "A playbook saves time because decisions are made before the crisis."
+   ],
+   "common_mistakes": [
+    "Treating the playbook as a rigid rule that forbids thinking.",
+    "Never testing the playbook before a real incident."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "escalation",
+   "transcription": "/ˌɛskəˈleɪʃən/",
+   "part_of_speech": "noun",
+   "definition_en": "Passing a problem to more senior or specialized people when it is too serious or too complex for the current handlers.",
+   "translation_ru": "эскалация",
+   "collocations": [
+    "escalation procedure",
+    "escalation path",
+    "escalation to management"
+   ],
+   "examples": [
+    "The first-line analyst started an escalation when customer data was involved.",
+    "A clear escalation path tells everyone whom to call at night."
+   ],
+   "common_mistakes": [
+    "Waiting too long because escalating feels like admitting failure.",
+    "Mixing it up with 'escalator' or with making a conflict worse."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "SIEM",
+   "transcription": "/sɪm/",
+   "part_of_speech": "noun",
+   "definition_en": "A system that gathers log messages from many sources, compares them and raises an alert when they show something suspicious.",
+   "translation_ru": "SIEM (система управления событиями безопасности)",
+   "collocations": [
+    "SIEM alert",
+    "SIEM rule",
+    "SIEM dashboard"
+   ],
+   "examples": [
+    "The SIEM raised an alert after fifty failed logins from one address.",
+    "Logs from firewalls and servers flow into the SIEM."
+   ],
+   "common_mistakes": [
+    "Thinking a SIEM stops attacks by itself: it detects and reports.",
+    "Sending logs to the SIEM without anyone reading its alerts."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "intrusion detection system",
+   "transcription": "/ɪnˈtruːʒən dɪˈtɛkʃən ˈsɪstəm/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A tool that watches network traffic or computers for signs of attack and raises an alert, without blocking anything itself.",
+   "translation_ru": "система обнаружения вторжений",
+   "collocations": [
+    "network intrusion detection system",
+    "intrusion detection system alert",
+    "deploy an intrusion detection system"
+   ],
+   "examples": [
+    "The intrusion detection system noticed a scan of the internal network.",
+    "An intrusion detection system only warns; an intrusion prevention system can block."
+   ],
+   "common_mistakes": [
+    "Thinking it blocks attacks: that is the job of a prevention system.",
+    "Ignoring alerts because of many false positives instead of tuning the rules."
+   ],
+   "contrast_term": "firewall",
+   "domain": "Information security"
+  },
+  {
+   "term": "threat hunting",
+   "transcription": "/ˈθrɛt ˈhʌntɪŋ/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "Actively searching a network for hidden intruders instead of waiting for an alert.",
+   "translation_ru": "проактивный поиск угроз",
+   "collocations": [
+    "threat hunting team",
+    "threat hunting exercise",
+    "proactive threat hunting"
+   ],
+   "examples": [
+    "Threat hunting found an old backdoor that no alert had caught.",
+    "Analysts start threat hunting from a theory about how an attacker might behave."
+   ],
+   "common_mistakes": [
+    "Thinking hunting means only reading the SIEM alerts.",
+    "Doing it without a clear question to answer."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "ransomware",
+   "transcription": "/ˈrænsəmwɛr/",
+   "part_of_speech": "noun",
+   "definition_en": "A kind of harmful software that locks or encrypts a victim's files and demands money to give them back.",
+   "translation_ru": "программа-вымогатель",
+   "collocations": [
+    "ransomware attack",
+    "ransomware gang",
+    "ransomware infection"
+   ],
+   "examples": [
+    "The hospital restored its systems from backups instead of paying the ransom demanded by the ransomware.",
+    "A ransomware attack often begins with a phishing email."
+   ],
+   "common_mistakes": [
+    "Believing that paying always returns the data.",
+    "Keeping the only backup on a network drive that the ransomware can also encrypt."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "data exfiltration",
+   "transcription": "/ˈdeɪtə ˌɛksfɪlˈtreɪʃən/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "Secretly copying or sending data out of an organization without permission.",
+   "translation_ru": "вывод (утечка) данных наружу",
+   "collocations": [
+    "data exfiltration attempt",
+    "prevent data exfiltration",
+    "detect data exfiltration"
+   ],
+   "examples": [
+    "Large uploads at night were a sign of data exfiltration.",
+    "The attacker used the web server for data exfiltration over many days."
+   ],
+   "common_mistakes": [
+    "Mixing it up with data loss from a broken disk.",
+    "Spelling it 'exfiltrating' as a noun."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "lateral movement",
+   "transcription": "/ˈlætərəl ˈmuːvmənt/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "The way an attacker who has entered one computer moves on to other computers inside the network.",
+   "translation_ru": "боковое перемещение",
+   "collocations": [
+    "lateral movement inside the network",
+    "detect lateral movement",
+    "limit lateral movement"
+   ],
+   "examples": [
+    "Network segmentation makes lateral movement harder.",
+    "The attacker used stolen credentials for lateral movement to the file server."
+   ],
+   "common_mistakes": [
+    "Thinking an attacker stops at the first compromised computer.",
+    "Confusing it with privilege escalation, which is about getting higher rights."
+   ],
+   "contrast_term": "privilege escalation",
+   "domain": "Information security"
+  },
+  {
+   "term": "persistence",
+   "transcription": "/pərˈsɪstəns/",
+   "part_of_speech": "noun",
+   "definition_en": "Techniques that let an attacker keep access to a system after a restart or a password change.",
+   "translation_ru": "закрепление в системе",
+   "collocations": [
+    "establish persistence",
+    "persistence mechanism",
+    "remove persistence"
+   ],
+   "examples": [
+    "The malware created a scheduled task for persistence.",
+    "Eradication must include removing every persistence mechanism."
+   ],
+   "common_mistakes": [
+    "Using the word only in its everyday sense of being determined.",
+    "Cleaning the malware file but leaving the scheduled task that restarts it."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "mitigation",
+   "transcription": "/ˌmɪtɪˈɡeɪʃən/",
+   "part_of_speech": "noun",
+   "definition_en": "Steps taken to reduce the damage or the likelihood of a risk when it cannot be removed completely.",
+   "translation_ru": "смягчение последствий (меры снижения риска)",
+   "collocations": [
+    "risk mitigation",
+    "mitigation measure",
+    "temporary mitigation"
+   ],
+   "examples": [
+    "Blocking the address was a quick mitigation until the patch arrived.",
+    "The report lists the mitigation for each risk."
+   ],
+   "common_mistakes": [
+    "Treating a mitigation as a full fix.",
+    "Spelling it 'mitigaton'."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "severity",
+   "transcription": "/sɪˈvɛrəti/",
+   "part_of_speech": "noun",
+   "definition_en": "A rating of how serious an incident or vulnerability is, based on its impact and how easily it can be exploited.",
+   "translation_ru": "критичность (серьёзность)",
+   "collocations": [
+    "high severity",
+    "severity level",
+    "assign a severity"
+   ],
+   "examples": [
+    "The team assigned the highest severity because customer data was exposed.",
+    "The severity can change when new facts appear."
+   ],
+   "common_mistakes": [
+    "Mixing up severity (how bad) with priority (how soon to act).",
+    "Setting the severity once and never reviewing it."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "tabletop exercise",
+   "transcription": "/ˈteɪblˌtɑːp ˈɛksərsaɪz/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A practice session in which the team talks through how it would handle an imagined incident, without touching real systems.",
+   "translation_ru": "учения за столом (настольные учения)",
+   "collocations": [
+    "run a tabletop exercise",
+    "tabletop exercise scenario",
+    "annual tabletop exercise"
+   ],
+   "examples": [
+    "During the tabletop exercise the team discovered that nobody knew the manager's phone number.",
+    "A tabletop exercise is cheaper than a full technical drill."
+   ],
+   "common_mistakes": [
+    "Thinking it involves attacking real servers.",
+    "Practicing only with the technical team and leaving out management."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "zero-day",
+   "transcription": "/ˈzɪroʊ deɪ/",
+   "part_of_speech": "noun",
+   "definition_en": "A flaw that the software maker does not know about yet, so no fix exists, or an attack that uses such a flaw.",
+   "translation_ru": "уязвимость нулевого дня",
+   "collocations": [
+    "zero-day vulnerability",
+    "zero-day exploit",
+    "zero-day attack"
+   ],
+   "examples": [
+    "Attackers used a zero-day to break into the mail server before a patch existed.",
+    "Monitoring helps to notice a zero-day even when no signature is available."
+   ],
+   "common_mistakes": [
+    "Thinking zero-day means a flaw that was found on the first day of the year.",
+    "Believing that updates alone protect against it."
+   ],
+   "contrast_term": "vulnerability",
+   "domain": "Information security"
+  },
+  {
+   "term": "denial of service",
+   "transcription": "/dɪˈnaɪəl əv ˈsɜːrvɪs/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "An attack that makes a service unavailable to real users, usually by overloading it with traffic or requests.",
+   "translation_ru": "отказ в обслуживании (DoS)",
+   "collocations": [
+    "denial of service attack",
+    "protect against denial of service",
+    "distributed denial of service"
+   ],
+   "examples": [
+    "A denial of service attack flooded the shop with fake requests on the busiest day.",
+    "Rate limiting reduces the effect of a simple denial of service."
+   ],
+   "common_mistakes": [
+    "Thinking it steals data: it only blocks access.",
+    "Writing 'denial of services'."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "quarantine",
+   "transcription": "/ˈkwɔːrəntiːn/",
+   "part_of_speech": "noun",
+   "definition_en": "Isolating a suspicious file or device so that it cannot affect other systems while it is examined.",
+   "translation_ru": "карантин (изоляция)",
+   "collocations": [
+    "put a device in quarantine",
+    "quarantine network",
+    "quarantine folder"
+   ],
+   "examples": [
+    "The antivirus moved the suspicious attachment into quarantine.",
+    "The infected laptop stayed in quarantine until the analysts finished their work."
+   ],
+   "common_mistakes": [
+    "Deleting a file from quarantine without checking it.",
+    "Spelling it 'quarentine'."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  }
+ ]
+}

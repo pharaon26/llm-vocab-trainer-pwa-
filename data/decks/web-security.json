@@ -1,0 +1,559 @@
+{
+ "deck": {
+  "name": "Web Security",
+  "description": "Атаки на веб-приложения и защита от них",
+  "domain": "Information security"
+ },
+ "cards": [
+  {
+   "term": "cross-site scripting",
+   "transcription": "/ˌkrɔːs saɪt ˈskrɪptɪŋ/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "An attack in which someone gets their own script to run inside a trusted website, so it executes in the browsers of other visitors.",
+   "translation_ru": "межсайтовый скриптинг (XSS)",
+   "collocations": [
+    "reflected cross-site scripting",
+    "stored cross-site scripting",
+    "prevent cross-site scripting"
+   ],
+   "examples": [
+    "The comment form allowed cross-site scripting because it printed user text without encoding.",
+    "A strict content policy limits the damage of cross-site scripting."
+   ],
+   "common_mistakes": [
+    "Abbreviating it as CSS: the usual abbreviation is XSS, because CSS already means style sheets.",
+    "Thinking it only affects the server: the script runs in the visitor's browser."
+   ],
+   "contrast_term": "cross-site request forgery",
+   "domain": "Information security"
+  },
+  {
+   "term": "SQL injection",
+   "transcription": "/ˌɛs kjuː ˈɛl ɪnˈdʒɛkʃən/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A flaw where text typed by a user ends up inside a database command and changes what that command does.",
+   "translation_ru": "SQL-инъекция",
+   "collocations": [
+    "prevent SQL injection",
+    "SQL injection attack",
+    "vulnerable to SQL injection"
+   ],
+   "examples": [
+    "Parameterized queries remove the risk of SQL injection in the login form.",
+    "The audit found an SQL injection in the search page."
+   ],
+   "common_mistakes": [
+    "Saying 'SQL inject' as a noun: use 'SQL injection' for the flaw and 'inject' only as a verb.",
+    "Believing that escaping quotes by hand is as safe as parameterized queries."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "cross-site request forgery",
+   "transcription": "/ˌkrɔːs saɪt rɪˈkwɛst ˈfɔːrdʒəri/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "An attack that makes a logged-in user's browser send an unwanted request to a site that trusts the user's cookies.",
+   "translation_ru": "подделка межсайтового запроса (CSRF)",
+   "collocations": [
+    "cross-site request forgery token",
+    "protect against cross-site request forgery",
+    "cross-site request forgery attack"
+   ],
+   "examples": [
+    "A hidden form on another page triggered cross-site request forgery and changed the user's email.",
+    "The framework adds an anti-token to stop cross-site request forgery."
+   ],
+   "common_mistakes": [
+    "Mixing it up with cross-site scripting: here the attacker does not run code on your site.",
+    "Writing 'forgary' instead of 'forgery'."
+   ],
+   "contrast_term": "cross-site scripting",
+   "domain": "Information security"
+  },
+  {
+   "term": "clickjacking",
+   "transcription": "/ˈklɪkˌdʒækɪŋ/",
+   "part_of_speech": "noun",
+   "definition_en": "A trick where a page is hidden under or inside another page so that a visitor clicks something different from what they think.",
+   "translation_ru": "кликджекинг",
+   "collocations": [
+    "prevent clickjacking",
+    "clickjacking attack",
+    "clickjacking protection"
+   ],
+   "examples": [
+    "Forbidding framing of the site is the standard defense against clickjacking.",
+    "The attacker used clickjacking to make users press a hidden 'Delete account' button."
+   ],
+   "common_mistakes": [
+    "Spelling it as 'click jacking' or 'clickjaking'.",
+    "Treating it as a bug in the user's mouse or browser instead of a design flaw of the page."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "sanitization",
+   "transcription": "/ˌsænɪtəˈzeɪʃən/",
+   "part_of_speech": "noun",
+   "definition_en": "Cleaning data from untrusted sources by removing or neutralizing the parts that could be harmful.",
+   "translation_ru": "очистка (санитизация) данных",
+   "collocations": [
+    "input sanitization",
+    "HTML sanitization",
+    "sanitization library"
+   ],
+   "examples": [
+    "Sanitization of the comment field removes script tags before saving.",
+    "Relying only on sanitization is risky; encode the output as well."
+   ],
+   "common_mistakes": [
+    "Using it as a synonym of validation: validation rejects bad data, sanitization changes it.",
+    "Confusing it with disinfecting hardware; here it concerns data."
+   ],
+   "contrast_term": "input validation",
+   "domain": "Information security"
+  },
+  {
+   "term": "input validation",
+   "transcription": "/ˈɪnpʊt ˌvælɪˈdeɪʃən/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "Checking that the data a program receives has the expected type, length and format before using it.",
+   "translation_ru": "проверка входных данных (валидация)",
+   "collocations": [
+    "server-side input validation",
+    "strict input validation",
+    "input validation rules"
+   ],
+   "examples": [
+    "Input validation rejected a phone number with letters in it.",
+    "Client-side checks are not enough, so the server repeats the input validation."
+   ],
+   "common_mistakes": [
+    "Thinking that checking in the browser is enough.",
+    "Calling it 'inputs validating' instead of using the noun phrase."
+   ],
+   "contrast_term": "sanitization",
+   "domain": "Information security"
+  },
+  {
+   "term": "cross-origin resource sharing",
+   "transcription": "/ˌkrɔːs ˈɔːrɪdʒɪn ˈriːsɔːrs ˈʃɛrɪŋ/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A browser mechanism that lets a server say which other websites are allowed to read its responses.",
+   "translation_ru": "совместное использование ресурсов между источниками (CORS)",
+   "collocations": [
+    "cross-origin resource sharing policy",
+    "configure cross-origin resource sharing",
+    "cross-origin resource sharing header"
+   ],
+   "examples": [
+    "Without cross-origin resource sharing headers the browser blocks the script from reading the API reply.",
+    "A wildcard in the cross-origin resource sharing settings let any site call the endpoint."
+   ],
+   "common_mistakes": [
+    "Believing it protects the server from requests: it only controls what scripts in the browser may read.",
+    "Treating it as the same thing as the same-origin policy: it is the controlled way to relax that policy."
+   ],
+   "contrast_term": "same-origin policy",
+   "domain": "Information security"
+  },
+  {
+   "term": "same-origin policy",
+   "transcription": "/ˌseɪm ˈɔːrɪdʒɪn ˈpɑːləsi/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A browser rule that stops a script loaded from one site from reading data that belongs to another site.",
+   "translation_ru": "политика одного источника",
+   "collocations": [
+    "enforce the same-origin policy",
+    "same-origin policy restriction",
+    "bypass the same-origin policy"
+   ],
+   "examples": [
+    "The same-origin policy prevents a random page from reading your bank's data.",
+    "Two addresses with different ports count as different origins under the same-origin policy."
+   ],
+   "common_mistakes": [
+    "Assuming an origin is only the domain name: it also includes the scheme and the port.",
+    "Thinking the policy blocks sending requests, when it mainly blocks reading the replies."
+   ],
+   "contrast_term": "cross-origin resource sharing",
+   "domain": "Information security"
+  },
+  {
+   "term": "content security policy",
+   "transcription": "/ˈkɑːntɛnt sɪˈkjʊrəti ˈpɑːləsi/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A response header that tells the browser which sources of scripts, images and other content a page may use.",
+   "translation_ru": "политика безопасности контента (CSP)",
+   "collocations": [
+    "strict content security policy",
+    "content security policy header",
+    "report-only content security policy"
+   ],
+   "examples": [
+    "A strict content security policy blocks inline scripts that an attacker injects.",
+    "We tested the content security policy in report-only mode first."
+   ],
+   "common_mistakes": [
+    "Thinking it replaces input validation: it only reduces the damage of injected code.",
+    "Writing 'contents security policy'."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "session fixation",
+   "transcription": "/ˈsɛʃən fɪkˈseɪʃən/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "An attack in which the attacker makes a victim use a session identifier the attacker already knows, and then uses it after the victim logs in.",
+   "translation_ru": "фиксация сессии",
+   "collocations": [
+    "session fixation attack",
+    "prevent session fixation",
+    "vulnerable to session fixation"
+   ],
+   "examples": [
+    "Issuing a new session identifier after login stops session fixation.",
+    "The report described session fixation through an identifier placed in the address."
+   ],
+   "common_mistakes": [
+    "Mixing it up with session hijacking: in fixation the attacker chooses the identifier, in hijacking they steal it.",
+    "Believing that HTTPS alone prevents it."
+   ],
+   "contrast_term": "session hijacking",
+   "domain": "Information security"
+  },
+  {
+   "term": "session hijacking",
+   "transcription": "/ˈsɛʃən ˈhaɪˌdʒækɪŋ/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "Taking over a user's active session by stealing its identifier and then acting as that user.",
+   "translation_ru": "перехват сессии",
+   "collocations": [
+    "session hijacking attack",
+    "prevent session hijacking",
+    "risk of session hijacking"
+   ],
+   "examples": [
+    "Marking the cookie as HttpOnly makes session hijacking through scripts harder.",
+    "Session hijacking on public Wi-Fi was easy before sites moved to HTTPS."
+   ],
+   "common_mistakes": [
+    "Confusing it with session fixation.",
+    "Writing 'highjacking' instead of 'hijacking'."
+   ],
+   "contrast_term": "session fixation",
+   "domain": "Information security"
+  },
+  {
+   "term": "directory traversal",
+   "transcription": "/dəˈrɛktəri trəˈvɜːrsəl/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A flaw that lets an attacker use sequences like '../' in a path to reach files outside the folder the application meant to expose.",
+   "translation_ru": "обход каталогов",
+   "collocations": [
+    "directory traversal attack",
+    "directory traversal vulnerability",
+    "prevent directory traversal"
+   ],
+   "examples": [
+    "The download script was open to directory traversal and returned the password file.",
+    "Normalizing the path before opening the file blocks directory traversal."
+   ],
+   "common_mistakes": [
+    "Using 'travel' instead of 'traversal'.",
+    "Thinking it needs special privileges: it works when the program does not check the path."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "web application firewall",
+   "transcription": "/wɛb ˌæplɪˈkeɪʃən ˈfaɪərwɔːl/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A filter in front of a website that reads incoming web requests and blocks the ones that look like attacks.",
+   "translation_ru": "межсетевой экран веб-приложений (WAF)",
+   "collocations": [
+    "deploy a web application firewall",
+    "web application firewall rule",
+    "web application firewall bypass"
+   ],
+   "examples": [
+    "The web application firewall blocked thousands of injection attempts last night.",
+    "A web application firewall helps, but it does not replace fixing the code."
+   ],
+   "common_mistakes": [
+    "Treating it as the same as a network firewall: it understands web requests, not only addresses and ports.",
+    "Thinking it makes an insecure application safe."
+   ],
+   "contrast_term": "firewall",
+   "domain": "Information security"
+  },
+  {
+   "term": "rate limiting",
+   "transcription": "/ˈreɪt ˌlɪmɪtɪŋ/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "Restricting how many requests one client may send in a given period of time.",
+   "translation_ru": "ограничение частоты запросов",
+   "collocations": [
+    "API rate limiting",
+    "rate limiting rule",
+    "apply rate limiting"
+   ],
+   "examples": [
+    "Rate limiting on the login page slows down password guessing.",
+    "The service answers with an error when rate limiting is triggered."
+   ],
+   "common_mistakes": [
+    "Writing 'rating limiting'.",
+    "Counting only requests per user and forgetting limits per address."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "CAPTCHA",
+   "transcription": "/ˈkæptʃə/",
+   "part_of_speech": "noun",
+   "definition_en": "A small challenge that a person can solve easily but an automated program usually cannot.",
+   "translation_ru": "капча",
+   "collocations": [
+    "solve a CAPTCHA",
+    "CAPTCHA challenge",
+    "CAPTCHA service"
+   ],
+   "examples": [
+    "The sign-up form shows a CAPTCHA after several failed attempts.",
+    "Some CAPTCHA challenges are hard to use for people with poor eyesight."
+   ],
+   "common_mistakes": [
+    "Writing it in lower case as an ordinary word.",
+    "Thinking a CAPTCHA stops all bots: determined attackers use solving services."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "HSTS",
+   "transcription": "/ˌeɪtʃ ɛs ti ˈɛs/",
+   "part_of_speech": "noun",
+   "definition_en": "A header with which a site tells browsers to use only encrypted connections to it for a stated period of time.",
+   "translation_ru": "HSTS (строгая транспортная безопасность HTTP)",
+   "collocations": [
+    "HSTS header",
+    "enable HSTS",
+    "HSTS preload list"
+   ],
+   "examples": [
+    "After enabling HSTS the browser upgrades every request to HTTPS by itself.",
+    "Adding the domain to the HSTS preload list protects even the first visit."
+   ],
+   "common_mistakes": [
+    "Expecting HSTS to work on the very first visit without preloading.",
+    "Mixing it up with HTTPS: HSTS only enforces its use."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "open redirect",
+   "transcription": "/ˈoʊpən ˈriːdaɪrɛkt/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A flaw where a site sends visitors to any address given in a request parameter, which attackers use to make harmful links look trustworthy.",
+   "translation_ru": "открытое перенаправление",
+   "collocations": [
+    "open redirect vulnerability",
+    "fix an open redirect",
+    "open redirect in the login page"
+   ],
+   "examples": [
+    "The phishing link used an open redirect on the company's own domain.",
+    "Allowing only a list of known paths removes the open redirect."
+   ],
+   "common_mistakes": [
+    "Calling every redirect an open redirect: only redirects to unchecked, user-supplied targets are a flaw.",
+    "Underestimating it as harmless because no data is stolen directly."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "server-side request forgery",
+   "transcription": "/ˌsɜːrvər saɪd rɪˈkwɛst ˈfɔːrdʒəri/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "An attack that tricks a server into sending requests to addresses chosen by the attacker, often reaching internal systems.",
+   "translation_ru": "подделка запросов на стороне сервера (SSRF)",
+   "collocations": [
+    "server-side request forgery attack",
+    "block server-side request forgery",
+    "server-side request forgery in the image fetcher"
+   ],
+   "examples": [
+    "The image import feature allowed server-side request forgery against the metadata service.",
+    "An allow-list of destinations is the best defense against server-side request forgery."
+   ],
+   "common_mistakes": [
+    "Confusing it with cross-site request forgery: here the server, not the browser, sends the request.",
+    "Forgetting that internal addresses are also targets."
+   ],
+   "contrast_term": "cross-site request forgery",
+   "domain": "Information security"
+  },
+  {
+   "term": "insecure deserialization",
+   "transcription": "/ˌɪnsɪˈkjʊr diːˌsɪriələˈzeɪʃən/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A weakness that appears when a program rebuilds objects from data it received without checking that the data is safe.",
+   "translation_ru": "небезопасная десериализация",
+   "collocations": [
+    "insecure deserialization flaw",
+    "exploit insecure deserialization",
+    "avoid insecure deserialization"
+   ],
+   "examples": [
+    "Insecure deserialization let the attacker run code on the server.",
+    "Signing the serialized data helps to detect insecure deserialization attempts."
+   ],
+   "common_mistakes": [
+    "Mixing up serialization (writing objects) and deserialization (reading them back).",
+    "Trusting data only because it came from the user's own browser."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "mass assignment",
+   "transcription": "/ˈmæs əˈsaɪnmənt/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A flaw where an application copies every field from a request into an object, so a user can set fields they should not control.",
+   "translation_ru": "массовое присвоение",
+   "collocations": [
+    "mass assignment vulnerability",
+    "prevent mass assignment",
+    "mass assignment of user fields"
+   ],
+   "examples": [
+    "Mass assignment let a normal user send an extra field and become an administrator.",
+    "Listing the allowed fields explicitly prevents mass assignment."
+   ],
+   "common_mistakes": [
+    "Thinking it means assigning many tasks to many users.",
+    "Binding the whole request body to the model without a whitelist."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "security misconfiguration",
+   "transcription": "/sɪˈkjʊrəti ˌmɪskənˌfɪɡjəˈreɪʃən/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A weakness caused by unsafe settings, such as default passwords, debug mode left on or storage that anyone can read.",
+   "translation_ru": "небезопасная конфигурация",
+   "collocations": [
+    "common security misconfiguration",
+    "security misconfiguration in the cloud",
+    "fix a security misconfiguration"
+   ],
+   "examples": [
+    "A security misconfiguration left the database open to the whole internet.",
+    "Automated checks catch many cases of security misconfiguration before release."
+   ],
+   "common_mistakes": [
+    "Spelling it 'misconfiguraton' or writing 'miss-configuration'.",
+    "Calling it a software bug: the code can be fine while the settings are unsafe."
+   ],
+   "contrast_term": "vulnerability",
+   "domain": "Information security"
+  },
+  {
+   "term": "penetration testing",
+   "transcription": "/ˌpɛnəˈtreɪʃən ˈtɛstɪŋ/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "An authorized, simulated attack on a system carried out to find weaknesses before real attackers do.",
+   "translation_ru": "тестирование на проникновение",
+   "collocations": [
+    "external penetration testing",
+    "penetration testing report",
+    "conduct penetration testing"
+   ],
+   "examples": [
+    "The company hires specialists for penetration testing every year.",
+    "The penetration testing report listed three serious findings."
+   ],
+   "common_mistakes": [
+    "Using it for any hacking: it needs written permission from the owner.",
+    "Writing 'penetrating testing'."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "bug bounty",
+   "transcription": "/ˈbʌɡ ˈbaʊnti/",
+   "part_of_speech": "noun phrase",
+   "definition_en": "A program in which an organization pays outside researchers for reporting real security problems in its products.",
+   "translation_ru": "программа поощрения за найденные уязвимости",
+   "collocations": [
+    "bug bounty program",
+    "bug bounty hunter",
+    "launch a bug bounty"
+   ],
+   "examples": [
+    "The company paid a large reward through its bug bounty for a serious flaw.",
+    "A clear scope is important in every bug bounty."
+   ],
+   "common_mistakes": [
+    "Thinking any report is paid: only valid issues inside the rules are rewarded.",
+    "Confusing it with penetration testing, which is hired and agreed in advance."
+   ],
+   "contrast_term": "penetration testing",
+   "domain": "Information security"
+  },
+  {
+   "term": "payload",
+   "transcription": "/ˈpeɪloʊd/",
+   "part_of_speech": "noun",
+   "definition_en": "The part of an attack that performs the harmful action, or in general the actual data carried by a message.",
+   "translation_ru": "полезная нагрузка",
+   "collocations": [
+    "malicious payload",
+    "deliver a payload",
+    "payload size"
+   ],
+   "examples": [
+    "The email delivered a payload that installed a remote access tool.",
+    "The web application firewall inspects the payload of every request."
+   ],
+   "common_mistakes": [
+    "Using it only for rockets or trucks: in security it means the harmful part of an attack.",
+    "Mixing it up with the whole message or packet, which also has headers."
+   ],
+   "contrast_term": null,
+   "domain": "Information security"
+  },
+  {
+   "term": "cookie",
+   "transcription": "/ˈkʊki/",
+   "part_of_speech": "noun",
+   "definition_en": "A small piece of data that a website asks the browser to store and send back with later requests, often to recognize a logged-in user.",
+   "translation_ru": "куки (cookie)",
+   "collocations": [
+    "session cookie",
+    "secure cookie",
+    "set a cookie"
+   ],
+   "examples": [
+    "The server sets a session cookie after the user logs in.",
+    "A cookie marked HttpOnly cannot be read by page scripts."
+   ],
+   "common_mistakes": [
+    "Thinking a cookie is a program: it is only data.",
+    "Storing sensitive details in a cookie without protection."
+   ],
+   "contrast_term": "token",
+   "domain": "Information security"
+  }
+ ]
+}

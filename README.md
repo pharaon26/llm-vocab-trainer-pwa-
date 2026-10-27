@@ -115,6 +115,7 @@ docker compose up --build   # PostgreSQL + app; migrations run on start
 docker compose exec app python -m app.seed          # load the 24 starter cards (once)
 docker compose exec app python -m app.verify_seed   # mark them verified after you have reviewed data/cards.json
 docker compose exec app python -m app.create_admin YOUR_NICK   # administrator of the shared card set
+docker compose exec app python -m app.seed --decks   # optional: 8 more decks (200 cards) from data/decks, loaded as NOT verified
 ```
 
 Open <http://localhost:8000>. Register as a student, or tick "Я преподаватель" to register as a teacher (teachers use `/teacher.html`). The API documentation is at `/docs`.
@@ -160,7 +161,8 @@ app/
 alembic/        migrations
 static/         PWA: HTML, CSS (tokens + components), JS modules, fonts, icons, service worker
 tests/          pytest suite
-data/cards.json starter cards
+data/cards.json starter cards (24)
+data/decks/     eight themed decks of 25 cards each (Web Security, Cryptography, Networking, ...)
 scripts/screenshots/  scripts that produced the screenshots
 DECISIONS.md    design decisions and their rationale (in Russian)
 ```

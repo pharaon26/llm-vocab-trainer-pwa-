@@ -14,6 +14,7 @@ cp .env.example .env        # заполните POSTGRES_PASSWORD и при н�
 docker compose up --build   # PostgreSQL + приложение; миграции применяются при старте
 docker compose exec app python -m app.seed          # загрузить стартовые карточки (один раз)
 docker compose exec app python -m app.verify_seed   # пометить карточки сида проверенными (см. ниже)
+docker compose exec app python -m app.seed --decks   # по желанию: 8 тематических наборов по 25 карточек из data/decks (загружаются непроверенными, verify_seed их не трогает)
 docker compose exec app python -m app.create_admin ВАШ_НИК   # администратор общего набора карточек (пароль спросит скрипт)
 ```
 
