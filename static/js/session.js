@@ -2,6 +2,11 @@ import * as api from "./api.js";
 import { show, unauthorized } from "./ui.js";
 import * as views from "./views.js";
 
+const failureView = (title, error, retry) =>
+  error.status === 0
+    ? views.messageView("Нет соединения", "Проверьте интернет и повторите. Ваши ответы не потеряны.", "Повторить", retry, "wifi-off", true)
+    : views.messageView(title, error.message, "Повторить", retry, "circle-alert", true);
+
 const stats = { answered: 0, correct: 0 };
 
 export function resetStats() {
@@ -18,7 +23,7 @@ function showFailure(error) {
     unauthorized();
     return;
   }
-  show(views.messageView("Не удалось загрузить задание", error.message, "Повторить", () => loadNext()));
+  show(failureView("Не удалось загрузить задание", error, () => loadNext()));
 }
 
 async function loadNext(quiet = false) {
@@ -28,7 +33,7 @@ async function loadNext(quiet = false) {
   try {
     const data = await api.nextTask();
     if (data.task) {
-      showTask(data.task, `В очереди: ${data.remaining}`);
+      showTask(data.task, `В очереди: ${data.remaining}`, false, { value: stats.answered, max: stats.answered + data.remaining });
     } else {
       const checkedAt = quiet ? new Date().toLocaleTimeString("ru-RU") : "";
       show(
@@ -68,8 +73,9 @@ function writeDraft(task, text) {
   }
 }
 
-function showTask(task, meta, practice = false) {
+function showTask(task, meta, practice = false, progress = null) {
   const view = views.taskView(task, meta, {
+    progress,
     draft: readDraft(task),
     onDraft: (text) => writeDraft(task, text),
     onSubmit: (answer) => submit(task, view, answer, practice),

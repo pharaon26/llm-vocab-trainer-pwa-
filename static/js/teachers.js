@@ -1,4 +1,5 @@
 import * as api from "./api.js";
+import { confirmDialog, toast } from "./components.js";
 import { el } from "./dom.js";
 import { loadingView } from "./views.js";
 import { show, unauthorized } from "./ui.js";
@@ -50,7 +51,8 @@ export async function showTeachers(notice = "", error = "") {
     const act = async (work, message) => {
       try {
         await work();
-        await showTeachers(message, "");
+        toast(message);
+        await showTeachers();
       } catch (err) {
         if (err.status === 401) {
           unauthorized();
@@ -68,8 +70,8 @@ export async function showTeachers(notice = "", error = "") {
         onAccept: (item) => act(() => api.answerInvitation(item.id, true), `Вы теперь учитесь у ${item.name}.`),
         onDecline: (item) => act(() => api.answerInvitation(item.id, false), "Приглашение отклонено."),
         onCancel: (item) => act(() => api.cancelRequest(item.id), "Заявка отменена."),
-        onLeave: (item) => {
-          if (window.confirm(`Отвязаться от преподавателя ${item.name}? Его наборы перестанут быть вам доступны.`)) {
+        onLeave: async (item) => {
+          if (await confirmDialog(`Отвязаться от преподавателя ${item.name}? Его наборы перестанут быть вам доступны.`, { title: "Разорвать связь", confirmText: "Отвязаться", danger: true })) {
             act(() => api.leaveTeacher(item.name), "Связь разорвана.");
           }
         },

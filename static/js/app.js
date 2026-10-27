@@ -1,8 +1,10 @@
 import * as api from "./api.js";
-import { clear, el, svg } from "./dom.js";
+import { icon } from "./components.js";
+import { clear, el } from "./dom.js";
 import { showHistory, showProgress, showSettings, showStats } from "./pages.js";
 import { resetStats, showStart } from "./session.js";
 import { showTeachers } from "./teachers.js";
+import { themeToggle } from "./theme.js";
 import { setLogoutHandler, show } from "./ui.js";
 import * as views from "./views.js";
 import { showDictionary } from "./words.js";
@@ -11,19 +13,15 @@ const userBox = document.getElementById("user-box");
 const nav = document.getElementById("nav");
 
 const NAV = [
-  ["session", "Повторение", "M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z M8 9h8 M8 13h5", showStart],
-  ["progress", "Прогресс", "M5 20v-6 M12 20V8 M19 20V4", showProgress],
-  ["dictionary", "Словарь", "M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z M5 17a3 3 0 0 1 3-3h11", showDictionary],
-  ["history", "История", "M12 3a9 9 0 1 0 0 18a9 9 0 0 0 0-18z M12 7v5l3 2", showHistory],
-  ["teachers", "Преподаватели", "M12 4a4 4 0 1 0 0 8a4 4 0 0 0 0-8z M4 20a8 8 0 0 1 16 0", showTeachers],
-  ["stats", "Статистика", "M12 3a9 9 0 1 0 0 18a9 9 0 0 0 0-18z M12 3v9h9", showStats],
+  ["session", "Повторение", "layers", showStart],
+  ["progress", "Прогресс", "trending-up", showProgress],
+  ["dictionary", "Словарь", "book-open", showDictionary],
+  ["history", "История", "history", showHistory],
+  ["teachers", "Учителя", "users", showTeachers],
+  ["stats", "Статистика", "chart-pie", showStats],
 ];
 
 const ROUTES = { ...Object.fromEntries(NAV.map(([id, , , handler]) => [id, handler])), settings: showSettings };
-
-function icon(path) {
-  return svg("svg", { viewBox: "0 0 24 24", "aria-hidden": "true" }, path.split(" M").map((part, i) => svg("path", { d: i ? `M${part}` : part })));
-}
 
 function currentRoute() {
   const name = location.hash.replace(/^#\//, "");
@@ -36,8 +34,8 @@ function renderNav(active) {
     el(
       "ul",
       {},
-      NAV.map(([id, label, path]) =>
-        el("li", {}, el("a", { href: `#/${id}`, "aria-current": id === active ? "page" : null }, icon(path), label)),
+      NAV.map(([id, label, name]) =>
+        el("li", {}, el("a", { href: `#/${id}`, "aria-current": id === active ? "page" : null }, icon(name), label)),
       ),
     ),
   );
@@ -68,14 +66,13 @@ function go(name) {
 
 function renderUserBox() {
   clear(userBox);
+  userBox.append(themeToggle());
   const name = api.getName();
   if (name) {
     userBox.append(
-      el("span", {}, name),
-      " ",
-      el("a", { href: "#/settings" }, "Настройки"),
-      " ",
-      el("button", { type: "button", className: "link", onclick: () => logout() }, "Выйти"),
+      el("span", { className: "user-name" }, name),
+      el("a", { className: "icon-button", href: "#/settings", "aria-label": "Настройки", title: "Настройки" }, icon("settings", 20)),
+      el("button", { type: "button", className: "icon-button", "aria-label": "Выйти", title: "Выйти", onclick: () => logout() }, icon("log-out", 20)),
     );
   }
 }
@@ -140,6 +137,7 @@ async function init() {
   } catch (error) {
     if (error.status === 401) {
       setNavVisible(false);
+      renderUserBox();
       showLogin();
       return;
     }

@@ -1,5 +1,7 @@
 import { createApi } from "../api.js";
+import { confirmDialog, icon, promptDialog, toast } from "../components.js";
 import { clear, el } from "../dom.js";
+import { themeToggle } from "../theme.js";
 import * as studentViews from "./students-views.js";
 import * as views from "./views.js";
 
@@ -31,14 +33,13 @@ function showPage(node) {
 
 function renderUserBox() {
   clear(userBox);
+  userBox.append(themeToggle());
   const name = api.getName();
   if (name) {
     userBox.append(
-      el("span", {}, name),
-      " ",
-      el("a", { href: "/" }, "Приложение студента"),
-      " ",
-      el("button", { type: "button", className: "link", onclick: () => logout() }, "Выйти"),
+      el("span", { className: "user-name" }, name),
+      el("a", { href: "/" }, "Для студента"),
+      el("button", { type: "button", className: "icon-button", "aria-label": "Выйти", title: "Выйти", onclick: () => logout() }, icon("log-out", 20)),
     );
   }
 }
@@ -147,9 +148,9 @@ async function showCards() {
         await api.request(`/admin/cards/${card.id}/verify`, { method: "PATCH" });
         await showCards();
       }),
-      onDelete: (card) => {
+      onDelete: async (card) => {
         const text = `Удалить карточку «${card.term}»? Вместе с ней удалятся прогресс студентов, история ответов и задания из банка.`;
-        if (window.confirm(text)) {
+        if (await confirmDialog(text, { title: "Удалить карточку", confirmText: "Удалить", danger: true })) {
           guarded(async () => {
             await api.request(`${scope()}/cards/${card.id}`, { method: "DELETE" });
             await showCards();
@@ -234,6 +235,7 @@ async function init() {
   try {
     me = await api.me();
   } catch (error) {
+    renderUserBox();
     showLogin("", error.status === 401 ? "" : error.message);
     return;
   }
@@ -260,8 +262,8 @@ async function showDecks(notice = "", error = "") {
       onEdit: (deck) => guarded(() => showDeckForm(deck)),
       onCards: (deck) => guarded(() => showDeckCards(deck)),
       onGroups: role === "teacher" ? (deck) => guarded(() => showDeckGroups(deck)) : null,
-      onDelete: (deck) => {
-        if (window.confirm(`Удалить набор «${deck.name}»? Карточки останутся, но выбор этого набора у студентов пропадет.`)) {
+      onDelete: async (deck) => {
+        if (await confirmDialog(`Удалить набор «${deck.name}»? Карточки останутся, но выбор этого набора у студентов пропадет.`, { title: "Удалить набор", confirmText: "Удалить", danger: true })) {
           guarded(async () => {
             await api.request(`${scope()}/decks/${deck.id}`, { method: "DELETE" });
             await showDecks("Набор удален.");
@@ -408,7 +410,8 @@ async function showStudents(notice = "", error = "") {
   const act = (work, message) => guarded(async () => {
     try {
       await work();
-      await showStudents(message, "");
+      toast(message);
+      await showStudents();
     } catch (err) {
       if (err.status === 401 || err.status === 403) {
         throw err;
@@ -445,14 +448,14 @@ async function showStudents(notice = "", error = "") {
           }
           return act(() => api.request("/teacher/groups", { method: "POST", body: { name } }), `Группа «${name}» создана.`);
         },
-        onRename: (group) => {
-          const name = window.prompt("Новое название группы", group.name);
+        onRename: async (group) => {
+          const name = await promptDialog("Новое название группы", group.name);
           if (name && name.trim() && name.trim() !== group.name) {
             act(() => api.request(`/teacher/groups/${group.id}`, { method: "PUT", body: { name: name.trim() } }), "Группа переименована.");
           }
         },
-        onDeleteGroup: (group) => {
-          if (window.confirm(`Удалить группу «${group.name}»? Студенты останутся, но будут без группы, а назначенные группе наборы перестанут быть доступны.`)) {
+        onDeleteGroup: async (group) => {
+          if (await confirmDialog(`Удалить группу «${group.name}»? Студенты останутся, но будут без группы, а назначенные группе наборы перестанут быть доступны.`, { title: "Удалить группу", confirmText: "Удалить", danger: true })) {
             act(() => api.request(`/teacher/groups/${group.id}`, { method: "DELETE" }), "Группа удалена.");
           }
         },
@@ -460,8 +463,8 @@ async function showStudents(notice = "", error = "") {
           () => api.request(`/teacher/students/${encodeURIComponent(student.name)}/group`, { method: "PUT", body: { group_id: groupId } }),
           `Студент ${student.name} перемещен.`,
         ),
-        onRemove: (student) => {
-          if (window.confirm(`Убрать студента ${student.name}? Вы перестанете видеть его данные.`)) {
+        onRemove: async (student) => {
+          if (await confirmDialog(`Убрать студента ${student.name}? Вы перестанете видеть его данные.`, { title: "Убрать студента", confirmText: "Убрать", danger: true })) {
             act(() => api.request(`/teacher/students/${encodeURIComponent(student.name)}`, { method: "DELETE" }), "Студент убран.");
           }
         },

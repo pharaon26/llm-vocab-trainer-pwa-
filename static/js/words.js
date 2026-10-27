@@ -1,4 +1,5 @@
 import * as api from "./api.js";
+import { confirmDialog } from "./components.js";
 import * as pageViews from "./page-views.js";
 import { show, unauthorized } from "./ui.js";
 import * as views from "./views.js";
@@ -24,7 +25,7 @@ export async function showDictionary() {
         onAddFromText: () => showExtract(),
         onOpenDraft: (draft) => showDraft(draft),
         onDeleteDraft: async (draft) => {
-          if (window.confirm(`Удалить черновик «${draft.term}»?`)) {
+          if (await confirmDialog(`Удалить черновик «${draft.term}»?`, { title: "Удалить черновик", confirmText: "Удалить", danger: true })) {
             await api.deleteDraft(draft.id);
             showDictionary();
           }
@@ -32,7 +33,7 @@ export async function showDictionary() {
         onEditCard: (card) => showCardEditor(card),
         onDeleteCard: async (card) => {
           const text = `Удалить слово «${card.term}»? Вместе с ним удалятся ваш прогресс и история по нему.`;
-          if (window.confirm(text)) {
+          if (await confirmDialog(text, { title: "Удалить слово", confirmText: "Удалить", danger: true })) {
             await api.deleteMyCard(card.id);
             showDictionary();
           }
@@ -109,7 +110,7 @@ async function showDraft(draft, extra = {}) {
         }
       },
       onDelete: async () => {
-        if (window.confirm(`Удалить черновик «${draft.term}»?`)) {
+        if (await confirmDialog(`Удалить черновик «${draft.term}»?`, { title: "Удалить черновик", confirmText: "Удалить", danger: true })) {
           await api.deleteDraft(draft.id);
           showDictionary();
         }

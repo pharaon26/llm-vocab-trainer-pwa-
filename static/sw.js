@@ -1,7 +1,9 @@
-const CACHE = "vocab-trainer-v4";
+const CACHE = "vocab-trainer-v5";
 
 const SHELL = [
   "/",
+  "/css/fonts.css",
+  "/css/tokens.css",
   "/css/app.css",
   "/js/app.js",
   "/js/api.js",
@@ -15,6 +17,14 @@ const SHELL = [
   "/js/page-views.js",
   "/js/words.js",
   "/js/teachers.js",
+  "/js/components.js",
+  "/js/icons.js",
+  "/js/theme.js",
+  "/js/theme-init.js",
+  "/fonts/nunito-cyrillic.woff2",
+  "/fonts/nunito-cyrillic-ext.woff2",
+  "/fonts/nunito-latin.woff2",
+  "/fonts/nunito-latin-ext.woff2",
   "/manifest.json",
   "/icons/icon.svg",
   "/icons/icon-192.png",

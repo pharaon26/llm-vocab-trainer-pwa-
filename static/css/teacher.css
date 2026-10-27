@@ -1,62 +1,7 @@
-body.wide .topbar,
-body.wide main {
-  max-width: 960px;
+.toolbar h4 {
+  margin: 0;
 }
 
-.tabs {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-  overflow-x: auto;
+.row.history-row {
+  align-items: flex-start;
 }
-
-.tabs button[aria-selected="true"] {
-  font-weight: 600;
-  color: var(--primary-text);
-  background: var(--primary);
-  border-color: var(--primary);
-}
-
-.toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-}
-
-.toolbar select,
-.toolbar input {
-  width: auto;
-  min-height: 40px;
-}
-
-button.danger {
-  color: var(--bad);
-  border-color: var(--bad);
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.hint {
-  font-weight: 400;
-  font-size: 0.9rem;
-  color: var(--muted);
-}
-
-.bank-options {
-  margin: 4px 0 0;
-}
-
-.bank-options .correct {
-  font-weight: 600;
-  color: var(--ok);
-}
-
-.row.rejected {
-  opacity: 0.65;
-}
-

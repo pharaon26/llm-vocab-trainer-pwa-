@@ -1,3 +1,4 @@
+import { emptyState, icon, skeleton } from "./components.js";
 import { el } from "./dom.js";
 import { describeDate } from "./format.js";
 
@@ -11,17 +12,11 @@ export const ERROR_LABELS = {
 const MULTILINE_TASKS = ["explain_meaning", "compose_sentence"];
 
 export function loadingView(text) {
-  return el("section", { className: "card" }, el("h2", {}, text), el("div", { className: "spinner", "aria-hidden": "true" }));
+  return skeleton(text);
 }
 
-export function messageView(title, text, buttonText, onClick) {
-  return el(
-    "section",
-    { className: "card" },
-    el("h2", {}, title),
-    el("p", {}, text),
-    el("button", { type: "button", className: "primary", onclick: onClick }, buttonText),
-  );
+export function messageView(title, text, buttonText, onClick, iconName = "inbox", error = false) {
+  return emptyState({ iconName, title, text, action: { label: buttonText, onClick }, error });
 }
 
 function nameInput(name) {
@@ -117,7 +112,7 @@ export function startView({ name, onStart }) {
   );
 }
 
-export function taskView(task, meta, { draft, onDraft, onSubmit, onExit }) {
+export function taskView(task, meta, { draft, onDraft, onSubmit, onExit, progress = null }) {
   let selected = null;
   let busy = false;
   let input = null;
@@ -181,6 +176,7 @@ export function taskView(task, meta, { draft, onDraft, onSubmit, onExit }) {
   const node = el(
     "section",
     { className: "card" },
+    progress && el("progress", { className: "session-progress", value: progress.value, max: progress.max, "aria-label": "Прогресс сессии" }),
     el("p", { className: "meta" }, meta),
     el("h2", {}, task.instruction),
     el("p", { className: "prompt" }, task.prompt),
@@ -240,7 +236,7 @@ export function feedbackView(result, userAnswer, { onNext, onExit }) {
 
   const node = el(
     "section",
-    { className: "card" },
+    { className: `card feedback ${result.correct ? "ok" : "bad"}` },
     el("p", { className: "meta" }, onExit ? "Тренировка: расписание повторений не меняется" : `Осталось: ${result.remaining}`),
     el("h2", { className: result.correct ? "ok" : "bad" }, verdict),
     !result.correct && el("p", {}, el("strong", {}, "Ваш ответ: "), userAnswer || "(пусто)"),
@@ -257,20 +253,17 @@ export function feedbackView(result, userAnswer, { onNext, onExit }) {
 export function doneView({ answered, correct, info, checkedAt, onRefresh, onPractice }) {
   const noCards = answered === 0 && !info.next_review_date && info.unseen_cards === 0;
   if (noCards) {
-    return el(
-      "section",
-      { className: "card" },
-      el("h2", {}, "Заданий пока нет"),
-      el("p", {}, "Выберите наборы для изучения в настройках или загляните позже: возможно, преподаватель еще не проверил карточки."),
-      el("p", {}, el("a", { href: "#/settings" }, "Открыть настройки")),
-      checkedAt && el("p", { className: "meta" }, `Проверено в ${checkedAt}: новых заданий нет.`),
-      el("button", { type: "button", className: "primary", onclick: onRefresh }, "Проверить снова"),
-    );
+    return emptyState({
+      iconName: "book-open",
+      title: "Заданий пока нет",
+      text: "Выберите наборы для изучения в настройках или загляните позже: возможно, карточки еще не проверены или преподаватель не назначил вам набор.",
+      action: { label: "Проверить снова", onClick: onRefresh },
+    });
   }
   return el(
     "section",
     { className: "card" },
-    el("h2", {}, "На сегодня всё"),
+    el("div", { className: "empty" }, icon("circle-check", 52), el("h2", {}, "На сегодня всё")),
     answered > 0 && el("p", {}, `Верных ответов в этой сессии: ${correct} из ${answered}.`),
     info.next_review_date && el("p", {}, `Следующее повторение: ${describeDate(info.next_review_date)}.`),
     info.unseen_cards > 0 &&

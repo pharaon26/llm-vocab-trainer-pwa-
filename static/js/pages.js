@@ -8,7 +8,11 @@ function failure(error, retry) {
     unauthorized();
     return;
   }
-  show(views.messageView("Не удалось загрузить данные", error.message, "Повторить", retry));
+  if (error.status === 0) {
+    show(views.messageView("Нет соединения", "Проверьте интернет и повторите.", "Повторить", retry, "wifi-off", true));
+  } else {
+    show(views.messageView("Не удалось загрузить данные", error.message, "Повторить", retry, "circle-alert", true));
+  }
 }
 
 export async function showProgress() {

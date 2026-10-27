@@ -1,3 +1,4 @@
+import { emptyBlock } from "./components.js";
 import { el } from "./dom.js";
 import { barChart } from "./charts.js";
 import { describeDate, percent, plural } from "./format.js";
@@ -39,7 +40,7 @@ export function progressView({ data, filter, onFilter }) {
           el(
             "div",
             { className: "error-chips" },
-            errors.map(([type, count]) => el("span", { className: "badge bad" }, `${ERROR_LABELS[type]}: ${count}`)),
+            errors.map(([type, count]) => el("span", { className: `badge err-${type}` }, `${ERROR_LABELS[type]}: ${count}`)),
           ),
       ),
     );
@@ -61,7 +62,7 @@ export function progressView({ data, filter, onFilter }) {
       filter,
       onFilter,
     ),
-    rows.length ? el("ul", { className: "list" }, rows) : el("p", {}, "В этой группе терминов нет."),
+    rows.length ? el("ul", { className: "list" }, rows) : emptyBlock({ iconName: "book-open", title: "Здесь пока пусто", text: "В этой группе терминов нет." }),
   );
 }
 
@@ -103,7 +104,7 @@ export function historyView({ terms, term, items, total, onTerm, onMore }) {
           " ",
           el("span", { className: "badge" }, TASK_LABELS[item.task_type] || item.task_type),
           " ",
-          el("span", { className: item.is_correct ? "badge ok" : "badge bad" }, item.is_correct ? "верно" : `ошибка: ${ERROR_LABELS[item.error_type]}`),
+          el("span", { className: item.is_correct ? "badge ok" : `badge err-${item.error_type}` }, item.is_correct ? "верно" : `ошибка: ${ERROR_LABELS[item.error_type]}`),
           item.is_retry && el("span", { className: "badge" }, "повтор"),
           item.is_practice && el("span", { className: "badge" }, "тренировка"),
           el("span", { className: "meta" }, ` ${formatDay(item.answered_on)}`),
@@ -121,7 +122,7 @@ export function historyView({ terms, term, items, total, onTerm, onMore }) {
     el("h2", {}, "История ответов"),
     el("div", { className: "toolbar" }, el("label", { for: "term-filter" }, "Термин:"), select),
     el("p", { className: "meta" }, `Показано ${items.length} из ${total}`),
-    rows.length ? el("ul", { className: "list" }, rows) : el("p", {}, "Ответов пока нет."),
+    rows.length ? el("ul", { className: "list" }, rows) : emptyBlock({ iconName: "history", title: "Ответов пока нет", text: "Здесь появится история ваших ответов после первых заданий." }),
     items.length < total && el("button", { type: "button", onclick: onMore }, "Показать еще"),
   );
 }
