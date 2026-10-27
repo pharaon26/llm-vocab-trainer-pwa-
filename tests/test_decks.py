@@ -82,7 +82,7 @@ def test_cards_api_resolves_domain_case_insensitively(teacher, db):
 def test_domains_list_requires_login_and_is_sorted(client, student_headers, db, cards):
     assert client.get("/domains").status_code == 401
     names = [d["name"] for d in client.get("/domains", headers=student_headers).json()]
-    assert names == sorted(names) and "Medicine" in names
+    assert names == sorted(names, key=str.lower) and "Medicine" in names
 
 
 def test_default_deck_is_selected_until_the_student_chooses(client, student_headers, cards):
@@ -244,11 +244,8 @@ def test_prompts_are_not_tied_to_it(db, cards):
     assert "contrast term" in with_contrast.split("<card>")[0]
 
 
-def test_migration_moves_domain_strings_into_domains_and_builds_the_default_deck(tmp_path, monkeypatch):
-    url = f"sqlite:///{tmp_path / 'm.db'}"
-    monkeypatch.setattr(settings, "database_url", url)
-    config = Config(str(BASE_DIR / "alembic.ini"))
-    config.set_main_option("script_location", str(BASE_DIR / "alembic"))
+def test_migration_moves_domain_strings_into_domains_and_builds_the_default_deck(scratch_database):
+    url, config = scratch_database
     command.upgrade(config, "85d3302c02ba")
     engine = create_engine(url)
     with engine.begin() as conn:
@@ -256,7 +253,7 @@ def test_migration_moves_domain_strings_into_domains_and_builds_the_default_deck
             conn.execute(text(
                 "INSERT INTO cards (term, transcription, part_of_speech, definition_en, translation_ru, collocations,"
                 " examples, common_mistakes, contrast_term, domain, verified) VALUES (:t, 'x', 'noun', 'd', 'п', '[]', '[]',"
-                " '[]', 'c', :d, 1)"), {"t": term, "d": domain})
+                " '[]', 'c', :d, true)"), {"t": term, "d": domain})
     command.upgrade(config, "head")
     with engine.connect() as conn:
         rows = conn.execute(text("SELECT c.term, d.name FROM cards c JOIN domains d ON d.id = c.domain_id ORDER BY c.term")).all()
@@ -268,3 +265,4 @@ def test_migration_moves_domain_strings_into_domains_and_builds_the_default_deck
     command.downgrade(config, "85d3302c02ba")
     with engine.connect() as conn:
         assert conn.execute(text("SELECT domain FROM cards ORDER BY term")).all() == [("IT",), ("Law",)]
+    engine.dispose()

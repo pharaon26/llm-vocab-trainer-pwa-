@@ -55,7 +55,8 @@ def test_setting_controls_how_many_new_terms_are_offered(client, student_headers
 
 
 def test_maximum_does_not_exceed_available_terms(client, db, student_headers, verified):
-    db.query(Card).filter(Card.id > 8).update({Card.verified: False})
+    keep = [card.id for card in db.query(Card).order_by(Card.id).limit(8)]
+    db.query(Card).filter(Card.id.not_in(keep)).update({Card.verified: False})
     db.commit()
     put(client, student_headers, 20)
     assert remaining(client, student_headers) == 8

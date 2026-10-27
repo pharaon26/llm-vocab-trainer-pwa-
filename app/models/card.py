@@ -1,4 +1,4 @@
-from sqlalchemy import JSON, Boolean, ForeignKey, Index, String, Text, UniqueConstraint, false, text
+from sqlalchemy import JSON, Boolean, ForeignKey, Index, String, Text, false, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
@@ -8,11 +8,8 @@ from app.models.catalog import Domain
 class Card(Base):
     __tablename__ = "cards"
     __table_args__ = (
-        UniqueConstraint("owner_id", "term", name="uq_cards_owner_term"),
-        Index(
-            "uq_cards_term_shared", "term", unique=True,
-            sqlite_where=text("owner_id IS NULL"), postgresql_where=text("owner_id IS NULL"),
-        ),
+        Index("uq_cards_owner_term", "owner_id", text("lower(term)"), unique=True),
+        Index("uq_cards_term_shared", text("lower(term)"), unique=True, postgresql_where=text("owner_id IS NULL")),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)

@@ -55,7 +55,7 @@ def build_progress(db: Session, user: User, config: LearningConfig = learning_co
     cards = db.scalars(
         select(Card)
         .where(usable(user), new_term_pool(db, user) | Card.id.in_(list(progress)))
-        .order_by(Card.term)
+        .order_by(func.lower(Card.term), Card.term)
     ).all()
     errors = error_counts(db, user)
     empty = {t.value: 0 for t in ErrorType}
@@ -90,8 +90,8 @@ def build_history(db: Session, user: User, term: str | None, limit: int, offset:
         select(Card.term)
         .join(ReviewHistory, ReviewHistory.card_id == Card.id)
         .where(ReviewHistory.user_id == user.id)
-        .distinct()
-        .order_by(Card.term)
+        .group_by(Card.term)
+        .order_by(func.lower(Card.term), Card.term)
     ).all()
 
     items = []
@@ -119,7 +119,7 @@ def build_dictionary(db: Session, user: User) -> list[DictionaryEntry]:
         select(Card)
         .join(CardProgress, CardProgress.card_id == Card.id)
         .where(CardProgress.user_id == user.id, usable(user))
-        .order_by(Card.term)
+        .order_by(func.lower(Card.term), Card.term)
     ).all()
     return [DictionaryEntry.model_validate(card, from_attributes=True) for card in cards]
 

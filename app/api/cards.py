@@ -36,7 +36,7 @@ def create_card(data: CardCreate, db: Session = Depends(get_db)):
 
 @router.get("", response_model=list[CardRead], dependencies=[Depends(require_teacher)])
 def list_cards(verified: bool | None = None, db: Session = Depends(get_db)):
-    query = select(Card).where(Card.owner_id.is_(None)).order_by(Card.term)
+    query = select(Card).where(Card.owner_id.is_(None)).order_by(func.lower(Card.term), Card.term)
     if verified is not None:
         query = query.where(Card.verified == verified)
     return db.scalars(query).all()

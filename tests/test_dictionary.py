@@ -132,8 +132,8 @@ def test_timeout_value_is_passed_to_the_request():
 
 
 def test_factory_selects_provider_from_settings():
-    assert isinstance(get_dictionary(Settings(_env_file=None, dictionary_provider="dictionaryapi")), DictionaryApiProvider)
-    disabled = get_dictionary(Settings(_env_file=None, dictionary_provider="none"))
+    assert isinstance(get_dictionary(Settings(_env_file=None, database_url="postgresql+psycopg://x/y", dictionary_provider="dictionaryapi")), DictionaryApiProvider)
+    disabled = get_dictionary(Settings(_env_file=None, database_url="postgresql+psycopg://x/y", dictionary_provider="none"))
     assert isinstance(disabled, DisabledDictionary)
     with pytest.raises(DictionaryUnavailable):
         disabled.lookup("x")

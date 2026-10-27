@@ -19,19 +19,18 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    with op.batch_alter_table("cards", schema=None) as batch_op:
-        batch_op.add_column(sa.Column("owner_id", sa.Integer(), nullable=True))
-        batch_op.add_column(sa.Column("confirmed_by_owner", sa.Boolean(), nullable=False, server_default=sa.false()))
-        batch_op.add_column(sa.Column("audio_url", sa.Text(), nullable=True))
-        batch_op.add_column(sa.Column("field_sources", sa.JSON(), nullable=True))
-        batch_op.create_foreign_key("fk_cards_owner_id", "users", ["owner_id"], ["id"], ondelete="CASCADE")
-        batch_op.create_index("ix_cards_owner_id", ["owner_id"], unique=False)
-        batch_op.drop_index("ix_cards_term")
-        batch_op.create_index("ix_cards_term", ["term"], unique=False)
-        batch_op.create_unique_constraint("uq_cards_owner_term", ["owner_id", "term"])
+    op.add_column("cards", sa.Column("owner_id", sa.Integer(), nullable=True))
+    op.add_column("cards", sa.Column("confirmed_by_owner", sa.Boolean(), nullable=False, server_default=sa.false()))
+    op.add_column("cards", sa.Column("audio_url", sa.Text(), nullable=True))
+    op.add_column("cards", sa.Column("field_sources", sa.JSON(), nullable=True))
+    op.create_foreign_key("fk_cards_owner_id", "cards", "users", ["owner_id"], ["id"], ondelete="CASCADE")
+    op.create_index("ix_cards_owner_id", "cards", ["owner_id"], unique=False)
+    op.drop_index("ix_cards_term", table_name="cards")
+    op.create_index("ix_cards_term", "cards", ["term"], unique=False)
+    op.create_unique_constraint("uq_cards_owner_term", "cards", ["owner_id", "term"])
     op.create_index(
         "uq_cards_term_shared", "cards", ["term"], unique=True,
-        sqlite_where=sa.text("owner_id IS NULL"), postgresql_where=sa.text("owner_id IS NULL"),
+        postgresql_where=sa.text("owner_id IS NULL"),
     )
     op.create_table(
         "card_drafts",
@@ -60,13 +59,12 @@ def downgrade() -> None:
     op.drop_table("card_drafts")
     op.drop_index("uq_cards_term_shared", table_name="cards")
     op.get_bind().execute(sa.text("DELETE FROM cards WHERE owner_id IS NOT NULL"))
-    with op.batch_alter_table("cards", schema=None) as batch_op:
-        batch_op.drop_constraint("uq_cards_owner_term", type_="unique")
-        batch_op.drop_index("ix_cards_term")
-        batch_op.create_index("ix_cards_term", ["term"], unique=True)
-        batch_op.drop_index("ix_cards_owner_id")
-        batch_op.drop_constraint("fk_cards_owner_id", type_="foreignkey")
-        batch_op.drop_column("field_sources")
-        batch_op.drop_column("audio_url")
-        batch_op.drop_column("confirmed_by_owner")
-        batch_op.drop_column("owner_id")
+    op.drop_constraint("uq_cards_owner_term", "cards", type_="unique")
+    op.drop_index("ix_cards_term", table_name="cards")
+    op.create_index("ix_cards_term", "cards", ["term"], unique=True)
+    op.drop_index("ix_cards_owner_id", table_name="cards")
+    op.drop_constraint("fk_cards_owner_id", "cards", type_="foreignkey")
+    op.drop_column("cards", "field_sources")
+    op.drop_column("cards", "audio_url")
+    op.drop_column("cards", "confirmed_by_owner")
+    op.drop_column("cards", "owner_id")

@@ -1,10 +1,20 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.api import auth, cards, catalog, health, me, personal, practice, session, teacher
+from sqlalchemy.exc import DataError
+
 from app.config import BASE_DIR
 
 app = FastAPI(title="LLM Vocab Trainer")
+
+
+@app.exception_handler(DataError)
+def invalid_data(request: Request, exc: DataError):
+    return JSONResponse({"detail": "Invalid characters or value in the request"}, status_code=422)
+
+
 app.include_router(health.router)
 app.include_router(auth.router)
 app.include_router(cards.router)

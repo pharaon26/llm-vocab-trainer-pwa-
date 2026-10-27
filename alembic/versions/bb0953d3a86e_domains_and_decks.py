@@ -47,10 +47,8 @@ def upgrade() -> None:
         sa.Column("user_id", sa.Integer(), sa.ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
         sa.Column("deck_id", sa.Integer(), sa.ForeignKey("decks.id", ondelete="CASCADE"), primary_key=True),
     )
-    with op.batch_alter_table("users", schema=None) as batch_op:
-        batch_op.add_column(sa.Column("decks_customized", sa.Boolean(), nullable=False, server_default=sa.false()))
-    with op.batch_alter_table("cards", schema=None) as batch_op:
-        batch_op.add_column(sa.Column("domain_id", sa.Integer(), nullable=True))
+    op.add_column("users", sa.Column("decks_customized", sa.Boolean(), nullable=False, server_default=sa.false()))
+    op.add_column("cards", sa.Column("domain_id", sa.Integer(), nullable=True))
 
     conn = op.get_bind()
     used = [row[0] for row in conn.execute(sa.text("SELECT DISTINCT domain FROM cards ORDER BY domain"))]
@@ -58,10 +56,9 @@ def upgrade() -> None:
         conn.execute(sa.text("INSERT INTO domains (name) VALUES (:name)"), {"name": name})
     conn.execute(sa.text("UPDATE cards SET domain_id = (SELECT id FROM domains WHERE domains.name = cards.domain)"))
 
-    with op.batch_alter_table("cards", schema=None) as batch_op:
-        batch_op.alter_column("domain_id", existing_type=sa.Integer(), nullable=False)
-        batch_op.create_foreign_key("fk_cards_domain_id", "domains", ["domain_id"], ["id"])
-        batch_op.drop_column("domain")
+    op.alter_column("cards", "domain_id", existing_type=sa.Integer(), nullable=False)
+    op.create_foreign_key("fk_cards_domain_id", "cards", "domains", ["domain_id"], ["id"])
+    op.drop_column("cards", "domain")
 
     if conn.execute(sa.text("SELECT COUNT(*) FROM cards")).scalar():
         conn.execute(
@@ -81,16 +78,13 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    with op.batch_alter_table("cards", schema=None) as batch_op:
-        batch_op.add_column(sa.Column("domain", sa.String(length=50), nullable=True))
+    op.add_column("cards", sa.Column("domain", sa.String(length=50), nullable=True))
     conn = op.get_bind()
     conn.execute(sa.text("UPDATE cards SET domain = (SELECT name FROM domains WHERE domains.id = cards.domain_id)"))
-    with op.batch_alter_table("cards", schema=None) as batch_op:
-        batch_op.alter_column("domain", existing_type=sa.String(length=50), nullable=False)
-        batch_op.drop_constraint("fk_cards_domain_id", type_="foreignkey")
-        batch_op.drop_column("domain_id")
-    with op.batch_alter_table("users", schema=None) as batch_op:
-        batch_op.drop_column("decks_customized")
+    op.alter_column("cards", "domain", existing_type=sa.String(length=50), nullable=False)
+    op.drop_constraint("fk_cards_domain_id", "cards", type_="foreignkey")
+    op.drop_column("cards", "domain_id")
+    op.drop_column("users", "decks_customized")
     op.drop_table("user_decks")
     op.drop_table("deck_cards")
     op.drop_table("decks")

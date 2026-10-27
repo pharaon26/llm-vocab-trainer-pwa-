@@ -27,7 +27,7 @@ def _counts(db: Session) -> tuple[dict[int, int], dict[int, int]]:
 def list_decks(db: Session, user: User) -> list[DeckOut]:
     selected = set(selected_deck_ids(db, user))
     _, verified = _counts(db)
-    decks = db.scalars(select(Deck).order_by(Deck.name)).all()
+    decks = db.scalars(select(Deck).order_by(func.lower(Deck.name), Deck.name)).all()
     return [
         DeckOut(
             id=deck.id, name=deck.name, description=deck.description, domain=deck.domain,

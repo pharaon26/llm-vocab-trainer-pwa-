@@ -151,16 +151,17 @@ def test_parse_rejects_bad_responses(text):
 
 
 def test_factory_default_is_fake():
-    assert isinstance(get_provider(Settings(_env_file=None)), FakeProvider)
+    assert isinstance(get_provider(Settings(_env_file=None, database_url="postgresql+psycopg://x/y")), FakeProvider)
 
 
 def test_factory_gigachat_requires_credentials():
     with pytest.raises(LLMError, match="CREDENTIALS"):
-        get_provider(Settings(_env_file=None, llm_provider="gigachat"))
+        get_provider(Settings(_env_file=None, database_url="postgresql+psycopg://x/y", llm_provider="gigachat"))
 
 
 def test_factory_builds_gigachat_from_settings(sdk):
     config = Settings(
+        database_url="postgresql+psycopg://x/y",
         _env_file=None, llm_provider="gigachat", gigachat_credentials="key", gigachat_model="GigaChat-2"
     )
     assert isinstance(get_provider(config), GigaChatProvider)

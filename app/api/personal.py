@@ -2,7 +2,7 @@ from datetime import date
 from functools import lru_cache
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.api.deps import current_user, get_today
@@ -145,7 +145,7 @@ def delete_draft(draft_id: int, user: User = Depends(current_user), db: Session 
 
 @router.get("/cards", response_model=list[PersonalCardOut])
 def my_cards(user: User = Depends(current_user), db: Session = Depends(get_db)):
-    cards = db.scalars(select(Card).where(Card.owner_id == user.id).order_by(Card.term)).all()
+    cards = db.scalars(select(Card).where(Card.owner_id == user.id).order_by(func.lower(Card.term), Card.term)).all()
     return [personal_out(card) for card in cards]
 
 
@@ -153,7 +153,7 @@ def my_cards(user: User = Depends(current_user), db: Session = Depends(get_db)):
 def update_card(card_id: int, data: CardCreate, user: User = Depends(current_user), db: Session = Depends(get_db)):
     card = own_card(db, user, card_id)
     clash = db.scalar(
-        select(Card).where(Card.owner_id == user.id, Card.id != card_id, Card.term.ilike(data.term))
+        select(Card).where(Card.owner_id == user.id, Card.id != card_id, func.lower(Card.term) == data.term.lower())
     )
     if clash:
         raise HTTPException(409, "A card with this term already exists")

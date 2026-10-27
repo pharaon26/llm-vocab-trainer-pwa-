@@ -49,7 +49,7 @@ def list_bank(
         query = query.where(TaskBank.task_type == task_type.value)
     if rejected is not None:
         query = query.where(TaskBank.rejected.is_(rejected))
-    rows = db.execute(query.order_by(Card.term, TaskBank.id)).all()
+    rows = db.execute(query.order_by(func.lower(Card.term), Card.term, TaskBank.id)).all()
     return [bank_out(entry, term) for entry, term in rows]
 
 
@@ -88,7 +88,7 @@ def ensure_deck_name_free(db: Session, name: str, exclude_id: int | None = None)
 
 @router.get("/decks", response_model=list[TeacherDeckOut])
 def list_decks(db: Session = Depends(get_db)):
-    return [decks_service.teacher_deck(db, deck) for deck in db.scalars(select(Deck).order_by(Deck.name))]
+    return [decks_service.teacher_deck(db, deck) for deck in db.scalars(select(Deck).order_by(func.lower(Deck.name), Deck.name))]
 
 
 @router.post("/decks", response_model=TeacherDeckOut, status_code=201)
@@ -151,7 +151,7 @@ def list_personal_cards(owner: str | None = None, db: Session = Depends(get_db))
         select(Card, User.name)
         .join(User, User.id == Card.owner_id)
         .where(Card.owner_id.isnot(None), Card.confirmed_by_owner.is_(True))
-        .order_by(Card.term, User.name)
+        .order_by(func.lower(Card.term), Card.term, User.name)
     )
     if owner:
         query = query.where(User.name == owner)

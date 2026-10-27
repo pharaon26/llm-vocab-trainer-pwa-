@@ -12,7 +12,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    database_url: str = "sqlite:///./app.db"
+    database_url: str
     llm_provider: Literal["fake", "gigachat"] = "fake"
     llm_temperature: float = 0.3
     llm_timeout: float = 30.0

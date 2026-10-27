@@ -19,11 +19,9 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    with op.batch_alter_table("cards", schema=None) as batch_op:
-        batch_op.alter_column("contrast_term", existing_type=sa.String(length=100), nullable=True)
+    op.alter_column("cards", "contrast_term", existing_type=sa.String(length=100), nullable=True)
 
 
 def downgrade() -> None:
     op.get_bind().execute(sa.text("UPDATE cards SET contrast_term = '' WHERE contrast_term IS NULL"))
-    with op.batch_alter_table("cards", schema=None) as batch_op:
-        batch_op.alter_column("contrast_term", existing_type=sa.String(length=100), nullable=False)
+    op.alter_column("cards", "contrast_term", existing_type=sa.String(length=100), nullable=False)
