@@ -79,7 +79,7 @@ def test_service_worker_precaches_existing_files_only():
 
 def test_service_worker_never_caches_api():
     source = (STATIC / "sw.js").read_text(encoding="utf-8")
-    for api_path in ("/auth", "/session", "/cards"):
+    for api_path in ("/auth", "/session", "/admin/cards"):
         assert f'"{api_path}' not in source
 
 

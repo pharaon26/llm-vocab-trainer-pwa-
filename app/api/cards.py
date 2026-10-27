@@ -2,13 +2,13 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import require_teacher
+from app.api.deps import require_admin
 from app.db import get_db
 from app.models import Card, CardProgress, DeckCard, ReviewHistory, TaskBank
 from app.schemas.card import CardCreate, CardRead
 from app.services.cards import card_values
 
-router = APIRouter(prefix="/cards", tags=["cards"])
+router = APIRouter(prefix="/admin/cards", tags=["admin"])
 
 
 async def get_card_or_404(card_id: int, db: AsyncSession) -> Card:
@@ -24,7 +24,7 @@ async def ensure_term_free(db: AsyncSession, term: str, exclude_id: int | None =
         raise HTTPException(409, "Card with this term already exists")
 
 
-@router.post("", response_model=CardRead, status_code=201, dependencies=[Depends(require_teacher)])
+@router.post("", response_model=CardRead, status_code=201, dependencies=[Depends(require_admin)])
 async def create_card(data: CardCreate, db: AsyncSession = Depends(get_db)):
     await ensure_term_free(db, data.term)
     card = Card(**await card_values(db, data.model_dump()), verified=False)
@@ -34,7 +34,7 @@ async def create_card(data: CardCreate, db: AsyncSession = Depends(get_db)):
     return card
 
 
-@router.get("", response_model=list[CardRead], dependencies=[Depends(require_teacher)])
+@router.get("", response_model=list[CardRead], dependencies=[Depends(require_admin)])
 async def list_cards(verified: bool | None = None, db: AsyncSession = Depends(get_db)):
     query = select(Card).where(Card.owner_id.is_(None)).order_by(func.lower(Card.term), Card.term)
     if verified is not None:
@@ -42,12 +42,12 @@ async def list_cards(verified: bool | None = None, db: AsyncSession = Depends(ge
     return (await db.scalars(query)).all()
 
 
-@router.get("/{card_id}", response_model=CardRead, dependencies=[Depends(require_teacher)])
+@router.get("/{card_id}", response_model=CardRead, dependencies=[Depends(require_admin)])
 async def read_card(card_id: int, db: AsyncSession = Depends(get_db)):
     return await get_card_or_404(card_id, db)
 
 
-@router.put("/{card_id}", response_model=CardRead, dependencies=[Depends(require_teacher)])
+@router.put("/{card_id}", response_model=CardRead, dependencies=[Depends(require_admin)])
 async def update_card(card_id: int, data: CardCreate, db: AsyncSession = Depends(get_db)):
     card = await get_card_or_404(card_id, db)
     await ensure_term_free(db, data.term, exclude_id=card_id)
@@ -59,7 +59,7 @@ async def update_card(card_id: int, data: CardCreate, db: AsyncSession = Depends
     return card
 
 
-@router.patch("/{card_id}/verify", response_model=CardRead, dependencies=[Depends(require_teacher)])
+@router.patch("/{card_id}/verify", response_model=CardRead, dependencies=[Depends(require_admin)])
 async def verify_card(card_id: int, db: AsyncSession = Depends(get_db)):
     card = await get_card_or_404(card_id, db)
     card.verified = True
@@ -68,7 +68,7 @@ async def verify_card(card_id: int, db: AsyncSession = Depends(get_db)):
     return card
 
 
-@router.delete("/{card_id}", status_code=204, dependencies=[Depends(require_teacher)])
+@router.delete("/{card_id}", status_code=204, dependencies=[Depends(require_admin)])
 async def delete_card(card_id: int, db: AsyncSession = Depends(get_db)):
     card = await get_card_or_404(card_id, db)
     await db.execute(delete(ReviewHistory).where(ReviewHistory.card_id == card_id))

@@ -34,8 +34,8 @@ async def cards(db):
 
 
 @pytest.fixture
-def teacher(client, teacher_headers):
-    client.headers.update(teacher_headers)
+def admin(client, admin_headers):
+    client.headers.update(admin_headers)
     return client
 
 
@@ -72,10 +72,10 @@ def test_card_domain_is_an_entity_shared_between_cards(db, cards):
     assert cards["threat"].domain_ref.id == cards["firewall"].domain_ref.id
 
 
-async def test_cards_api_resolves_domain_case_insensitively(teacher, db):
+async def test_cards_api_resolves_domain_case_insensitively(admin, db):
     await ensure_default_domains(db)
     await db.commit()
-    created = (await teacher.post("/cards", json={**CARD, "domain": "medicine"})).json()
+    created = (await admin.post("/admin/cards", json={**CARD, "domain": "medicine"})).json()
     assert created["domain"] == "Medicine"
     assert (await db.scalar(select(func.count()).select_from(select(Domain).where(Domain.name.ilike("medicine")).subquery()))) == 1
 
@@ -160,48 +160,48 @@ async def test_progress_lists_selected_decks_and_opened_terms_only(client, db, s
 
 
 async def test_teacher_deck_endpoints_require_teacher(client, student_headers):
-    assert (await client.get("/teacher/decks")).status_code == 401
-    assert (await client.get("/teacher/decks", headers=student_headers)).status_code == 403
-    assert (await client.post("/teacher/domains", headers=student_headers, json={"name": "X"})).status_code == 403
+    assert (await client.get("/admin/decks")).status_code == 401
+    assert (await client.get("/admin/decks", headers=student_headers)).status_code == 403
+    assert (await client.post("/admin/domains", headers=student_headers, json={"name": "X"})).status_code == 403
 
 
-async def test_teacher_deck_crud(teacher, db, cards):
-    created = (await teacher.post("/teacher/decks", json={"name": "Law basics", "description": "d", "domain": "Law"})).json()
+async def test_teacher_deck_crud(admin, db, cards):
+    created = (await admin.post("/admin/decks", json={"name": "Law basics", "description": "d", "domain": "Law"})).json()
     assert created["domain"] == "Law" and created["is_default"] is False and created["cards_total"] == 0
-    assert (await teacher.post("/teacher/decks", json={"name": "law BASICS", "domain": "Law"})).status_code == 409
+    assert (await admin.post("/admin/decks", json={"name": "law BASICS", "domain": "Law"})).status_code == 409
 
     cards["patch"].verified = False
     await db.commit()
     ids = [cards["patch"].id, cards["threat"].id]
-    updated = (await teacher.put(f"/teacher/decks/{created['id']}/cards", json={"card_ids": ids})).json()
+    updated = (await admin.put(f"/admin/decks/{created['id']}/cards", json={"card_ids": ids})).json()
     assert updated["card_ids"] == sorted(ids) and updated["cards"] == 1 and updated["cards_total"] == 2
-    assert (await teacher.put(f"/teacher/decks/{created['id']}/cards", json={"card_ids": ids[:1]})).json()["cards"] == 0
-    assert (await teacher.put(f"/teacher/decks/{created['id']}/cards", json={"card_ids": [9999]})).status_code == 422
+    assert (await admin.put(f"/admin/decks/{created['id']}/cards", json={"card_ids": ids[:1]})).json()["cards"] == 0
+    assert (await admin.put(f"/admin/decks/{created['id']}/cards", json={"card_ids": [9999]})).status_code == 422
 
-    renamed = (await teacher.put(f"/teacher/decks/{created['id']}", json={"name": "Law 101", "domain": "Law", "is_default": True})).json()
+    renamed = (await admin.put(f"/admin/decks/{created['id']}", json={"name": "Law 101", "domain": "Law", "is_default": True})).json()
     assert renamed["name"] == "Law 101" and renamed["is_default"] is True
-    assert len((await teacher.get("/teacher/decks")).json()) == 2
-    assert (await teacher.delete(f"/teacher/decks/{created['id']}")).status_code == 204
-    assert (await teacher.delete(f"/teacher/decks/{created['id']}")).status_code == 404
+    assert len((await admin.get("/admin/decks")).json()) == 2
+    assert (await admin.delete(f"/admin/decks/{created['id']}")).status_code == 204
+    assert (await admin.delete(f"/admin/decks/{created['id']}")).status_code == 404
     assert (await db.scalar(select(func.count()).select_from(select(DeckCard).filter_by(deck_id=created["id"]).subquery()))) == 0
     assert (await db.scalar(select(func.count()).select_from(select(Card).subquery()))) == 24
 
 
-async def test_deleting_a_deck_removes_student_selections(teacher, client, db, student_headers, cards):
+async def test_deleting_a_deck_removes_student_selections(admin, client, db, student_headers, cards):
     deck = await make_deck(db, "Temp", ["patch"])
     await client.put("/me/decks", headers=student_headers, json={"deck_ids": [deck.id]})
-    await teacher.delete(f"/teacher/decks/{deck.id}")
+    await admin.delete(f"/admin/decks/{deck.id}")
     assert (await db.scalar(select(func.count()).select_from(select(UserDeck).subquery()))) == 0
 
 
-async def test_teacher_domains(teacher):
-    assert (await teacher.post("/teacher/domains", json={"name": "Aviation"})).status_code == 201
-    assert (await teacher.post("/teacher/domains", json={"name": "aviation"})).status_code == 409
-    assert (await teacher.post("/teacher/domains", json={"name": " "})).status_code == 422
+async def test_teacher_domains(admin):
+    assert (await admin.post("/admin/domains", json={"name": "Aviation"})).status_code == 201
+    assert (await admin.post("/admin/domains", json={"name": "aviation"})).status_code == 409
+    assert (await admin.post("/admin/domains", json={"name": " "})).status_code == 422
 
 
-async def test_deleting_a_card_removes_it_from_decks(teacher, db, cards):
-    await teacher.delete(f"/cards/{cards['patch'].id}")
+async def test_deleting_a_card_removes_it_from_decks(admin, db, cards):
+    await admin.delete(f"/admin/cards/{cards['patch'].id}")
     assert (await db.scalar(select(func.count()).select_from(select(DeckCard).filter_by(card_id=cards["patch"].id).subquery()))) == 0
 
 

@@ -18,8 +18,8 @@ async def cards(db):
 
 
 @pytest.fixture
-def teacher(client, teacher_headers):
-    client.headers.update(teacher_headers)
+def admin(client, admin_headers):
+    client.headers.update(admin_headers)
     return client
 
 
@@ -51,13 +51,13 @@ async def add_bank(db, card, prompt="A ____ here.", rejected=False, source="fake
     return entry
 
 
-@pytest.mark.parametrize("path", ["/teacher/analytics", "/teacher/bank"])
+@pytest.mark.parametrize("path", ["/admin/analytics", "/admin/bank"])
 async def test_teacher_endpoints_require_teacher(client, student_headers, path):
     assert (await client.get(path)).status_code == 401
     assert (await client.get(path, headers=student_headers)).status_code == 403
 
 
-async def test_analytics_counts_first_attempts_of_students_only(db, teacher, cards):
+async def test_analytics_counts_first_attempts_of_students_only(db, admin, cards):
     anna, boris = await student(db, "anna"), await student(db, "boris")
     vuln, threat = cards["vulnerability"], cards["threat"]
     for _ in range(3):
@@ -67,10 +67,10 @@ async def test_analytics_counts_first_attempts_of_students_only(db, teacher, car
     await answer_row(db, anna, vuln, False, "meaning", retry=True)
     await answer_row(db, anna, threat, False, "usage")
     await answer_row(db, boris, threat, True)
-    teacher_user = (await db.scalars(select(User).filter_by(role="teacher"))).one()
+    teacher_user = (await db.scalars(select(User).filter_by(role="admin"))).one()
     await answer_row(db, teacher_user, vuln, False, "meaning")
 
-    data = (await teacher.get("/teacher/analytics?min_answers=2")).json()
+    data = (await admin.get("/admin/analytics?min_answers=2")).json()
     assert (data["students"], data["answers"], data["errors"], data["error_rate"]) == (2, 7, 3, 0.429)
     types = {t["error_type"]: (t["count"], t["share"]) for t in data["error_types"]}
     assert types == {"form": (1, 0.333), "meaning": (1, 0.333), "usage": (1, 0.333), "collocation": (0, 0.0)}
@@ -81,47 +81,47 @@ async def test_analytics_counts_first_attempts_of_students_only(db, teacher, car
     assert {s["classified_by"]: s["count"] for s in data["classified_by"]} == {"llm": 1, "rule": 1, "task": 5}
 
 
-async def test_analytics_min_answers_and_limit(db, teacher, cards):
+async def test_analytics_min_answers_and_limit(db, admin, cards):
     anna = await student(db, "anna")
     await answer_row(db, anna, cards["threat"], False, "usage")
-    assert (await teacher.get("/teacher/analytics")).json()["hardest_terms"] == []
-    assert len((await teacher.get("/teacher/analytics?min_answers=1")).json()["hardest_terms"]) == 1
-    assert (await teacher.get("/teacher/analytics?min_answers=0")).status_code == 422
+    assert (await admin.get("/admin/analytics")).json()["hardest_terms"] == []
+    assert len((await admin.get("/admin/analytics?min_answers=1")).json()["hardest_terms"]) == 1
+    assert (await admin.get("/admin/analytics?min_answers=0")).status_code == 422
 
 
-async def test_analytics_is_empty_without_answers(teacher):
-    data = (await teacher.get("/teacher/analytics")).json()
+async def test_analytics_is_empty_without_answers(admin):
+    data = (await admin.get("/admin/analytics")).json()
     assert (data["students"], data["answers"], data["error_rate"], data["hardest_terms"]) == (0, 0, 0.0, [])
     assert all(t["count"] == 0 for t in data["error_types"])
 
 
-async def test_analytics_has_no_personal_data(db, teacher, cards):
+async def test_analytics_has_no_personal_data(db, admin, cards):
     await answer_row(db, await student(db, "SecretName"), cards["threat"], False, "usage")
-    assert "SecretName" not in (await teacher.get("/teacher/analytics?min_answers=1")).text
+    assert "SecretName" not in (await admin.get("/admin/analytics?min_answers=1")).text
 
 
-async def test_bank_list_and_filters(db, teacher, cards):
+async def test_bank_list_and_filters(db, admin, cards):
     await add_bank(db, cards["threat"], "One ____.")
     await add_bank(db, cards["vulnerability"], "Two ____.", rejected=True)
     await add_bank(db, cards["vulnerability"], "Three ____.")
-    everything = (await teacher.get("/teacher/bank")).json()
+    everything = (await admin.get("/admin/bank")).json()
     assert [(e["term"], e["prompt"]) for e in everything] == [
         ("threat", "One ____."), ("vulnerability", "Two ____."), ("vulnerability", "Three ____."),
     ]
-    assert len((await teacher.get("/teacher/bank?rejected=true")).json()) == 1
-    assert len((await teacher.get("/teacher/bank?rejected=false")).json()) == 2
-    assert len((await teacher.get(f"/teacher/bank?card_id={cards['threat'].id}")).json()) == 1
-    assert len((await teacher.get("/teacher/bank?task_type=gap_fill")).json()) == 3
-    assert (await teacher.get("/teacher/bank?task_type=nonsense")).status_code == 422
+    assert len((await admin.get("/admin/bank?rejected=true")).json()) == 1
+    assert len((await admin.get("/admin/bank?rejected=false")).json()) == 2
+    assert len((await admin.get(f"/admin/bank?card_id={cards['threat'].id}")).json()) == 1
+    assert len((await admin.get("/admin/bank?task_type=gap_fill")).json()) == 3
+    assert (await admin.get("/admin/bank?task_type=nonsense")).status_code == 422
 
 
-async def test_reject_and_restore_bank_entry(db, teacher, cards):
+async def test_reject_and_restore_bank_entry(db, admin, cards):
     entry = await add_bank(db, cards["threat"])
-    assert (await teacher.patch(f"/teacher/bank/{entry.id}", json={"rejected": True})).json()["rejected"] is True
+    assert (await admin.patch(f"/admin/bank/{entry.id}", json={"rejected": True})).json()["rejected"] is True
     assert await bank.count(db, cards["threat"].id, TaskType.GAP_FILL, "fake") == 0
-    assert (await teacher.patch(f"/teacher/bank/{entry.id}", json={"rejected": False})).json()["rejected"] is False
+    assert (await admin.patch(f"/admin/bank/{entry.id}", json={"rejected": False})).json()["rejected"] is False
     assert await bank.count(db, cards["threat"].id, TaskType.GAP_FILL, "fake") == 1
-    assert (await teacher.patch("/teacher/bank/999", json={"rejected": True})).status_code == 404
+    assert (await admin.patch("/admin/bank/999", json={"rejected": True})).status_code == 404
 
 
 async def test_rejected_entries_are_never_shown(db, cards):

@@ -18,8 +18,11 @@ def cookie(value):
     return {"Cookie": f"{NAME}={value}"}
 
 
-async def register(client, name="Anna", password=PASSWORD, **kwargs):
-    return await client.post("/auth/register", json={"name": name, "password": password, "password_confirm": password}, **kwargs)
+async def register(client, name="Anna", password=PASSWORD, role=None, **kwargs):
+    body = {"name": name, "password": password, "password_confirm": password}
+    if role is not None:
+        body["role"] = role
+    return await client.post("/auth/register", json=body, **kwargs)
 
 
 async def attempt(client, name="Anna", password="wrong-password", **extra):
@@ -178,11 +181,50 @@ async def test_password_must_be_repeated_identically(client):
     assert (await client.post("/auth/register", json={**body, "password_confirm": PASSWORD})).status_code == 201
 
 
-async def test_name_is_taken(client):
+async def test_nickname_is_taken_ignoring_case(client):
     await register(client)
     assert (await register(client)).status_code == 409
-    await client.post("/auth/login", json={"name": "Ivan", "role": "teacher", "password": "secret"})
-    assert (await register(client, "Ivan")).status_code == 409
+    assert (await register(client, "ANNA")).status_code == 409
+    assert (await register(client, "anna")).status_code == 409
+
+
+@pytest.mark.parametrize("nickname", ["ab", "a" * 33, "with space", "dash-name", "Анна", "dot.name", "a@b", "emoji😀x", ""])
+async def test_nickname_rules(client, nickname):
+    assert (await register(client, nickname)).status_code == 422
+
+
+@pytest.mark.parametrize("nickname", ["abc", "Anna_1", "_x_", "A1b2C3", "a" * 32])
+async def test_valid_nicknames(client, nickname):
+    assert (await register(client, nickname)).status_code == 201
+
+
+async def test_login_ignores_nickname_case(client):
+    await register(client, "AnnaK")
+    assert (await attempt(client, "annak", PASSWORD)).json()["name"] == "AnnaK"
+
+
+async def test_role_is_chosen_at_registration_and_returned(client):
+    student = await register(client, "stud")
+    teacher = await register(client, "teach", role="teacher")
+    assert student.json()["role"] == "student" and teacher.json()["role"] == "teacher"
+    me = await client.get("/auth/me", headers=cookie(session_cookie_of(teacher)))
+    assert me.json() == {"name": "teach", "role": "teacher"}
+
+
+async def test_admin_role_cannot_be_chosen_at_registration(client):
+    assert (await register(client, "sneaky", role="admin")).status_code == 422
+    assert (await register(client, "sneaky", role="")).status_code == 422
+
+
+async def test_unknown_role_defaults_are_not_accepted(client):
+    body = {"name": "Anna", "password": PASSWORD, "password_confirm": PASSWORD, "role": "superuser"}
+    assert (await client.post("/auth/register", json=body)).status_code == 422
+
+
+async def test_login_has_no_role_parameter_and_roles_come_from_the_database(client, db):
+    await register(client, "teach", role="teacher")
+    response = await client.post("/auth/login", json={"name": "teach", "password": PASSWORD, "role": "admin"})
+    assert response.json()["role"] == "teacher"
 
 
 async def test_wrong_and_unknown_credentials_look_the_same(client):
@@ -193,14 +235,6 @@ async def test_wrong_and_unknown_credentials_look_the_same(client):
     assert wrong.json() == unknown.json()
     assert not wrong.headers.get_list("set-cookie")
     assert (await client.post("/auth/login", json={"name": "Anna"})).status_code == 401
-
-
-async def test_teacher_cannot_log_in_as_student_and_vice_versa(client):
-    await client.post("/auth/login", json={"name": "Ivan", "role": "teacher", "password": "secret"})
-    assert (await attempt(client, "Ivan", "secret")).status_code == 401
-    await register(client, "Petr")
-    response = await client.post("/auth/login", json={"name": "Petr", "role": "teacher", "password": "secret"})
-    assert response.status_code == 409
 
 
 async def test_accounts_created_before_passwords_cannot_log_in(client, db):
@@ -214,30 +248,31 @@ async def test_accounts_created_before_passwords_cannot_log_in(client, db):
     assert (await attempt(client, "legacy", "fresh-password")).status_code == 200
 
 
-async def test_teacher_requires_password(client):
-    body = {"name": "teacher", "role": "teacher"}
-    assert (await client.post("/auth/login", json=body)).status_code == 403
-    assert (await client.post("/auth/login", json={**body, "password": "wrong"})).status_code == 403
-    assert (await client.post("/auth/login", json={**body, "password": "secret"})).status_code == 200
-
-
-async def test_teacher_login_disabled_without_configured_password(client, monkeypatch):
-    monkeypatch.setattr(settings, "teacher_password", "")
-    response = await client.post("/auth/login", json={"name": "t", "role": "teacher", "password": ""})
-    assert response.status_code == 403
+async def test_there_is_no_shared_teacher_password_anymore(client):
+    assert not hasattr(settings, "teacher_password")
+    response = await client.post("/auth/login", json={"name": "teach", "password": "secret"})
+    assert response.status_code == 401
 
 
 async def test_non_ascii_password_does_not_crash(client):
-    response = await client.post("/auth/login", json={"name": "t", "role": "teacher", "password": "пароль"})
-    assert response.status_code == 403
+    response = await client.post("/auth/login", json={"name": "t", "password": "пароль"})
+    assert response.status_code == 401
 
 
 async def test_teacher_can_log_out(client):
-    response = await client.post("/auth/login", json={"name": "teacher", "role": "teacher", "password": "secret"})
-    headers = cookie(session_cookie_of(response))
-    assert (await client.get("/teacher/analytics", headers=headers)).status_code == 200
+    created = await register(client, "teach", role="teacher")
+    headers = cookie(session_cookie_of(created))
+    assert (await client.get("/auth/me", headers=headers)).status_code == 200
     assert (await client.post("/auth/logout", headers=headers)).status_code == 204
-    assert (await client.get("/teacher/analytics", headers=headers)).status_code == 401
+    assert (await client.get("/auth/me", headers=headers)).status_code == 401
+
+
+async def test_admin_logs_in_like_everyone(client, db):
+    from tests.conftest import make_admin
+
+    await make_admin(db, "boss")
+    response = await attempt(client, "boss", PASSWORD)
+    assert response.status_code == 200 and response.json()["role"] == "admin"
 
 
 async def fail_times(client, count, name="Anna", **extra):
@@ -297,17 +332,10 @@ async def test_failures_only_older_than_window_do_not_count(client, db):
     assert (await attempt(client)).status_code == 429
 
 
-async def test_teacher_password_has_the_same_limit(client):
-    await fail_times(client, 5, name="teacher", role="teacher")
-    blocked = await client.post("/auth/login", json={"name": "teacher", "role": "teacher", "password": "secret"})
-    assert blocked.status_code == 429
-
-
-async def test_teacher_password_is_limited_per_ip_too(client):
-    for index in range(5):
-        await attempt(client, f"t{index}", role="teacher")
-    response = await client.post("/auth/login", json={"name": "t9", "role": "teacher", "password": "secret"})
-    assert response.status_code == 429
+async def test_limit_covers_every_role(client):
+    await register(client, "teach", role="teacher")
+    await fail_times(client, 5, name="teach")
+    assert (await attempt(client, "teach", PASSWORD)).status_code == 429
 
 
 async def test_attempts_are_stored_in_the_database(client, db):
@@ -363,3 +391,11 @@ def test_comma_separated_lists_in_settings():
     assert config.trusted_proxies == ["10.0.0.0/8", "127.0.0.1"]
     assert config.dictionary_audio_domains == ["a.example", "b.example"]
     assert config.allowed_origins == ["https://one.example", "https://two.example"]
+
+
+@pytest.mark.parametrize("path", ["/admin/analytics", "/admin/bank", "/admin/decks", "/admin/cards", "/admin/personal-cards"])
+async def test_admin_endpoints_are_for_admins_only(client, teacher_headers, student_headers, admin_headers, path):
+    assert (await client.get(path)).status_code == 401
+    assert (await client.get(path, headers=student_headers)).status_code == 403
+    assert (await client.get(path, headers=teacher_headers)).status_code == 403
+    assert (await client.get(path, headers=admin_headers)).status_code == 200

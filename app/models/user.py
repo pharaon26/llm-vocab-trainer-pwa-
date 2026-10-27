@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, String, false, func
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, String, false, func, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base
@@ -8,9 +8,10 @@ from app.db import Base
 
 class User(Base):
     __tablename__ = "users"
+    __table_args__ = (Index("uq_users_name_lower", text("lower(name)"), unique=True),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(50), unique=True, index=True)
+    name: Mapped[str] = mapped_column(String(50))
     role: Mapped[str] = mapped_column(String(10))
     password_hash: Mapped[str | None] = mapped_column(String(255))
     new_cards_per_day: Mapped[int] = mapped_column(default=5, server_default="5")

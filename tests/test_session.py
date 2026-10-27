@@ -211,11 +211,11 @@ async def test_session_survives_llm_failure(client, db, llm, student_headers, ve
     assert (await answer(client, student_headers, db, task))["correct"] is True
 
 
-async def test_deleting_card_removes_bank_entries(client, db, llm, student_headers, teacher_headers, verified_cards):
+async def test_deleting_card_removes_bank_entries(client, db, llm, student_headers, admin_headers, verified_cards):
     llm.provider = FakeProvider()
     task = (await next_task(client, student_headers))["task"]
     await answer(client, student_headers, db, task)
-    response = await client.delete(f"/cards/{task['card_id']}", headers=teacher_headers)
+    response = await client.delete(f"/admin/cards/{task['card_id']}", headers=admin_headers)
     assert response.status_code == 204
     assert (await db.scalar(select(func.count()).select_from(select(TaskBank).filter_by(card_id=task["card_id"]).subquery()))) == 0
 

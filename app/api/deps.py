@@ -39,3 +39,15 @@ async def require_teacher(user: User = Depends(current_user)) -> User:
     if user.role != Role.TEACHER:
         raise HTTPException(403, "Teacher role required")
     return user
+
+
+async def require_student(user: User = Depends(current_user)) -> User:
+    if user.role != Role.STUDENT:
+        raise HTTPException(403, "Student role required")
+    return user
+
+
+async def require_admin(user: User = Depends(current_user)) -> User:
+    if user.role != Role.ADMIN:
+        raise HTTPException(403, "Administrator role required")
+    return user

@@ -35,13 +35,14 @@ export function loginView({ name = "", error = "", onSubmit }) {
         onSubmit(nameInput.value.trim(), passwordInput.value);
       },
     },
-    el("h2", {}, "Вход преподавателя"),
-    el("label", { for: "name" }, "Имя"),
+    el("h2", {}, "Вход в кабинет"),
+    el("label", { for: "name" }, "Ник"),
     nameInput,
     el("label", { for: "password" }, "Пароль"),
     passwordInput,
     error && el("p", { className: "banner error", role: "alert" }, error),
     el("button", { type: "submit", className: "primary" }, "Войти"),
+    el("p", {}, "Нет аккаунта? ", el("a", { href: "/" }, "Зарегистрироваться (отметьте «Я преподаватель»)")),
   );
 }
 

@@ -26,7 +26,6 @@ class Settings(BaseSettings):
     gigachat_ca_bundle: str = "certs/russian_trusted_root_ca_pem.crt"
     dictionary_provider: Literal["dictionaryapi", "none"] = "dictionaryapi"
     dictionary_url: str = "https://api.dictionaryapi.dev/api/v2/entries/en"
-    teacher_password: str = ""
     session_ttl_days: int = 30
     session_cookie_name: str = "session"
     cookie_secure: bool = True
@@ -49,6 +48,8 @@ settings = Settings()
 class AuthConfig:
     password_min_length: int = 8
     password_max_length: int = 128
+    nickname_min_length: int = 3
+    nickname_max_length: int = 32
     login_max_failures: int = 5
     login_window_minutes: int = 15
 

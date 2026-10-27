@@ -370,7 +370,7 @@ async def test_personal_card_enters_the_session_as_a_new_term_even_without_decks
     assert queue["remaining"] == 1 and queue["task"]["card_id"] == (await db.scalars(select(Card).where(Card.owner_id.isnot(None)))).one().id
 
 
-async def test_personal_cards_are_invisible_to_other_students_and_teachers_card_list(client, db, student_headers, teacher_headers, cards, full):
+async def test_personal_cards_are_invisible_to_other_students_and_teachers_card_list(client, db, student_headers, admin_headers, cards, full):
     draft = draft_of(await create(client, student_headers))
     await client.post(f"/me/drafts/{draft['id']}/confirm", headers=student_headers)
     card = (await db.scalars(select(Card).where(Card.owner_id.isnot(None)))).one()
@@ -378,15 +378,15 @@ async def test_personal_cards_are_invisible_to_other_students_and_teachers_card_
     assert (await client.get("/me/cards", headers=other)).json() == []
     assert "jitter" not in (await client.get("/me/dictionary", headers=other)).text
     assert "jitter" not in (await client.get("/me/progress", headers=other)).text
-    assert "jitter" not in {c["term"] for c in (await client.get("/cards", headers=teacher_headers)).json()}
+    assert "jitter" not in {c["term"] for c in (await client.get("/admin/cards", headers=admin_headers)).json()}
     for call in (
-        await client.get(f"/cards/{card.id}", headers=teacher_headers),
-        await client.put(f"/cards/{card.id}", headers=teacher_headers, json={}),
-        await client.patch(f"/cards/{card.id}/verify", headers=teacher_headers),
-        await client.delete(f"/cards/{card.id}", headers=teacher_headers),
+        await client.get(f"/admin/cards/{card.id}", headers=admin_headers),
+        await client.put(f"/admin/cards/{card.id}", headers=admin_headers, json={}),
+        await client.patch(f"/admin/cards/{card.id}/verify", headers=admin_headers),
+        await client.delete(f"/admin/cards/{card.id}", headers=admin_headers),
     ):
         assert call.status_code in (404, 422)
-    assert (await client.get(f"/cards/{card.id}", headers=teacher_headers)).status_code == 404
+    assert (await client.get(f"/admin/cards/{card.id}", headers=admin_headers)).status_code == 404
 
 
 async def test_other_students_never_see_a_personal_card_as_an_answer_option(client, db, student_headers, cards, full):
@@ -446,13 +446,13 @@ async def test_deleting_a_personal_card_removes_its_traces(client, db, student_h
     assert (await db.scalar(select(func.count()).select_from(select(ReviewHistory).filter_by(card_id=card_id).subquery()))) == 0
 
 
-async def test_shared_card_added_meanwhile_blocks_confirmation(client, db, student_headers, teacher_headers, cards, full):
+async def test_shared_card_added_meanwhile_blocks_confirmation(client, db, student_headers, admin_headers, cards, full):
     draft = draft_of(await create(client, student_headers))
     new = {"term": "jitter", "transcription": "/x/", "part_of_speech": "noun", "definition_en": "d", "translation_ru": "з",
            "collocations": ["a b", "c d"], "examples": ["Jitter one.", "Jitter two."], "common_mistakes": ["m"],
            "contrast_term": None, "domain": "IT"}
-    card_id = (await client.post("/cards", headers=teacher_headers, json=new)).json()["id"]
-    await client.patch(f"/cards/{card_id}/verify", headers=teacher_headers)
+    card_id = (await client.post("/admin/cards", headers=admin_headers, json=new)).json()["id"]
+    await client.patch(f"/admin/cards/{card_id}/verify", headers=admin_headers)
     assert (await client.post(f"/me/drafts/{draft['id']}/confirm", headers=student_headers)).status_code == 409
 
 

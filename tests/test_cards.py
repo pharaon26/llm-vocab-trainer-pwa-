@@ -8,8 +8,8 @@ from app.models import Card
 from app.seed import CARDS_FILE, load_cards, update_cards
 
 @pytest.fixture
-def client(client, teacher_headers):
-    client.headers.update(teacher_headers)
+def client(client, admin_headers):
+    client.headers.update(admin_headers)
     return client
 
 
@@ -28,33 +28,33 @@ VALID = {
 
 
 async def test_create_and_read(client):
-    created = await client.post("/cards", json=VALID)
+    created = await client.post("/admin/cards", json=VALID)
     assert created.status_code == 201
     body = created.json()
     assert body["verified"] is False
-    assert (await client.get(f"/cards/{body['id']}")).json()["term"] == "vulnerability"
+    assert (await client.get(f"/admin/cards/{body['id']}")).json()["term"] == "vulnerability"
 
 
 async def test_duplicate_term_conflict(client):
-    await client.post("/cards", json=VALID)
-    assert (await client.post("/cards", json=VALID)).status_code == 409
+    await client.post("/admin/cards", json=VALID)
+    assert (await client.post("/admin/cards", json=VALID)).status_code == 409
 
 
 async def test_student_cannot_modify_cards(client, student_headers):
     client.headers.update(student_headers)
-    assert (await client.post("/cards", json=VALID)).status_code == 403
+    assert (await client.post("/admin/cards", json=VALID)).status_code == 403
 
 
 async def test_reading_cards_requires_teacher(client, student_headers):
-    card_id = (await client.post("/cards", json=VALID)).json()["id"]
+    card_id = (await client.post("/admin/cards", json=VALID)).json()["id"]
     plain = AsyncClient(transport=client._transport, base_url="http://test")
-    assert (await plain.get("/cards")).status_code == 401
-    assert (await plain.get(f"/cards/{card_id}")).status_code == 401
-    assert (await plain.get("/cards", headers=student_headers)).status_code == 403
+    assert (await plain.get("/admin/cards")).status_code == 401
+    assert (await plain.get(f"/admin/cards/{card_id}")).status_code == 401
+    assert (await plain.get("/admin/cards", headers=student_headers)).status_code == 403
 
 
 async def test_not_found(client):
-    assert (await client.get("/cards/999")).status_code == 404
+    assert (await client.get("/admin/cards/999")).status_code == 404
 
 
 @pytest.mark.parametrize(
@@ -69,36 +69,36 @@ async def test_not_found(client):
     ],
 )
 async def test_validation(client, field, value):
-    response = await client.post("/cards", json={**VALID, field: value})
+    response = await client.post("/admin/cards", json={**VALID, field: value})
     assert response.status_code == 422
 
 
 async def test_update_resets_verified(client):
-    card_id = (await client.post("/cards", json=VALID)).json()["id"]
-    assert (await client.patch(f"/cards/{card_id}/verify")).json()["verified"] is True
-    updated = await client.put(f"/cards/{card_id}", json={**VALID, "translation_ru": "брешь"})
+    card_id = (await client.post("/admin/cards", json=VALID)).json()["id"]
+    assert (await client.patch(f"/admin/cards/{card_id}/verify")).json()["verified"] is True
+    updated = await client.put(f"/admin/cards/{card_id}", json={**VALID, "translation_ru": "брешь"})
     assert updated.json()["translation_ru"] == "брешь"
     assert updated.json()["verified"] is False
 
 
 async def test_update_to_taken_term_conflict(client):
-    await client.post("/cards", json=VALID)
-    other = (await client.post("/cards", json={**VALID, "term": "threat"})).json()["id"]
-    assert (await client.put(f"/cards/{other}", json=VALID)).status_code == 409
+    await client.post("/admin/cards", json=VALID)
+    other = (await client.post("/admin/cards", json={**VALID, "term": "threat"})).json()["id"]
+    assert (await client.put(f"/admin/cards/{other}", json=VALID)).status_code == 409
 
 
 async def test_filter_by_verified(client):
-    first = (await client.post("/cards", json=VALID)).json()["id"]
-    await client.post("/cards", json={**VALID, "term": "threat"})
-    await client.patch(f"/cards/{first}/verify")
-    assert len((await client.get("/cards")).json()) == 2
-    assert [c["term"] for c in (await client.get("/cards?verified=true")).json()] == ["vulnerability"]
+    first = (await client.post("/admin/cards", json=VALID)).json()["id"]
+    await client.post("/admin/cards", json={**VALID, "term": "threat"})
+    await client.patch(f"/admin/cards/{first}/verify")
+    assert len((await client.get("/admin/cards")).json()) == 2
+    assert [c["term"] for c in (await client.get("/admin/cards?verified=true")).json()] == ["vulnerability"]
 
 
 async def test_delete(client):
-    card_id = (await client.post("/cards", json=VALID)).json()["id"]
-    assert (await client.delete(f"/cards/{card_id}")).status_code == 204
-    assert (await client.get(f"/cards/{card_id}")).status_code == 404
+    card_id = (await client.post("/admin/cards", json=VALID)).json()["id"]
+    assert (await client.delete(f"/admin/cards/{card_id}")).status_code == 204
+    assert (await client.get(f"/admin/cards/{card_id}")).status_code == 404
 
 
 async def test_seed_is_idempotent(db):

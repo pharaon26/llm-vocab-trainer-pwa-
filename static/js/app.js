@@ -88,7 +88,11 @@ function logout(message = "") {
 
 async function authenticate(name, action, showForm) {
   try {
-    await action();
+    const me = await action();
+    if (me.role !== "student") {
+      location.assign("/teacher.html");
+      return;
+    }
     renderUserBox();
     go("session");
   } catch (err) {
@@ -112,8 +116,8 @@ function showRegister(name = "", error = "") {
     views.registerView({
       name,
       error,
-      onSubmit: (value, password, confirm) =>
-        authenticate(value, () => api.register(value, password, confirm), showRegister),
+      onSubmit: (value, password, confirm, role) =>
+        authenticate(value, () => api.register(value, password, confirm, role), showRegister),
       onShowLogin: (value) => showLogin(value),
     }),
   );
@@ -126,7 +130,11 @@ async function init() {
   setLogoutHandler(logout);
   window.addEventListener("hashchange", route);
   try {
-    await api.me();
+    const me = await api.me();
+    if (me.role !== "student") {
+      location.assign("/teacher.html");
+      return;
+    }
   } catch (error) {
     if (error.status === 401) {
       setNavVisible(false);

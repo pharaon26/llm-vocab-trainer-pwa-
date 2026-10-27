@@ -90,7 +90,7 @@ async def test_audio_is_rechecked_when_the_card_is_saved(client, db, student_hea
     assert await db.scalar(select(Card.audio_url).where(Card.id == card["id"])) is None
 
 
-async def test_audio_already_stored_is_filtered_on_output(client, db, student_headers, teacher_headers, ready, dictionary, clock):
+async def test_audio_already_stored_is_filtered_on_output(client, db, student_headers, admin_headers, ready, dictionary, clock):
     clock.today = TODAY
     dictionary.provider = FakeDictionary({"jitter": JITTER})
     draft = await create_draft(client, student_headers)
@@ -98,4 +98,4 @@ async def test_audio_already_stored_is_filtered_on_output(client, db, student_he
     await db.execute(update(Card).where(Card.id == card["id"]).values(audio_url="https://evil.example/x.mp3"))
     await db.commit()
     assert (await client.get("/me/cards", headers=student_headers)).json()[0]["audio_url"] is None
-    assert (await client.get("/teacher/personal-cards", headers=teacher_headers)).json()[0]["audio_url"] is None
+    assert (await client.get("/admin/personal-cards", headers=admin_headers)).json()[0]["audio_url"] is None

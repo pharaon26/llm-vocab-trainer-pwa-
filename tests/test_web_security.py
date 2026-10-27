@@ -41,8 +41,8 @@ async def test_foreign_origin_cannot_use_a_valid_session(client, student_headers
 
 
 async def test_allowed_origin_passes(plain):
-    for origin in ("http://test", "HTTP://TEST", "https://test"):
-        response = await plain.post("/auth/register", json={"name": f"u-{len(origin)}-{origin[0]}", "password": STUDENT_PASSWORD, "password_confirm": STUDENT_PASSWORD}, headers={"Origin": origin})
+    for index, origin in enumerate(("http://test", "HTTP://TEST", "https://test")):
+        response = await plain.post("/auth/register", json={"name": f"origin_{index}", "password": STUDENT_PASSWORD, "password_confirm": STUDENT_PASSWORD}, headers={"Origin": origin})
         assert response.status_code == 201
 
 

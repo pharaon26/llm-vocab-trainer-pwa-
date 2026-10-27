@@ -31,7 +31,9 @@ function nameInput(name) {
     maxlength: 50,
     required: true,
     autocomplete: "username",
-    placeholder: "Например, Анна",
+    pattern: "[A-Za-z0-9_]{3,32}",
+    title: "Латиница, цифры и подчеркивание, 3-32 символа",
+    placeholder: "например, anna_k",
   });
   input.value = name;
   return input;
@@ -61,7 +63,7 @@ export function loginView({ name = "", error = "", onSubmit, onShowRegister }) {
       },
     },
     el("h2", {}, "Вход"),
-    el("label", { for: "name" }, "Ваше имя"),
+    el("label", { for: "name" }, "Ник"),
     input,
     el("label", { for: "password" }, "Пароль"),
     password,
@@ -75,6 +77,7 @@ export function registerView({ name = "", error = "", onSubmit, onShowLogin }) {
   const input = nameInput(name);
   const password = passwordInput("password", "new-password");
   const confirm = passwordInput("password-confirm", "new-password");
+  const teacher = el("input", { id: "is-teacher", type: "checkbox" });
   const checkMatch = () => confirm.setCustomValidity(confirm.value === password.value ? "" : "Пароли не совпадают");
   password.addEventListener("input", checkMatch);
   confirm.addEventListener("input", checkMatch);
@@ -86,17 +89,18 @@ export function registerView({ name = "", error = "", onSubmit, onShowLogin }) {
         event.preventDefault();
         checkMatch();
         if (confirm.reportValidity()) {
-          onSubmit(input.value.trim(), password.value, confirm.value);
+          onSubmit(input.value.trim(), password.value, confirm.value, teacher.checked ? "teacher" : "student");
         }
       },
     },
     el("h2", {}, "Регистрация"),
-    el("label", { for: "name" }, "Ваше имя"),
+    el("label", { for: "name" }, "Ник (латиница, цифры, _; 3-32 символа)"),
     input,
     el("label", { for: "password" }, "Пароль (не короче 8 символов)"),
     password,
     el("label", { for: "password-confirm" }, "Повторите пароль"),
     confirm,
+    el("label", { className: "check", for: "is-teacher" }, teacher, " Я преподаватель"),
     error && el("p", { className: "banner error", role: "alert" }, error),
     el("button", { type: "submit", className: "primary" }, "Зарегистрироваться"),
     el("p", {}, "Уже есть аккаунт? ", el("button", { type: "button", className: "link", onclick: () => onShowLogin(input.value.trim()) }, "Войти")),

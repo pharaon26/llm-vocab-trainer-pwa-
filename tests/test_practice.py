@@ -235,12 +235,12 @@ async def test_practice_is_excluded_from_progress_and_stats(client, db, student_
     assert stats["streak"] == {"current": 1, "best": 1}
 
 
-async def test_teacher_analytics_excludes_practice_and_counts_it_separately(client, db, student_headers, teacher_headers, cards):
+async def test_teacher_analytics_excludes_practice_and_counts_it_separately(client, db, student_headers, admin_headers, cards):
     await finish_new_cards(db, cards)
     for _ in range(3):
         task = (await practice_next(client, student_headers)).json()["task"]
         await practice_answer(client, db, student_headers, task, correct=False)
-    data = (await client.get("/teacher/analytics", headers=teacher_headers)).json()
+    data = (await client.get("/admin/analytics", headers=admin_headers)).json()
     assert (data["answers"], data["errors"], data["practice_answers"]) == (0, 0, 3)
     assert data["hardest_terms"] == [] and all(t["count"] == 0 for t in data["error_types"])
 

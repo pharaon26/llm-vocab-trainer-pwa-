@@ -57,8 +57,8 @@ export function createApi() {
   }
 
   const login = (loginName, extra = {}) => authenticate("/auth/login", { name: loginName, ...extra });
-  const register = (registerName, password, passwordConfirm) =>
-    authenticate("/auth/register", { name: registerName, password, password_confirm: passwordConfirm });
+  const register = (registerName, password, passwordConfirm, role) =>
+    authenticate("/auth/register", { name: registerName, password, password_confirm: passwordConfirm, role });
 
   async function me() {
     const data = await request("/auth/me");

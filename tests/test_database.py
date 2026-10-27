@@ -37,8 +37,8 @@ async def test_shared_card_terms_are_unique_ignoring_case(db):
         await db.flush()
 
 
-async def test_nul_character_in_input_is_rejected_with_422(client, teacher_headers):
-    response = await client.post("/teacher/domains", headers=teacher_headers, json={"name": "a\u0000b"})
+async def test_nul_character_in_input_is_rejected_with_422(client, admin_headers):
+    response = await client.post("/admin/domains", headers=admin_headers, json={"name": "a\u0000b"})
     assert response.status_code == 422
 
 
@@ -85,4 +85,24 @@ def test_auth_migration_replaces_tokens_with_sessions_and_leaves_old_accounts_wi
     command.downgrade(config, "c1d2e3f40a11")
     with engine.connect() as conn:
         assert conn.execute(text("SELECT COUNT(*) FROM auth_tokens")).scalar() == 0
+    engine.dispose()
+
+
+def test_nickname_migration_renames_unsuitable_and_duplicate_names(scratch_database):
+    url, config = scratch_database
+    command.upgrade(config, "d2e3f4a5b6c7")
+    engine = create_engine(url)
+    with engine.begin() as conn:
+        conn.execute(text(
+            "INSERT INTO users (id, name, role) VALUES (1, 'Anna', 'student'), (2, 'anna', 'student'), "
+            "(3, 'Анна', 'student'), (4, 'ok_name1', 'teacher'), (5, 'a b', 'student')"
+        ))
+    command.upgrade(config, "e3f4a5b6c7d8")
+    with engine.connect() as conn:
+        names = dict(conn.execute(text("SELECT id, name FROM users")).all())
+    assert names == {1: "Anna", 2: "user2", 3: "user3", 4: "ok_name1", 5: "user5"}
+    with engine.begin() as conn:
+        with pytest.raises(IntegrityError):
+            conn.execute(text("INSERT INTO users (name, role) VALUES ('ANNA', 'student')"))
+    command.downgrade(config, "d2e3f4a5b6c7")
     engine.dispose()

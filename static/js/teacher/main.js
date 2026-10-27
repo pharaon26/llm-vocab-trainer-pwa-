@@ -3,6 +3,7 @@ import { clear, el } from "../dom.js";
 import * as views from "./views.js";
 
 const api = createApi();
+const ROLES = ["teacher", "admin"];
 const root = document.getElementById("app");
 const userBox = document.getElementById("user-box");
 
@@ -46,11 +47,16 @@ function showLogin(name = "", error = "") {
       error,
       onSubmit: async (value, password) => {
         try {
-          await api.login(value, { role: "teacher", password });
+          const me = await api.login(value, { password });
+          if (!ROLES.includes(me.role)) {
+            await api.logout();
+            showLogin(value, "Этот кабинет только для преподавателей. Студентам - главная страница приложения.");
+            return;
+          }
           renderUserBox();
           showShell();
         } catch (err) {
-          const hint = err.status === 403 ? "Неверный пароль или вход преподавателя отключен (не задан TEACHER_PASSWORD)." : err.message;          showLogin(value, hint);
+          showLogin(value, err.message);
         }
       },
     }),
@@ -109,7 +115,7 @@ function openTab() {
 
 async function showCards() {
   const query = state.cardFilter === "all" ? "" : `?verified=${state.cardFilter}`;
-  const cards = await api.request(`/cards${query}`);
+  const cards = await api.request(`/admin/cards${query}`);
   show(
     views.cardsView({
       cards,
@@ -121,14 +127,14 @@ async function showCards() {
       onNew: () => guarded(() => showCardForm(null)),
       onEdit: (card) => guarded(() => showCardForm(card)),
       onVerify: (card) => guarded(async () => {
-        await api.request(`/cards/${card.id}/verify`, { method: "PATCH" });
+        await api.request(`/admin/cards/${card.id}/verify`, { method: "PATCH" });
         await showCards();
       }),
       onDelete: (card) => {
         const text = `Удалить карточку «${card.term}»? Вместе с ней удалятся прогресс студентов, история ответов и задания из банка.`;
         if (window.confirm(text)) {
           guarded(async () => {
-            await api.request(`/cards/${card.id}`, { method: "DELETE" });
+            await api.request(`/admin/cards/${card.id}`, { method: "DELETE" });
             await showCards();
           });
         }
@@ -148,9 +154,9 @@ async function showCardForm(card, error = "", draft = card) {
       onSave: async (data) => {
         try {
           if (card) {
-            await api.request(`/cards/${card.id}`, { method: "PUT", body: data });
+            await api.request(`/admin/cards/${card.id}`, { method: "PUT", body: data });
           } else {
-            await api.request("/cards", { method: "POST", body: data });
+            await api.request("/admin/cards", { method: "POST", body: data });
           }
           await showCards();
         } catch (err) {
@@ -167,7 +173,7 @@ async function showCardForm(card, error = "", draft = card) {
 
 async function showBank() {
   const query = state.bankFilter === "all" ? "" : `?rejected=${state.bankFilter}`;
-  const entries = await api.request(`/teacher/bank${query}`);
+  const entries = await api.request(`/admin/bank${query}`);
   show(
     views.bankView({
       entries,
@@ -177,7 +183,7 @@ async function showBank() {
         guarded(showBank);
       },
       onToggle: (entry) => guarded(async () => {
-        await api.request(`/teacher/bank/${entry.id}`, { method: "PATCH", body: { rejected: !entry.rejected } });
+        await api.request(`/admin/bank/${entry.id}`, { method: "PATCH", body: { rejected: !entry.rejected } });
         await showBank();
       }),
     }),
@@ -185,7 +191,7 @@ async function showBank() {
 }
 
 async function showAnalytics() {
-  const data = await api.request(`/teacher/analytics?min_answers=${state.minAnswers}`);
+  const data = await api.request(`/admin/analytics?min_answers=${state.minAnswers}`);
   show(
     views.analyticsView({
       data,
@@ -201,7 +207,7 @@ async function showAnalytics() {
 async function init() {
   try {
     const me = await api.me();
-    if (me.role !== "teacher") {
+    if (!ROLES.includes(me.role)) {
       logout();
       return;
     }
@@ -218,7 +224,7 @@ async function init() {
 init();
 
 async function showDecks(notice = "", error = "") {
-  const [decks, domains] = await Promise.all([api.request("/teacher/decks"), api.request("/domains")]);
+  const [decks, domains] = await Promise.all([api.request("/admin/decks"), api.request("/domains")]);
   show(
     views.decksView({
       decks,
@@ -231,7 +237,7 @@ async function showDecks(notice = "", error = "") {
       onDelete: (deck) => {
         if (window.confirm(`Удалить набор «${deck.name}»? Карточки останутся, но выбор этого набора у студентов пропадет.`)) {
           guarded(async () => {
-            await api.request(`/teacher/decks/${deck.id}`, { method: "DELETE" });
+            await api.request(`/admin/decks/${deck.id}`, { method: "DELETE" });
             await showDecks("Набор удален.");
           });
         }
@@ -241,7 +247,7 @@ async function showDecks(notice = "", error = "") {
           return showDecks("", "Введите название области.");
         }
         try {
-          await api.request("/teacher/domains", { method: "POST", body: { name } });
+          await api.request("/admin/domains", { method: "POST", body: { name } });
           return showDecks(`Область «${name}» добавлена.`);
         } catch (err) {
           if (err.status === 409) {
@@ -265,9 +271,9 @@ async function showDeckForm(deck, error = "", draft = deck) {
       onSave: async (data) => {
         try {
           if (deck) {
-            await api.request(`/teacher/decks/${deck.id}`, { method: "PUT", body: data });
+            await api.request(`/admin/decks/${deck.id}`, { method: "PUT", body: data });
           } else {
-            await api.request("/teacher/decks", { method: "POST", body: data });
+            await api.request("/admin/decks", { method: "POST", body: data });
           }
           await showDecks("Набор сохранен.");
         } catch (err) {
@@ -283,14 +289,14 @@ async function showDeckForm(deck, error = "", draft = deck) {
 }
 
 async function showDeckCards(deck) {
-  const cards = await api.request("/cards");
+  const cards = await api.request("/admin/cards");
   show(
     views.deckCardsView({
       deck,
       cards,
       onBack: () => guarded(() => showDecks()),
       onSave: (ids) => guarded(async () => {
-        await api.request(`/teacher/decks/${deck.id}/cards`, { method: "PUT", body: { card_ids: ids } });
+        await api.request(`/admin/decks/${deck.id}/cards`, { method: "PUT", body: { card_ids: ids } });
         await showDecks(`Состав набора «${deck.name}» сохранен: ${ids.length}.`);
       }),
     }),
@@ -299,7 +305,7 @@ async function showDeckCards(deck) {
 
 async function showPersonal() {
   const query = state.personalOwner ? `?owner=${encodeURIComponent(state.personalOwner)}` : "";
-  const [cards, all] = await Promise.all([api.request(`/teacher/personal-cards${query}`), api.request("/teacher/personal-cards")]);
+  const [cards, all] = await Promise.all([api.request(`/admin/personal-cards${query}`), api.request("/admin/personal-cards")]);
   show(
     views.personalView({
       cards,
@@ -315,7 +321,7 @@ async function showPersonal() {
 }
 
 async function showPersonalCard(card, extra = {}) {
-  const [decks, domains] = await Promise.all([api.request("/teacher/decks"), api.request("/domains")]);
+  const [decks, domains] = await Promise.all([api.request("/admin/decks"), api.request("/domains")]);
   show(
     views.personalCardView({
       card,
@@ -325,7 +331,7 @@ async function showPersonalCard(card, extra = {}) {
       onBack: () => guarded(showPersonal),
       onSave: async (data) => {
         try {
-          const saved = await api.request(`/teacher/personal-cards/${card.id}`, { method: "PUT", body: data });
+          const saved = await api.request(`/admin/personal-cards/${card.id}`, { method: "PUT", body: data });
           showPersonalCard(saved, { notice: "Изменения сохранены." });
         } catch (err) {
           if (err.status === 401 || err.status === 403) {
@@ -337,7 +343,7 @@ async function showPersonalCard(card, extra = {}) {
       },
       onPromote: async (deckIds) => {
         try {
-          await api.request(`/teacher/personal-cards/${card.id}/promote`, { method: "POST", body: { deck_ids: deckIds } });
+          await api.request(`/admin/personal-cards/${card.id}/promote`, { method: "POST", body: { deck_ids: deckIds } });
           state.tab = "personal";
           await showPersonal();
         } catch (err) {

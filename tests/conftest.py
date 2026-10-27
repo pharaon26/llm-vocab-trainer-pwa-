@@ -21,6 +21,8 @@ from app.config import BASE_DIR, settings
 from app.db import get_db
 from app.dictionary.fake import FakeDictionary
 from app.main import app
+from app.models import User
+from app.security import hash_password
 
 
 class Clock:
@@ -68,11 +70,6 @@ def scratch_database():
     with admin.connect() as conn:
         conn.execute(text(f'DROP DATABASE IF EXISTS "{url.database}" WITH (FORCE)'))
     admin.dispose()
-
-
-@pytest.fixture(autouse=True)
-def teacher_password(monkeypatch):
-    monkeypatch.setattr(settings, "teacher_password", "secret")
 
 
 @pytest.fixture(autouse=True)
@@ -174,22 +171,36 @@ def session_cookie_of(response) -> str | None:
 
 async def login(client, **body):
     anonymous = {"Cookie": ""}
-    if body.get("role") == "teacher":
-        response = await client.post("/auth/login", json=body, headers=anonymous)
-    else:
-        body.setdefault("password", STUDENT_PASSWORD)
-        response = await client.post(
-            "/auth/register", json={"name": body["name"], "password": body["password"], "password_confirm": body["password"]}, headers=anonymous
-        )
-        if response.status_code == 409:
-            response = await client.post("/auth/login", json=body, headers=anonymous)
+    password = body.setdefault("password", STUDENT_PASSWORD)
+    response = await client.post(
+        "/auth/register",
+        json={"name": body["name"], "password": password, "password_confirm": password, "role": body.get("role", "student")},
+        headers=anonymous,
+    )
+    if response.status_code == 409:
+        response = await client.post("/auth/login", json={"name": body["name"], "password": password}, headers=anonymous)
     client.cookies.clear()
     return {"Cookie": f"{settings.session_cookie_name}={session_cookie_of(response)}"}
 
 
 @pytest.fixture
 async def teacher_headers(client):
-    return await login(client, name="teacher", role="teacher", password="secret")
+    return await login(client, name="teacher", role="teacher")
+
+
+async def make_admin(db, name="admin"):
+    db.add(User(name=name, role="admin", password_hash=hash_password(STUDENT_PASSWORD)))
+    await db.commit()
+
+
+@pytest.fixture
+async def admin_headers(client, db):
+    await make_admin(db)
+    response = await client.post(
+        "/auth/login", json={"name": "admin", "password": STUDENT_PASSWORD}, headers={"Cookie": ""}
+    )
+    client.cookies.clear()
+    return {"Cookie": f"{settings.session_cookie_name}={session_cookie_of(response)}"}
 
 
 @pytest.fixture

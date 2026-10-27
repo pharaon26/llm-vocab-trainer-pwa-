@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import require_teacher
+from app.api.deps import require_admin
 from app.dictionary.audio import safe_audio_url
 from app.db import get_db
 from app.enums import TaskType
@@ -15,7 +15,7 @@ from app.services import drafts as drafts_service
 from app.services.cards import get_or_create_domain
 from app.services.analytics import build_analytics
 
-router = APIRouter(prefix="/teacher", tags=["teacher"], dependencies=[Depends(require_teacher)])
+router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(require_admin)])
 
 
 def bank_out(entry: TaskBank, term: str) -> BankEntryOut:
