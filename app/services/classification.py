@@ -48,7 +48,7 @@ def has_misspelled_term(term: str, answer: str, config: ClassificationConfig) ->
     return any(abs(len(w) - len(target)) <= limit and distance(w, target) <= limit for w in words)
 
 
-def classify_open_answer(
+async def classify_open_answer(
     provider: LLMProvider | None,
     card: Card,
     task_type: TaskType,
@@ -73,7 +73,7 @@ def classify_open_answer(
     system, user = build_classification_prompt(card, task_type, answer, context)
     for attempt in range(1, config.max_retries + 2):
         try:
-            result = parse_model(provider.complete(system, user), ClassificationResult)
+            result = parse_model(await provider.complete(system, user), ClassificationResult)
         except InvalidResponse as exc:
             logger.info("%s/%s classification attempt %s invalid: %s", card.term, task_type.value, attempt, exc)
             continue

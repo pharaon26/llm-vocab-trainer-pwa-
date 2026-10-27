@@ -7,7 +7,7 @@ class FakeDictionary(DictionaryProvider):
         self.unavailable = unavailable
         self.calls: list[str] = []
 
-    def lookup(self, word: str) -> DictionaryEntry | None:
+    async def lookup(self, word: str) -> DictionaryEntry | None:
         self.calls.append(word)
         if self.unavailable:
             raise DictionaryUnavailable("fake outage")

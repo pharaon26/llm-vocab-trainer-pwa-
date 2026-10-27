@@ -3,7 +3,7 @@ import re
 from datetime import date
 
 from sqlalchemy import func, select
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import DraftConfig, draft_config
 from app.llm.base import LLMError, LLMProvider
@@ -71,8 +71,8 @@ def clean_terms(raw: list, text: str, max_terms: int) -> list[str]:
     return result[:max_terms]
 
 
-def extract_terms(
-    db: Session,
+async def extract_terms(
+    db: AsyncSession,
     user: User,
     text: str,
     domain_name: str,
@@ -82,20 +82,20 @@ def extract_terms(
 ) -> ExtractOut:
     if len(text) > config.extract_max_chars:
         raise TextTooLong
-    domain = find_domain(db, domain_name)
+    domain = await find_domain(db, domain_name)
     if provider is None:
         raise ModelUnavailable
-    if llm_calls_left(db, user, today, config) <= 0:
+    if await llm_calls_left(db, user, today, config) <= 0:
         raise LimitReached
 
     system, prompt = build_extract_prompt(text, domain.name, config.extract_max_terms)
     terms: list | None = None
     for _ in range(config.max_retries + 1):
-        if llm_calls_left(db, user, today, config) <= 0:
+        if await llm_calls_left(db, user, today, config) <= 0:
             raise LimitReached
-        register_llm_call(db, user, today)
+        await register_llm_call(db, user, today)
         try:
-            terms = parse_model(provider.complete(system, prompt), ExtractedTerms).terms
+            terms = parse_model(await provider.complete(system, prompt), ExtractedTerms).terms
             break
         except InvalidResponse as exc:
             logger.info("term extraction invalid: %s", exc)
@@ -107,11 +107,11 @@ def extract_terms(
 
     drafts = {
         value.lower()
-        for value in db.scalars(select(CardDraft.term).where(CardDraft.owner_id == user.id))
+        for value in await db.scalars(select(CardDraft.term).where(CardDraft.owner_id == user.id))
     }
     candidates = []
     for term in clean_terms(terms, text, config.extract_max_terms):
-        existing = find_duplicate(db, user, term)
+        existing = await find_duplicate(db, user, term)
         candidates.append(
             ExtractCandidate(
                 term=term,
@@ -120,4 +120,4 @@ def extract_terms(
                 has_draft=term.lower() in drafts,
             )
         )
-    return ExtractOut(candidates=candidates, llm_calls_left=llm_calls_left(db, user, today, config))
+    return ExtractOut(candidates=candidates, llm_calls_left=await llm_calls_left(db, user, today, config))

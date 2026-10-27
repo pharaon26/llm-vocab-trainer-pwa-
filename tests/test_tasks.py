@@ -2,6 +2,7 @@ import random
 
 import pytest
 
+from sqlalchemy import select
 from app.config import classification_config
 from app.enums import ErrorType, TaskType
 from app.models import Card
@@ -10,9 +11,9 @@ from app.services.tasks import BLANK, OPEN_TYPES, build_task, correct_answer, ev
 
 
 @pytest.fixture
-def cards(db):
-    load_cards(db)
-    return {card.term: card for card in db.query(Card).all()}
+async def cards(db):
+    await load_cards(db)
+    return {card.term: card for card in (await db.scalars(select(Card))).all()}
 
 
 def build(cards, term, task_type, seed=1):

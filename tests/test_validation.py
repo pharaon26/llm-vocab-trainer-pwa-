@@ -2,6 +2,7 @@ import json
 
 import pytest
 
+from sqlalchemy import select
 from app.config import GenerationConfig
 from app.enums import TaskType
 from app.llm.base import LLMError
@@ -14,9 +15,9 @@ from app.services.validation import check_rules, check_with_llm, validate
 
 
 @pytest.fixture
-def cards(db):
-    load_cards(db)
-    return {c.term: c for c in db.query(Card).all()}
+async def cards(db):
+    await load_cards(db)
+    return {c.term: c for c in (await db.scalars(select(Card))).all()}
 
 
 @pytest.fixture
@@ -72,49 +73,49 @@ def review(fitting, meaning=True):
     return json.dumps({"fitting_options": fitting, "term_meaning_matches": meaning})
 
 
-def test_llm_check_accepts_single_fitting_option(vuln):
+async def test_llm_check_accepts_single_fitting_option(vuln):
     provider = FakeProvider([review(["vulnerability"])])
-    assert check_with_llm(provider, vuln, TaskType.GAP_FILL, GAP_OK) == []
+    assert await check_with_llm(provider, vuln, TaskType.GAP_FILL, GAP_OK) == []
 
 
-def test_llm_check_hides_correct_answer_from_reviewer(vuln):
+async def test_llm_check_hides_correct_answer_from_reviewer(vuln):
     provider = FakeProvider([review(["vulnerability"])])
-    check_with_llm(provider, vuln, TaskType.GAP_FILL, GAP_OK)
+    await check_with_llm(provider, vuln, TaskType.GAP_FILL, GAP_OK)
     _, user = provider.calls[0]
     assert "correct_answer" not in user
 
 
-def test_llm_check_detects_ambiguity(vuln):
+async def test_llm_check_detects_ambiguity(vuln):
     provider = FakeProvider([review(["vulnerability", "exploit"])])
-    assert check_with_llm(provider, vuln, TaskType.GAP_FILL, GAP_OK) == ["ambiguous"]
+    assert await check_with_llm(provider, vuln, TaskType.GAP_FILL, GAP_OK) == ["ambiguous"]
 
 
-def test_llm_check_detects_rejected_answer(vuln):
+async def test_llm_check_detects_rejected_answer(vuln):
     provider = FakeProvider([review(["exploit"])])
-    failures = check_with_llm(provider, vuln, TaskType.GAP_FILL, GAP_OK)
+    failures = await check_with_llm(provider, vuln, TaskType.GAP_FILL, GAP_OK)
     assert set(failures) == {"answer_rejected", "ambiguous"}
 
 
-def test_llm_check_detects_wrong_meaning(vuln):
+async def test_llm_check_detects_wrong_meaning(vuln):
     provider = FakeProvider([review(["vulnerability"], meaning=False)])
-    assert check_with_llm(provider, vuln, TaskType.GAP_FILL, GAP_OK) == ["wrong_meaning"]
+    assert await check_with_llm(provider, vuln, TaskType.GAP_FILL, GAP_OK) == ["wrong_meaning"]
 
 
-def test_llm_check_invalid_review(vuln):
+async def test_llm_check_invalid_review(vuln):
     provider = FakeProvider(["not json"])
-    assert check_with_llm(provider, vuln, TaskType.GAP_FILL, GAP_OK) == ["review_invalid"]
+    assert await check_with_llm(provider, vuln, TaskType.GAP_FILL, GAP_OK) == ["review_invalid"]
 
 
-def test_llm_error_in_review_propagates(vuln):
+async def test_llm_error_in_review_propagates(vuln):
     provider = FakeProvider([LLMError("down")])
     with pytest.raises(LLMError):
-        check_with_llm(provider, vuln, TaskType.GAP_FILL, GAP_OK)
+        await check_with_llm(provider, vuln, TaskType.GAP_FILL, GAP_OK)
 
 
-def test_llm_not_called_when_rules_fail(vuln):
+async def test_llm_not_called_when_rules_fail(vuln):
     provider = FakeProvider()
     bad = task("A found.", ["vulnerability", "threat", "attack", "exploit"], "vulnerability")
-    assert validate(provider, vuln, TaskType.GAP_FILL, bad) == ["blank_count"]
+    assert await validate(provider, vuln, TaskType.GAP_FILL, bad) == ["blank_count"]
     assert provider.calls == []
 
 
@@ -125,11 +126,11 @@ def test_custom_options_count(vuln):
 
 
 @pytest.mark.parametrize("task_type", GENERATED_TYPES)
-def test_fake_provider_end_to_end_passes_validation(cards, task_type):
+async def test_fake_provider_end_to_end_passes_validation(cards, task_type):
     provider = FakeProvider()
     for card in cards.values():
-        generated = generate_task(provider, card, task_type)
-        assert validate(provider, card, task_type, generated) == [], card.term
+        generated = await generate_task(provider, card, task_type)
+        assert await validate(provider, card, task_type, generated) == [], card.term
 
 
 def test_blank_is_normalized():

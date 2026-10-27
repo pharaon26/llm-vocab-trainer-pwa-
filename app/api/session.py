@@ -3,7 +3,7 @@ from datetime import date
 from functools import lru_cache
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import current_user, get_today
 from app.db import get_db
@@ -30,27 +30,27 @@ def get_llm_provider() -> LLMProvider | None:
 
 
 @router.get("/next", response_model=NextOut)
-def next_task(
+async def next_task(
     user: User = Depends(current_user),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     today: date = Depends(get_today),
     provider: LLMProvider | None = Depends(get_llm_provider),
 ):
-    task, remaining = session_service.next_task(db, user, today, provider)
+    task, remaining = await session_service.next_task(db, user, today, provider)
     if task is not None:
         return NextOut(task=task, remaining=remaining)
-    next_review, unseen, opened = session_service.idle_info(db, user, today)
+    next_review, unseen, opened = await session_service.idle_info(db, user, today)
     return NextOut(
         task=None, remaining=0, next_review_date=next_review, unseen_cards=unseen, opened_cards=opened,
         new_cards_per_day=user.new_cards_per_day,
     )
 
 
-def submit_or_http(
-    db: Session, user: User, data: AnswerIn, today: date, provider: LLMProvider | None, practice: bool
+async def submit_or_http(
+    db: AsyncSession, user: User, data: AnswerIn, today: date, provider: LLMProvider | None, practice: bool
 ) -> AnswerOut:
     try:
-        return session_service.submit_answer(
+        return await session_service.submit_answer(
             db, user, data.card_id, data.task_type, data.answer, today,
             task_id=data.task_id, provider=provider, context=data.context, practice=practice,
         )
@@ -67,11 +67,11 @@ def submit_or_http(
 
 
 @router.post("/answer", response_model=AnswerOut)
-def answer(
+async def answer(
     data: AnswerIn,
     user: User = Depends(current_user),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     today: date = Depends(get_today),
     provider: LLMProvider | None = Depends(get_llm_provider),
 ):
-    return submit_or_http(db, user, data, today, provider, practice=False)
+    return await submit_or_http(db, user, data, today, provider, practice=False)

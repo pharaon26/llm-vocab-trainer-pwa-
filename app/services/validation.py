@@ -43,12 +43,12 @@ def check_rules(
     return failures
 
 
-def check_with_llm(
+async def check_with_llm(
     provider: LLMProvider, card: Card, task_type: TaskType, task: GeneratedTask
 ) -> list[str]:
     system, user = build_check_prompt(card, task_type, task)
     try:
-        review = parse_model(provider.complete(system, user), ReviewResult)
+        review = parse_model(await provider.complete(system, user), ReviewResult)
     except InvalidResponse:
         return ["review_invalid"]
 
@@ -64,7 +64,7 @@ def check_with_llm(
     return failures
 
 
-def validate(
+async def validate(
     provider: LLMProvider,
     card: Card,
     task_type: TaskType,
@@ -74,4 +74,4 @@ def validate(
     failures = check_rules(card, task_type, task, config)
     if failures:
         return failures
-    return check_with_llm(provider, card, task_type, task)
+    return await check_with_llm(provider, card, task_type, task)

@@ -29,7 +29,7 @@ LATENCY = [
 
 
 def provider(handler):
-    client = httpx.Client(transport=httpx.MockTransport(handler))
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
     return DictionaryApiProvider("https://dict.test/api/entries/en/", 3.0, client)
 
 
@@ -67,73 +67,73 @@ def test_contains_word():
     assert contains_word("LATENCY matters", "latency")
 
 
-def test_lookup_success_builds_the_url_from_the_word():
+async def test_lookup_success_builds_the_url_from_the_word():
     seen = []
 
     def handler(request):
         seen.append(str(request.url))
         return httpx.Response(200, json=LATENCY)
 
-    assert provider(handler).lookup("latency").definition.startswith("The delay")
+    assert (await provider(handler).lookup("latency")).definition.startswith("The delay")
     assert seen == ["https://dict.test/api/entries/en/latency"]
 
 
-def test_word_is_url_quoted():
+async def test_word_is_url_quoted():
     seen = []
 
     def handler(request):
         seen.append(request.url.raw_path.decode())
         return httpx.Response(404)
 
-    provider(handler).lookup("man in the middle/../x")
+    await provider(handler).lookup("man in the middle/../x")
     assert "/../" not in seen[0] and "%20" in seen[0]
 
 
-def test_404_means_not_found():
-    assert provider(lambda r: httpx.Response(404, json={"title": "No Definitions Found"})).lookup("zzz") is None
+async def test_404_means_not_found():
+    assert await provider(lambda r: httpx.Response(404, json={"title": "No Definitions Found"})).lookup("zzz") is None
 
 
 @pytest.mark.parametrize("status", [429, 500, 503])
-def test_server_errors_mean_unavailable(status):
+async def test_server_errors_mean_unavailable(status):
     with pytest.raises(DictionaryUnavailable):
-        provider(lambda r: httpx.Response(status)).lookup("latency")
+        await provider(lambda r: httpx.Response(status)).lookup("latency")
 
 
-def test_timeout_means_unavailable():
+async def test_timeout_means_unavailable():
     def handler(request):
         raise httpx.ConnectTimeout("blocked", request=request)
 
     with pytest.raises(DictionaryUnavailable):
-        provider(handler).lookup("latency")
+        await provider(handler).lookup("latency")
 
 
-def test_connection_error_means_unavailable():
+async def test_connection_error_means_unavailable():
     def handler(request):
         raise httpx.ConnectError("no route", request=request)
 
     with pytest.raises(DictionaryUnavailable):
-        provider(handler).lookup("latency")
+        await provider(handler).lookup("latency")
 
 
-def test_invalid_json_means_unavailable():
+async def test_invalid_json_means_unavailable():
     with pytest.raises(DictionaryUnavailable):
-        provider(lambda r: httpx.Response(200, content=b"<html>blocked</html>")).lookup("latency")
+        await provider(lambda r: httpx.Response(200, content=b"<html>blocked</html>")).lookup("latency")
 
 
-def test_timeout_value_is_passed_to_the_request():
+async def test_timeout_value_is_passed_to_the_request():
     captured = {}
 
     def handler(request):
         captured["timeout"] = request.extensions["timeout"]
         return httpx.Response(404)
 
-    provider(handler).lookup("x")
+    await provider(handler).lookup("x")
     assert captured["timeout"]["connect"] == 3.0
 
 
-def test_factory_selects_provider_from_settings():
+async def test_factory_selects_provider_from_settings():
     assert isinstance(get_dictionary(Settings(_env_file=None, database_url="postgresql+psycopg://x/y", dictionary_provider="dictionaryapi")), DictionaryApiProvider)
     disabled = get_dictionary(Settings(_env_file=None, database_url="postgresql+psycopg://x/y", dictionary_provider="none"))
     assert isinstance(disabled, DisabledDictionary)
     with pytest.raises(DictionaryUnavailable):
-        disabled.lookup("x")
+        await disabled.lookup("x")

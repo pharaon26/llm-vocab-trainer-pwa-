@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy import func, select
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import current_user
 from app.db import get_db
@@ -11,5 +11,5 @@ router = APIRouter(tags=["catalog"], dependencies=[Depends(current_user)])
 
 
 @router.get("/domains", response_model=list[DomainOut])
-def list_domains(db: Session = Depends(get_db)):
-    return db.scalars(select(Domain).order_by(func.lower(Domain.name), Domain.name)).all()
+async def list_domains(db: AsyncSession = Depends(get_db)):
+    return (await db.scalars(select(Domain).order_by(func.lower(Domain.name), Domain.name))).all()

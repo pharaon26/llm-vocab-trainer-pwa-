@@ -19,7 +19,7 @@ class FakeProvider(LLMProvider):
         self.responses = list(responses) if responses is not None else None
         self.calls: list[tuple[str, str]] = []
 
-    def complete(self, system: str, user: str) -> str:
+    async def complete(self, system: str, user: str) -> str:
         self.calls.append((system, user))
         if self.responses is None:
             return json.dumps(self._auto(user), ensure_ascii=False)

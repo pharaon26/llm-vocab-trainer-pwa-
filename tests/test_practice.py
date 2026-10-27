@@ -2,6 +2,7 @@ from datetime import date, timedelta
 
 import pytest
 
+from sqlalchemy import func, select, update
 from app.llm.base import LLMError
 from app.llm.fake import FakeProvider
 from app.models import Card, CardProgress, ReviewHistory, TaskBank, User
@@ -14,45 +15,45 @@ TODAY = date(2026, 1, 10)
 
 
 @pytest.fixture
-def cards(db):
-    load_cards(db)
-    db.query(Card).update({Card.verified: True})
-    db.commit()
-    return {c.term: c for c in db.query(Card).all()}
+async def cards(db):
+    await load_cards(db)
+    (await db.execute(update(Card).values({Card.verified: True})))
+    await db.commit()
+    return {c.term: c for c in (await db.scalars(select(Card))).all()}
 
 
-def user_of(db, name="student"):
-    return db.query(User).filter_by(name=name).one()
+async def user_of(db, name="student"):
+    return (await db.scalars(select(User).filter_by(name=name))).one()
 
 
-def open_card(db, card, due=None, name="student", **extra):
+async def open_card(db, card, due=None, name="student", **extra):
     values = dict(interval=10, ease=2.5, repetitions=3, first_seen_on=TODAY - timedelta(days=5),
                   due_date=due or TODAY + timedelta(days=5))
     values.update(extra)
-    db.add(CardProgress(user_id=user_of(db, name).id, card_id=card.id, **values))
-    db.commit()
+    db.add(CardProgress(user_id=(await user_of(db, name)).id, card_id=card.id, **values))
+    await db.commit()
 
 
-def snapshot(db):
+async def snapshot(db):
     return sorted(
         (p.card_id, p.interval, p.ease, p.repetitions, p.pending_interval, p.due_date, p.last_error_type)
-        for p in db.query(CardProgress)
+        for p in (await db.scalars(select(CardProgress))).all()
     )
 
 
-def practice_next(client, headers, query=""):
-    return client.get(f"/practice/next{query}", headers=headers)
+async def practice_next(client, headers, query=""):
+    return await client.get(f"/practice/next{query}", headers=headers)
 
 
-def practice_answer(client, db, headers, task, correct=True, text=None):
-    card = db.get(Card, task["card_id"])
+async def practice_answer(client, db, headers, task, correct=True, text=None):
+    card = await db.get(Card, task["card_id"])
     if task["task_type"] in ("explain_meaning", "compose_sentence"):
         right = f"A weakness in a system that an attacker can exploit. We found a {card.term} today."
     elif task["task_id"]:
-        right = db.get(TaskBank, task["task_id"]).correct_answer
+        right = (await db.get(TaskBank, task["task_id"])).correct_answer
     else:
         right = correct_answer(card, TaskType(task["task_type"]))
-    return client.post(
+    return await client.post(
         "/practice/answer",
         headers=headers,
         json={"card_id": task["card_id"], "task_type": task["task_type"], "task_id": task["task_id"],
@@ -65,117 +66,117 @@ def fixed_today(clock):
     clock.today = TODAY
 
 
-def test_practice_requires_login(client):
-    assert client.get("/practice/next").status_code == 401
-    assert client.post("/practice/answer", json={}).status_code == 401
+async def test_practice_requires_login(client):
+    assert (await client.get("/practice/next")).status_code == 401
+    assert (await client.post("/practice/answer", json={})).status_code == 401
 
 
-def test_practice_is_locked_until_the_session_is_finished(client, db, student_headers, cards):
-    open_card(db, cards["patch"], due=TODAY)
-    response = practice_next(client, student_headers)
+async def test_practice_is_locked_until_the_session_is_finished(client, db, student_headers, cards):
+    await open_card(db, cards["patch"], due=TODAY)
+    response = await practice_next(client, student_headers)
     assert response.status_code == 409
 
 
-def test_practice_with_new_cards_waiting_is_also_locked(client, db, student_headers, cards):
-    open_card(db, cards["patch"])
-    assert practice_next(client, student_headers).status_code == 409
+async def test_practice_with_new_cards_waiting_is_also_locked(client, db, student_headers, cards):
+    await open_card(db, cards["patch"])
+    assert (await practice_next(client, student_headers)).status_code == 409
 
 
-def finish_new_cards(db, cards, count=5):
+async def finish_new_cards(db, cards, count=5):
     for term in list(cards)[:count]:
-        open_card(db, cards[term], first_seen_on=TODAY)
+        await open_card(db, cards[term], first_seen_on=TODAY)
 
 
-def test_no_opened_cards_means_no_task(client, db, student_headers):
-    db.query(Card).update({Card.verified: False})
-    db.commit()
-    assert practice_next(client, student_headers).json() == {"task": None}
+async def test_no_opened_cards_means_no_task(client, db, student_headers):
+    (await db.execute(update(Card).values({Card.verified: False})))
+    await db.commit()
+    assert (await practice_next(client, student_headers)).json() == {"task": None}
 
 
-def test_practice_offers_only_opened_cards(client, db, student_headers, cards):
-    finish_new_cards(db, cards)
+async def test_practice_offers_only_opened_cards(client, db, student_headers, cards):
+    await finish_new_cards(db, cards)
     opened = {cards[t].id for t in list(cards)[:5]}
     for _ in range(25):
-        task = practice_next(client, student_headers).json()["task"]
+        task = (await practice_next(client, student_headers)).json()["task"]
         assert task["card_id"] in opened
 
 
-def test_exclude_avoids_the_previous_card(client, db, student_headers, cards):
-    finish_new_cards(db, cards)
-    first = practice_next(client, student_headers).json()["task"]["card_id"]
+async def test_exclude_avoids_the_previous_card(client, db, student_headers, cards):
+    await finish_new_cards(db, cards)
+    first = (await practice_next(client, student_headers)).json()["task"]["card_id"]
     for _ in range(25):
-        assert practice_next(client, student_headers, f"?exclude={first}").json()["task"]["card_id"] != first
+        assert (await practice_next(client, student_headers, f"?exclude={first}")).json()["task"]["card_id"] != first
 
 
-def test_exclude_is_ignored_when_it_is_the_only_card(client, db, student_headers, cards):
-    db.query(Card).filter(Card.term != "patch").update({Card.verified: False})
-    db.commit()
-    open_card(db, cards["patch"])
+async def test_exclude_is_ignored_when_it_is_the_only_card(client, db, student_headers, cards):
+    (await db.execute(update(Card).where(Card.term != "patch").values({Card.verified: False})))
+    await db.commit()
+    await open_card(db, cards["patch"])
     only = cards["patch"].id
-    assert practice_next(client, student_headers, f"?exclude={only}").json()["task"]["card_id"] == only
+    assert (await practice_next(client, student_headers, f"?exclude={only}")).json()["task"]["card_id"] == only
 
 
-def test_practice_answers_never_touch_the_schedule(client, db, student_headers, cards):
-    finish_new_cards(db, cards)
-    before = snapshot(db)
+async def test_practice_answers_never_touch_the_schedule(client, db, student_headers, cards):
+    await finish_new_cards(db, cards)
+    before = await snapshot(db)
     for index in range(12):
-        task = practice_next(client, student_headers).json()["task"]
-        result = practice_answer(client, db, student_headers, task, correct=index % 2 == 0).json()
+        task = (await practice_next(client, student_headers)).json()["task"]
+        result = (await practice_answer(client, db, student_headers, task, correct=index % 2 == 0)).json()
         assert result["retry_in_session"] is False and result["remaining"] == 0
-    assert snapshot(db) == before
-    assert db.query(ReviewHistory).count() == 12
+    assert await snapshot(db) == before
+    assert (await db.scalar(select(func.count()).select_from(select(ReviewHistory).subquery()))) == 12
 
 
-def test_practice_answers_are_marked_in_history(client, db, student_headers, cards):
-    finish_new_cards(db, cards)
-    task = practice_next(client, student_headers).json()["task"]
-    practice_answer(client, db, student_headers, task, correct=False)
-    row = db.query(ReviewHistory).one()
+async def test_practice_answers_are_marked_in_history(client, db, student_headers, cards):
+    await finish_new_cards(db, cards)
+    task = (await practice_next(client, student_headers)).json()["task"]
+    await practice_answer(client, db, student_headers, task, correct=False)
+    row = (await db.scalars(select(ReviewHistory))).one()
     assert (row.is_practice, row.is_retry, row.is_correct) == (True, False, False)
     assert row.prompt and row.correct_answer
-    item = client.get("/me/history", headers=student_headers).json()["items"][0]
+    item = (await client.get("/me/history", headers=student_headers)).json()["items"][0]
     assert item["is_practice"] is True
 
 
-def test_wrong_practice_answer_does_not_create_a_session_retry(client, db, student_headers, cards):
-    finish_new_cards(db, cards)
-    task = practice_next(client, student_headers).json()["task"]
-    practice_answer(client, db, student_headers, task, correct=False)
-    db.query(Card).update({Card.verified: False})
-    db.commit()
-    db.query(Card).filter(Card.id == task["card_id"]).update({Card.verified: True})
-    db.commit()
-    queue = client.get("/session/next", headers=student_headers).json()
+async def test_wrong_practice_answer_does_not_create_a_session_retry(client, db, student_headers, cards):
+    await finish_new_cards(db, cards)
+    task = (await practice_next(client, student_headers)).json()["task"]
+    await practice_answer(client, db, student_headers, task, correct=False)
+    (await db.execute(update(Card).values({Card.verified: False})))
+    await db.commit()
+    (await db.execute(update(Card).where(Card.id == task["card_id"]).values({Card.verified: True})))
+    await db.commit()
+    queue = (await client.get("/session/next", headers=student_headers)).json()
     assert queue["task"] is None and queue["remaining"] == 0
 
 
-def test_practice_answer_does_not_turn_the_real_answer_into_a_retry(client, db, student_headers, cards):
-    open_card(db, cards["patch"], due=TODAY, repetitions=1, interval=3)
+async def test_practice_answer_does_not_turn_the_real_answer_into_a_retry(client, db, student_headers, cards):
+    await open_card(db, cards["patch"], due=TODAY, repetitions=1, interval=3)
     db.add(
         ReviewHistory(
-            user_id=user_of(db).id, card_id=cards["patch"].id, task_type="write_term", answer="x",
+            user_id=(await user_of(db)).id, card_id=cards["patch"].id, task_type="write_term", answer="x",
             is_correct=False, error_type="form", is_retry=False, is_practice=True, answered_on=TODAY,
         )
     )
-    db.commit()
-    task = client.get("/session/next", headers=student_headers).json()["task"]
+    await db.commit()
+    task = (await client.get("/session/next", headers=student_headers)).json()["task"]
     assert task["card_id"] == cards["patch"].id
-    result = client.post(
+    result = await client.post(
         "/session/answer",
         headers=student_headers,
         json={"card_id": task["card_id"], "task_type": task["task_type"], "task_id": task["task_id"],
               "answer": "wrong"},
     )
     assert result.status_code == 200
-    progress = db.query(CardProgress).filter_by(card_id=cards["patch"].id).one()
+    progress = (await db.scalars(select(CardProgress).filter_by(card_id=cards["patch"].id))).one()
     assert progress.pending_interval is not None
-    graded = db.query(ReviewHistory).filter_by(is_practice=False).one()
+    graded = (await db.scalars(select(ReviewHistory).filter_by(is_practice=False))).one()
     assert graded.is_retry is False
 
 
-def test_practice_answer_for_an_unopened_card_is_rejected(client, db, student_headers, cards):
-    open_card(db, cards["patch"])
-    response = client.post(
+async def test_practice_answer_for_an_unopened_card_is_rejected(client, db, student_headers, cards):
+    await open_card(db, cards["patch"])
+    response = await client.post(
         "/practice/answer",
         headers=student_headers,
         json={"card_id": cards["threat"].id, "task_type": "write_term", "answer": "threat"},
@@ -183,68 +184,68 @@ def test_practice_answer_for_an_unopened_card_is_rejected(client, db, student_he
     assert response.status_code == 409
 
 
-def test_practice_includes_generated_and_open_tasks_with_a_provider(client, db, llm, student_headers, cards):
+async def test_practice_includes_generated_and_open_tasks_with_a_provider(client, db, llm, student_headers, cards):
     llm.provider = FakeProvider()
-    finish_new_cards(db, cards)
+    await finish_new_cards(db, cards)
     kinds = set()
     for _ in range(60):
-        task = practice_next(client, student_headers).json()["task"]
+        task = (await practice_next(client, student_headers)).json()["task"]
         kinds.add(task["task_type"])
     assert {"explain_meaning", "compose_sentence", "write_term"} <= kinds
 
 
-def test_open_task_in_practice_is_classified_and_never_scheduled(client, db, llm, student_headers, cards):
+async def test_open_task_in_practice_is_classified_and_never_scheduled(client, db, llm, student_headers, cards):
     llm.provider = FakeProvider()
-    finish_new_cards(db, cards)
-    before = snapshot(db)
+    await finish_new_cards(db, cards)
+    before = await snapshot(db)
     for _ in range(200):
-        task = practice_next(client, student_headers).json()["task"]
+        task = (await practice_next(client, student_headers)).json()["task"]
         if task["task_type"] == "explain_meaning":
             break
-    result = practice_answer(client, db, student_headers, task).json()
+    result = (await practice_answer(client, db, student_headers, task)).json()
     assert result["classified_by"] == "llm"
-    assert snapshot(db) == before
+    assert await snapshot(db) == before
 
 
-def test_classifier_failure_in_practice_returns_503_and_records_nothing(client, db, llm, student_headers, cards):
-    finish_new_cards(db, cards)
+async def test_classifier_failure_in_practice_returns_503_and_records_nothing(client, db, llm, student_headers, cards):
+    await finish_new_cards(db, cards)
     llm.provider = FakeProvider()
     for _ in range(200):
-        task = practice_next(client, student_headers).json()["task"]
+        task = (await practice_next(client, student_headers)).json()["task"]
         if task["task_type"] == "explain_meaning":
             break
     llm.provider = FakeProvider([LLMError("down")])
-    response = practice_answer(client, db, student_headers, task, text="My long answer about the term")
+    response = await practice_answer(client, db, student_headers, task, text="My long answer about the term")
     assert response.status_code == 503
-    assert db.query(ReviewHistory).count() == 0
+    assert (await db.scalar(select(func.count()).select_from(select(ReviewHistory).subquery()))) == 0
 
 
-def test_practice_is_excluded_from_progress_and_stats(client, db, student_headers, cards):
-    finish_new_cards(db, cards)
-    task = practice_next(client, student_headers).json()["task"]
-    practice_answer(client, db, student_headers, task, correct=False)
+async def test_practice_is_excluded_from_progress_and_stats(client, db, student_headers, cards):
+    await finish_new_cards(db, cards)
+    task = (await practice_next(client, student_headers)).json()["task"]
+    await practice_answer(client, db, student_headers, task, correct=False)
 
-    progress = client.get("/me/progress", headers=student_headers).json()
+    progress = (await client.get("/me/progress", headers=student_headers)).json()
     assert all(sum(item["errors"].values()) == 0 for item in progress["items"])
 
-    stats = client.get("/me/stats", headers=student_headers).json()
+    stats = (await client.get("/me/stats", headers=student_headers)).json()
     assert stats["totals"] == {"answered": 0, "correct": 0, "accuracy": None}
     assert all(e["count"] == 0 for e in stats["error_types"])
     assert stats["days"][-1]["practice"] == 1
     assert stats["streak"] == {"current": 1, "best": 1}
 
 
-def test_teacher_analytics_excludes_practice_and_counts_it_separately(client, db, student_headers, teacher_headers, cards):
-    finish_new_cards(db, cards)
+async def test_teacher_analytics_excludes_practice_and_counts_it_separately(client, db, student_headers, teacher_headers, cards):
+    await finish_new_cards(db, cards)
     for _ in range(3):
-        task = practice_next(client, student_headers).json()["task"]
-        practice_answer(client, db, student_headers, task, correct=False)
-    data = client.get("/teacher/analytics", headers=teacher_headers).json()
+        task = (await practice_next(client, student_headers)).json()["task"]
+        await practice_answer(client, db, student_headers, task, correct=False)
+    data = (await client.get("/teacher/analytics", headers=teacher_headers)).json()
     assert (data["answers"], data["errors"], data["practice_answers"]) == (0, 0, 3)
     assert data["hardest_terms"] == [] and all(t["count"] == 0 for t in data["error_types"])
 
 
-def test_idle_info_reports_opened_cards(client, db, student_headers, cards):
-    finish_new_cards(db, cards)
-    idle = client.get("/session/next", headers=student_headers).json()
+async def test_idle_info_reports_opened_cards(client, db, student_headers, cards):
+    await finish_new_cards(db, cards)
+    idle = (await client.get("/session/next", headers=student_headers)).json()
     assert idle["opened_cards"] == 5

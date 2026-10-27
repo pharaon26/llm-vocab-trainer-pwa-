@@ -1,5 +1,5 @@
 from sqlalchemy import case, func, select
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.enums import ErrorType, Role
 from app.models import Card, ReviewHistory, User
@@ -10,7 +10,7 @@ def _ratio(part: int, whole: int) -> float:
     return round(part / whole, 3) if whole else 0.0
 
 
-def build_analytics(db: Session, min_answers: int = 3, limit: int = 10) -> AnalyticsOut:
+async def build_analytics(db: AsyncSession, min_answers: int = 3, limit: int = 10) -> AnalyticsOut:
     scope = (
         User.role == Role.STUDENT.value,
         Card.owner_id.is_(None),
@@ -19,19 +19,23 @@ def build_analytics(db: Session, min_answers: int = 3, limit: int = 10) -> Analy
     )
     wrong = case((ReviewHistory.is_correct.is_(False), 1), else_=0)
 
-    students, answers, errors = db.execute(
-        select(func.count(func.distinct(ReviewHistory.user_id)), func.count(), func.coalesce(func.sum(wrong), 0))
-        .join(User, User.id == ReviewHistory.user_id)
-        .join(Card, Card.id == ReviewHistory.card_id)
-        .where(*scope)
+    students, answers, errors = (
+        await db.execute(
+            select(func.count(func.distinct(ReviewHistory.user_id)), func.count(), func.coalesce(func.sum(wrong), 0))
+            .join(User, User.id == ReviewHistory.user_id)
+            .join(Card, Card.id == ReviewHistory.card_id)
+            .where(*scope)
+        )
     ).one()
 
-    per_card = db.execute(
-        select(Card.term, func.count(), func.sum(wrong))
-        .join(Card, Card.id == ReviewHistory.card_id)
-        .join(User, User.id == ReviewHistory.user_id)
-        .where(*scope)
-        .group_by(Card.id, Card.term)
+    per_card = (
+        await db.execute(
+            select(Card.term, func.count(), func.sum(wrong))
+            .join(Card, Card.id == ReviewHistory.card_id)
+            .join(User, User.id == ReviewHistory.user_id)
+            .where(*scope)
+            .group_by(Card.id, Card.term)
+        )
     ).all()
     terms = [
         TermStat(term=term, attempts=attempts, errors=card_errors, error_rate=_ratio(card_errors, attempts))
@@ -41,24 +45,28 @@ def build_analytics(db: Session, min_answers: int = 3, limit: int = 10) -> Analy
     terms.sort(key=lambda t: (-t.error_rate, -t.attempts, t.term))
 
     by_type = dict(
-        db.execute(
-            select(ReviewHistory.error_type, func.count())
-            .join(User, User.id == ReviewHistory.user_id)
-            .join(Card, Card.id == ReviewHistory.card_id)
-            .where(*scope, ReviewHistory.is_correct.is_(False))
-            .group_by(ReviewHistory.error_type)
+        (
+            await db.execute(
+                select(ReviewHistory.error_type, func.count())
+                .join(User, User.id == ReviewHistory.user_id)
+                .join(Card, Card.id == ReviewHistory.card_id)
+                .where(*scope, ReviewHistory.is_correct.is_(False))
+                .group_by(ReviewHistory.error_type)
+            )
         ).all()
     )
-    by_source = db.execute(
-        select(ReviewHistory.classified_by, func.count())
-        .join(User, User.id == ReviewHistory.user_id)
-        .join(Card, Card.id == ReviewHistory.card_id)
-        .where(*scope)
-        .group_by(ReviewHistory.classified_by)
-        .order_by(ReviewHistory.classified_by)
+    by_source = (
+        await db.execute(
+            select(ReviewHistory.classified_by, func.count())
+            .join(User, User.id == ReviewHistory.user_id)
+            .join(Card, Card.id == ReviewHistory.card_id)
+            .where(*scope)
+            .group_by(ReviewHistory.classified_by)
+            .order_by(ReviewHistory.classified_by)
+        )
     ).all()
 
-    practice_answers = db.scalar(
+    practice_answers = await db.scalar(
         select(func.count())
         .select_from(ReviewHistory)
         .join(User, User.id == ReviewHistory.user_id)

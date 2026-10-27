@@ -5,10 +5,11 @@ from types import SimpleNamespace
 import pytest
 from alembic import command
 from alembic.config import Config
-from fastapi.testclient import TestClient
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import URL, make_url
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.pool import NullPool
 
 from app.api.deps import get_today
 from app.api.personal import get_dictionary_provider
@@ -71,22 +72,31 @@ def teacher_password(monkeypatch):
     monkeypatch.setattr(settings, "teacher_password", "secret")
 
 
-@pytest.fixture(scope="session")
-def engine(database_url):
-    engine = create_engine(database_url)
-    yield engine
-    engine.dispose()
+class FreshSession(AsyncSession):
+    """Сессия теста: всегда перечитывает объекты из базы, чтобы видеть изменения, сделанные запросами к API."""
+
+    async def execute(self, statement, params=None, *, execution_options=None, **kwargs):
+        options = {"populate_existing": True, **(execution_options or {})}
+        return await super().execute(statement, params, execution_options=options, **kwargs)
+
+    async def get(self, entity, ident, **kwargs):
+        return await super().get(entity, ident, populate_existing=True, **kwargs)
 
 
 @pytest.fixture
-def db(engine):
-    connection = engine.connect()
-    transaction = connection.begin()
-    session = sessionmaker(bind=connection, join_transaction_mode="create_savepoint")()
-    yield session
-    session.close()
-    transaction.rollback()
-    connection.close()
+async def connection(database_url):
+    engine = create_async_engine(database_url, poolclass=NullPool)
+    async with engine.connect() as connection:
+        transaction = await connection.begin()
+        yield connection
+        await transaction.rollback()
+    await engine.dispose()
+
+
+@pytest.fixture
+async def db(connection):
+    async with FreshSession(bind=connection, expire_on_commit=False, join_transaction_mode="create_savepoint") as session:
+        yield session
 
 
 @pytest.fixture
@@ -105,25 +115,34 @@ def dictionary():
 
 
 @pytest.fixture
-def client(db, clock, llm, dictionary):
-    app.dependency_overrides[get_db] = lambda: db
+async def client(connection, clock, llm, dictionary):
+    request_session = async_sessionmaker(
+        bind=connection, autoflush=False, expire_on_commit=False, join_transaction_mode="create_savepoint"
+    )
+
+    async def override_db():
+        async with request_session() as session:
+            yield session
+
+    app.dependency_overrides[get_db] = override_db
     app.dependency_overrides[get_today] = lambda: clock.today
     app.dependency_overrides[get_llm_provider] = lambda: llm.provider
     app.dependency_overrides[get_dictionary_provider] = lambda: dictionary.provider
-    yield TestClient(app)
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as http:
+        yield http
     app.dependency_overrides.clear()
 
 
-def login(client, **body):
-    response = client.post("/auth/login", json=body)
+async def login(client, **body):
+    response = await client.post("/auth/login", json=body)
     return {"Authorization": f"Bearer {response.json()['token']}"}
 
 
 @pytest.fixture
-def teacher_headers(client):
-    return login(client, name="teacher", role="teacher", password="secret")
+async def teacher_headers(client):
+    return await login(client, name="teacher", role="teacher", password="secret")
 
 
 @pytest.fixture
-def student_headers(client):
-    return login(client, name="student")
+async def student_headers(client):
+    return await login(client, name="student")

@@ -8,6 +8,7 @@ import httpx
 import pytest
 from gigachat import GigaChatException
 
+from sqlalchemy import select
 from app.config import BASE_DIR, Settings
 from app.enums import TaskType
 from app.llm import gigachat as gigachat_module
@@ -25,9 +26,9 @@ CA_FILE = "certs/russian_trusted_root_ca_pem.crt"
 
 
 @pytest.fixture
-def cards(db):
-    load_cards(db)
-    return db.query(Card).order_by(Card.id).all()
+async def cards(db):
+    await load_cards(db)
+    return (await db.scalars(select(Card).order_by(Card.id))).all()
 
 
 @pytest.fixture
@@ -45,7 +46,7 @@ class FakeSDKClient:
         self.error = None
         FakeSDKClient.instances.append(self)
 
-    def chat(self, payload):
+    async def achat(self, payload):
         self.payloads.append(payload)
         if self.error:
             raise self.error
@@ -96,36 +97,36 @@ def test_prompt_card_has_only_reference_fields(card):
 @pytest.mark.parametrize(
     "task_type", [TaskType.WRITE_TERM, TaskType.SPELLING_CHOICE, TaskType.COLLOCATION_CHOICE]
 )
-def test_non_generated_type_rejected(card, task_type):
+async def test_non_generated_type_rejected(card, task_type):
     with pytest.raises(ValueError):
-        generate_task(FakeProvider(), card, task_type)
+        await generate_task(FakeProvider(), card, task_type)
 
 
 @pytest.mark.parametrize("task_type", GENERATED_TYPES)
-def test_fake_provider_output_is_valid_for_every_card(cards, task_type):
+async def test_fake_provider_output_is_valid_for_every_card(cards, task_type):
     provider = FakeProvider()
     for card in cards:
-        task = generate_task(provider, card, task_type)
+        task = await generate_task(provider, card, task_type)
         assert task.correct_answer in task.options
         assert len(task.options) == len(set(task.options))
     assert len(provider.calls) == len(cards)
 
 
-def test_fake_gap_fill_hides_term(card):
-    task = generate_task(FakeProvider(), card, TaskType.GAP_FILL)
+async def test_fake_gap_fill_hides_term(card):
+    task = await generate_task(FakeProvider(), card, TaskType.GAP_FILL)
     assert "____" in task.prompt
     assert card.term not in task.prompt.lower()
     assert task.correct_answer == card.term
 
 
-def test_fake_scripted_responses_and_errors(card):
+async def test_fake_scripted_responses_and_errors(card):
     good = '{"prompt": "p", "options": ["a", "b"], "correct_answer": "a"}'
     provider = FakeProvider([good, LLMError("boom")])
-    assert generate_task(provider, card, TaskType.GAP_FILL).correct_answer == "a"
+    assert (await generate_task(provider, card, TaskType.GAP_FILL)).correct_answer == "a"
     with pytest.raises(LLMError, match="boom"):
-        generate_task(provider, card, TaskType.GAP_FILL)
+        await generate_task(provider, card, TaskType.GAP_FILL)
     with pytest.raises(LLMError, match="No scripted"):
-        generate_task(provider, card, TaskType.GAP_FILL)
+        await generate_task(provider, card, TaskType.GAP_FILL)
 
 
 def test_parse_accepts_fenced_json_with_noise():
@@ -178,30 +179,30 @@ def test_gigachat_client_options(sdk):
     assert Path(kwargs["ca_bundle_file"]) == BASE_DIR / CA_FILE
 
 
-def test_gigachat_complete_sends_system_and_user(sdk):
+async def test_gigachat_complete_sends_system_and_user(sdk):
     provider = make_provider()
-    assert provider.complete("sys", "usr") == '{"ok": 1}'
+    assert await provider.complete("sys", "usr") == '{"ok": 1}'
     payload = sdk.instances[0].payloads[0]
     assert [(m.role, m.content) for m in payload.messages] == [("system", "sys"), ("user", "usr")]
     assert payload.temperature == 0.3
 
 
-def test_gigachat_wraps_sdk_errors_without_leaking_key(sdk):
+async def test_gigachat_wraps_sdk_errors_without_leaking_key(sdk):
     provider = make_provider()
     sdk.instances[0].error = httpx.ConnectError("tls failure with secret-key")
     with pytest.raises(LLMError) as info:
-        provider.complete("s", "u")
+        await provider.complete("s", "u")
     assert "secret-key" not in str(info.value)
     sdk.instances[0].error = GigaChatException("bad")
     with pytest.raises(LLMError):
-        provider.complete("s", "u")
+        await provider.complete("s", "u")
 
 
-def test_gigachat_empty_response(sdk):
+async def test_gigachat_empty_response(sdk):
     provider = make_provider()
     sdk.instances[0].reply = SimpleNamespace(choices=[])
     with pytest.raises(LLMError, match="empty"):
-        provider.complete("s", "u")
+        await provider.complete("s", "u")
 
 
 def test_gigachat_missing_ca_bundle(sdk):

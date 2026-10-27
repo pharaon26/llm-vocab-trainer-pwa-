@@ -1,7 +1,7 @@
 from datetime import date, timedelta
 
 from sqlalchemy import case, func, select
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import LearningConfig, learning_config
 from app.enums import ErrorType, TaskType
@@ -31,16 +31,18 @@ def card_status(progress: CardProgress | None, config: LearningConfig = learning
     return "learning"
 
 
-def error_counts(db: Session, user: User) -> dict[int, dict[str, int]]:
-    rows = db.execute(
-        select(ReviewHistory.card_id, ReviewHistory.error_type, func.count())
-        .where(
-            ReviewHistory.user_id == user.id,
-            ReviewHistory.is_correct.is_(False),
-            ReviewHistory.is_retry.is_(False),
-            ReviewHistory.is_practice.is_(False),
+async def error_counts(db: AsyncSession, user: User) -> dict[int, dict[str, int]]:
+    rows = (
+        await db.execute(
+            select(ReviewHistory.card_id, ReviewHistory.error_type, func.count())
+            .where(
+                ReviewHistory.user_id == user.id,
+                ReviewHistory.is_correct.is_(False),
+                ReviewHistory.is_retry.is_(False),
+                ReviewHistory.is_practice.is_(False),
+            )
+            .group_by(ReviewHistory.card_id, ReviewHistory.error_type)
         )
-        .group_by(ReviewHistory.card_id, ReviewHistory.error_type)
     ).all()
     result: dict[int, dict[str, int]] = {}
     for card_id, error_type, count in rows:
@@ -48,16 +50,19 @@ def error_counts(db: Session, user: User) -> dict[int, dict[str, int]]:
     return result
 
 
-def build_progress(db: Session, user: User, config: LearningConfig = learning_config) -> ProgressOut:
+async def build_progress(db: AsyncSession, user: User, config: LearningConfig = learning_config) -> ProgressOut:
     progress = {
-        p.card_id: p for p in db.scalars(select(CardProgress).where(CardProgress.user_id == user.id))
+        p.card_id: p for p in await db.scalars(select(CardProgress).where(CardProgress.user_id == user.id))
     }
-    cards = db.scalars(
-        select(Card)
-        .where(usable(user), new_term_pool(db, user) | Card.id.in_(list(progress)))
-        .order_by(func.lower(Card.term), Card.term)
+    pool = await new_term_pool(db, user)
+    cards = (
+        await db.scalars(
+            select(Card)
+            .where(usable(user), pool | Card.id.in_(list(progress)))
+            .order_by(func.lower(Card.term), Card.term)
+        )
     ).all()
-    errors = error_counts(db, user)
+    errors = await error_counts(db, user)
     empty = {t.value: 0 for t in ErrorType}
 
     items = [
@@ -75,7 +80,7 @@ def build_progress(db: Session, user: User, config: LearningConfig = learning_co
     return ProgressOut(summary=ProgressSummary(total=len(items), **counts), items=items)
 
 
-def build_history(db: Session, user: User, term: str | None, limit: int, offset: int) -> HistoryOut:
+async def build_history(db: AsyncSession, user: User, term: str | None, limit: int, offset: int) -> HistoryOut:
     query = (
         select(ReviewHistory, Card, TaskBank)
         .join(Card, Card.id == ReviewHistory.card_id)
@@ -84,14 +89,16 @@ def build_history(db: Session, user: User, term: str | None, limit: int, offset:
     )
     if term:
         query = query.where(Card.term == term)
-    total = db.scalar(select(func.count()).select_from(query.subquery()))
-    rows = db.execute(query.order_by(ReviewHistory.id.desc()).limit(limit).offset(offset)).all()
-    terms = db.scalars(
-        select(Card.term)
-        .join(ReviewHistory, ReviewHistory.card_id == Card.id)
-        .where(ReviewHistory.user_id == user.id)
-        .group_by(Card.term)
-        .order_by(func.lower(Card.term), Card.term)
+    total = await db.scalar(select(func.count()).select_from(query.subquery()))
+    rows = (await db.execute(query.order_by(ReviewHistory.id.desc()).limit(limit).offset(offset))).all()
+    terms = (
+        await db.scalars(
+            select(Card.term)
+            .join(ReviewHistory, ReviewHistory.card_id == Card.id)
+            .where(ReviewHistory.user_id == user.id)
+            .group_by(Card.term)
+            .order_by(func.lower(Card.term), Card.term)
+        )
     ).all()
 
     items = []
@@ -114,12 +121,14 @@ def build_history(db: Session, user: User, term: str | None, limit: int, offset:
     return HistoryOut(total=total, terms=list(terms), items=items)
 
 
-def build_dictionary(db: Session, user: User) -> list[DictionaryEntry]:
-    cards = db.scalars(
-        select(Card)
-        .join(CardProgress, CardProgress.card_id == Card.id)
-        .where(CardProgress.user_id == user.id, usable(user))
-        .order_by(func.lower(Card.term), Card.term)
+async def build_dictionary(db: AsyncSession, user: User) -> list[DictionaryEntry]:
+    cards = (
+        await db.scalars(
+            select(Card)
+            .join(CardProgress, CardProgress.card_id == Card.id)
+            .where(CardProgress.user_id == user.id, usable(user))
+            .order_by(func.lower(Card.term), Card.term)
+        )
     ).all()
     return [DictionaryEntry.model_validate(card, from_attributes=True) for card in cards]
 
@@ -144,27 +153,31 @@ def _accuracy(correct: int, answered: int) -> float | None:
     return round(correct / answered, 3) if answered else None
 
 
-def build_stats(db: Session, user: User, today: date, days: int) -> StatsOut:
+async def build_stats(db: AsyncSession, user: User, today: date, days: int) -> StatsOut:
     correct_flag = case((ReviewHistory.is_correct.is_(True), 1), else_=0)
-    graded = db.execute(
-        select(ReviewHistory.answered_on, func.count(), func.sum(correct_flag))
-        .where(
-            ReviewHistory.user_id == user.id,
-            ReviewHistory.is_retry.is_(False),
-            ReviewHistory.is_practice.is_(False),
+    graded = (
+        await db.execute(
+            select(ReviewHistory.answered_on, func.count(), func.sum(correct_flag))
+            .where(
+                ReviewHistory.user_id == user.id,
+                ReviewHistory.is_retry.is_(False),
+                ReviewHistory.is_practice.is_(False),
+            )
+            .group_by(ReviewHistory.answered_on)
         )
-        .group_by(ReviewHistory.answered_on)
     ).all()
     practice_per_day = dict(
-        db.execute(
-            select(ReviewHistory.answered_on, func.count())
-            .where(ReviewHistory.user_id == user.id, ReviewHistory.is_practice.is_(True))
-            .group_by(ReviewHistory.answered_on)
+        (
+            await db.execute(
+                select(ReviewHistory.answered_on, func.count())
+                .where(ReviewHistory.user_id == user.id, ReviewHistory.is_practice.is_(True))
+                .group_by(ReviewHistory.answered_on)
+            )
         ).all()
     )
     per_day = {day: (answered, correct) for day, answered, correct in graded}
     active_days = set(
-        db.scalars(select(ReviewHistory.answered_on).where(ReviewHistory.user_id == user.id).distinct())
+        await db.scalars(select(ReviewHistory.answered_on).where(ReviewHistory.user_id == user.id).distinct())
     )
 
     window = [today - timedelta(days=offset) for offset in range(days - 1, -1, -1)]
@@ -180,15 +193,17 @@ def build_stats(db: Session, user: User, today: date, days: int) -> StatsOut:
     ]
 
     by_type = dict(
-        db.execute(
-            select(ReviewHistory.error_type, func.count())
-            .where(
-                ReviewHistory.user_id == user.id,
-                ReviewHistory.is_correct.is_(False),
-                ReviewHistory.is_retry.is_(False),
-                ReviewHistory.is_practice.is_(False),
+        (
+            await db.execute(
+                select(ReviewHistory.error_type, func.count())
+                .where(
+                    ReviewHistory.user_id == user.id,
+                    ReviewHistory.is_correct.is_(False),
+                    ReviewHistory.is_retry.is_(False),
+                    ReviewHistory.is_practice.is_(False),
+                )
+                .group_by(ReviewHistory.error_type)
             )
-            .group_by(ReviewHistory.error_type)
         ).all()
     )
     errors = sum(by_type.values())

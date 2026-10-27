@@ -4,7 +4,7 @@ from app.dictionary.dictionaryapi import DictionaryApiProvider
 
 
 class DisabledDictionary(DictionaryProvider):
-    def lookup(self, word: str):
+    async def lookup(self, word: str):
         raise DictionaryUnavailable("disabled")
 
 

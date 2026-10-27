@@ -1,7 +1,7 @@
 from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import current_user, get_today
 from app.api.session import get_llm_provider, submit_or_http
@@ -15,25 +15,25 @@ router = APIRouter(prefix="/practice", tags=["practice"])
 
 
 @router.get("/next", response_model=PracticeNextOut)
-def next_task(
+async def next_task(
     exclude: int | None = None,
     user: User = Depends(current_user),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     today: date = Depends(get_today),
     provider: LLMProvider | None = Depends(get_llm_provider),
 ):
     try:
-        return PracticeNextOut(task=practice_next(db, user, today, provider, exclude))
+        return PracticeNextOut(task=await practice_next(db, user, today, provider, exclude))
     except SessionNotFinished:
         raise HTTPException(409, "Finish today's session before free practice")
 
 
 @router.post("/answer", response_model=AnswerOut)
-def answer(
+async def answer(
     data: AnswerIn,
     user: User = Depends(current_user),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     today: date = Depends(get_today),
     provider: LLMProvider | None = Depends(get_llm_provider),
 ):
-    return submit_or_http(db, user, data, today, provider, practice=True)
+    return await submit_or_http(db, user, data, today, provider, practice=True)

@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     database_url: str
+    db_pool_size: int = 10
+    db_max_overflow: int = 20
     llm_provider: Literal["fake", "gigachat"] = "fake"
     llm_temperature: float = 0.3
     llm_timeout: float = 30.0

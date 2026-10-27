@@ -62,16 +62,19 @@ def parse_entries(payload, word: str) -> DictionaryEntry | None:
 
 
 class DictionaryApiProvider(DictionaryProvider):
-    def __init__(self, base_url: str, timeout: float, client: httpx.Client | None = None):
+    def __init__(self, base_url: str, timeout: float, client: httpx.AsyncClient | None = None):
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
-        self.client = client or httpx.Client()
+        self.client = client
 
-    def lookup(self, word: str) -> DictionaryEntry | None:
+    async def lookup(self, word: str) -> DictionaryEntry | None:
+        url = f"{self.base_url}/{quote(word, safe='')}"
         try:
-            response = self.client.get(
-                f"{self.base_url}/{quote(word, safe='')}", timeout=self.timeout, follow_redirects=True
-            )
+            if self.client is not None:
+                response = await self.client.get(url, timeout=self.timeout, follow_redirects=True)
+            else:
+                async with httpx.AsyncClient() as client:
+                    response = await client.get(url, timeout=self.timeout, follow_redirects=True)
         except httpx.HTTPError as exc:
             raise DictionaryUnavailable(type(exc).__name__) from exc
         if response.status_code == 404:

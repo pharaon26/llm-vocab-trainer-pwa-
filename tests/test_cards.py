@@ -1,7 +1,9 @@
 import json
 
 import pytest
+from httpx import AsyncClient
 
+from sqlalchemy import func, select, update
 from app.models import Card
 from app.seed import CARDS_FILE, load_cards, update_cards
 
@@ -25,34 +27,34 @@ VALID = {
 }
 
 
-def test_create_and_read(client):
-    created = client.post("/cards", json=VALID)
+async def test_create_and_read(client):
+    created = await client.post("/cards", json=VALID)
     assert created.status_code == 201
     body = created.json()
     assert body["verified"] is False
-    assert client.get(f"/cards/{body['id']}").json()["term"] == "vulnerability"
+    assert (await client.get(f"/cards/{body['id']}")).json()["term"] == "vulnerability"
 
 
-def test_duplicate_term_conflict(client):
-    client.post("/cards", json=VALID)
-    assert client.post("/cards", json=VALID).status_code == 409
+async def test_duplicate_term_conflict(client):
+    await client.post("/cards", json=VALID)
+    assert (await client.post("/cards", json=VALID)).status_code == 409
 
 
-def test_student_cannot_modify_cards(client, student_headers):
+async def test_student_cannot_modify_cards(client, student_headers):
     client.headers.update(student_headers)
-    assert client.post("/cards", json=VALID).status_code == 403
+    assert (await client.post("/cards", json=VALID)).status_code == 403
 
 
-def test_reading_cards_requires_teacher(client, student_headers):
-    card_id = client.post("/cards", json=VALID).json()["id"]
-    plain = client.__class__(client.app)
-    assert plain.get("/cards").status_code == 401
-    assert plain.get(f"/cards/{card_id}").status_code == 401
-    assert plain.get("/cards", headers=student_headers).status_code == 403
+async def test_reading_cards_requires_teacher(client, student_headers):
+    card_id = (await client.post("/cards", json=VALID)).json()["id"]
+    plain = AsyncClient(transport=client._transport, base_url="http://test")
+    assert (await plain.get("/cards")).status_code == 401
+    assert (await plain.get(f"/cards/{card_id}")).status_code == 401
+    assert (await plain.get("/cards", headers=student_headers)).status_code == 403
 
 
-def test_not_found(client):
-    assert client.get("/cards/999").status_code == 404
+async def test_not_found(client):
+    assert (await client.get("/cards/999")).status_code == 404
 
 
 @pytest.mark.parametrize(
@@ -66,64 +68,64 @@ def test_not_found(client):
         ("common_mistakes", []),
     ],
 )
-def test_validation(client, field, value):
-    response = client.post("/cards", json={**VALID, field: value})
+async def test_validation(client, field, value):
+    response = await client.post("/cards", json={**VALID, field: value})
     assert response.status_code == 422
 
 
-def test_update_resets_verified(client):
-    card_id = client.post("/cards", json=VALID).json()["id"]
-    assert client.patch(f"/cards/{card_id}/verify").json()["verified"] is True
-    updated = client.put(f"/cards/{card_id}", json={**VALID, "translation_ru": "брешь"})
+async def test_update_resets_verified(client):
+    card_id = (await client.post("/cards", json=VALID)).json()["id"]
+    assert (await client.patch(f"/cards/{card_id}/verify")).json()["verified"] is True
+    updated = await client.put(f"/cards/{card_id}", json={**VALID, "translation_ru": "брешь"})
     assert updated.json()["translation_ru"] == "брешь"
     assert updated.json()["verified"] is False
 
 
-def test_update_to_taken_term_conflict(client):
-    client.post("/cards", json=VALID)
-    other = client.post("/cards", json={**VALID, "term": "threat"}).json()["id"]
-    assert client.put(f"/cards/{other}", json=VALID).status_code == 409
+async def test_update_to_taken_term_conflict(client):
+    await client.post("/cards", json=VALID)
+    other = (await client.post("/cards", json={**VALID, "term": "threat"})).json()["id"]
+    assert (await client.put(f"/cards/{other}", json=VALID)).status_code == 409
 
 
-def test_filter_by_verified(client):
-    first = client.post("/cards", json=VALID).json()["id"]
-    client.post("/cards", json={**VALID, "term": "threat"})
-    client.patch(f"/cards/{first}/verify")
-    assert len(client.get("/cards").json()) == 2
-    assert [c["term"] for c in client.get("/cards?verified=true").json()] == ["vulnerability"]
+async def test_filter_by_verified(client):
+    first = (await client.post("/cards", json=VALID)).json()["id"]
+    await client.post("/cards", json={**VALID, "term": "threat"})
+    await client.patch(f"/cards/{first}/verify")
+    assert len((await client.get("/cards")).json()) == 2
+    assert [c["term"] for c in (await client.get("/cards?verified=true")).json()] == ["vulnerability"]
 
 
-def test_delete(client):
-    card_id = client.post("/cards", json=VALID).json()["id"]
-    assert client.delete(f"/cards/{card_id}").status_code == 204
-    assert client.get(f"/cards/{card_id}").status_code == 404
+async def test_delete(client):
+    card_id = (await client.post("/cards", json=VALID)).json()["id"]
+    assert (await client.delete(f"/cards/{card_id}")).status_code == 204
+    assert (await client.get(f"/cards/{card_id}")).status_code == 404
 
 
-def test_seed_is_idempotent(db):
+async def test_seed_is_idempotent(db):
     total = len(json.loads(CARDS_FILE.read_text(encoding="utf-8")))
-    assert load_cards(db) == (total, 0)
-    assert load_cards(db) == (0, total)
-    assert db.query(Card).count() == total
+    assert await load_cards(db) == (total, 0)
+    assert await load_cards(db) == (0, total)
+    assert (await db.scalar(select(func.count()).select_from(select(Card).subquery()))) == total
     assert 20 <= total <= 30
 
 
-def test_update_cards_restores_changed_cards_and_resets_verified(db):
-    load_cards(db)
-    db.query(Card).update({Card.verified: True})
-    changed = db.query(Card).filter_by(term="encryption").one()
+async def test_update_cards_restores_changed_cards_and_resets_verified(db):
+    await load_cards(db)
+    (await db.execute(update(Card).values({Card.verified: True})))
+    changed = (await db.scalars(select(Card).filter_by(term="encryption"))).one()
     changed.translation_ru = "что-то другое"
-    db.commit()
+    await db.commit()
 
-    assert update_cards(db) == 1
-    db.refresh(changed)
+    assert await update_cards(db) == 1
+    await db.refresh(changed)
     assert changed.translation_ru == "шифрование"
     assert changed.verified is False
-    assert db.query(Card).filter_by(verified=True).count() == db.query(Card).count() - 1
+    assert (await db.scalar(select(func.count()).select_from(select(Card).filter_by(verified=True).subquery()))) == (await db.scalar(select(func.count()).select_from(select(Card).subquery()))) - 1
 
 
-def test_update_cards_without_changes_does_nothing(db):
-    load_cards(db)
-    db.query(Card).update({Card.verified: True})
-    db.commit()
-    assert update_cards(db) == 0
-    assert db.query(Card).filter_by(verified=False).count() == 0
+async def test_update_cards_without_changes_does_nothing(db):
+    await load_cards(db)
+    (await db.execute(update(Card).values({Card.verified: True})))
+    await db.commit()
+    assert await update_cards(db) == 0
+    assert (await db.scalar(select(func.count()).select_from(select(Card).filter_by(verified=False).subquery()))) == 0

@@ -17,5 +17,5 @@ class DictionaryEntry:
 
 class DictionaryProvider(ABC):
     @abstractmethod
-    def lookup(self, word: str) -> DictionaryEntry | None:
+    async def lookup(self, word: str) -> DictionaryEntry | None:
         """Возвращает запись или None, если слова нет. Если сервис недоступен, бросает DictionaryUnavailable."""

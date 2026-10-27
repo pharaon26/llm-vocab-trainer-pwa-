@@ -4,7 +4,7 @@ from datetime import date
 from pydantic import ValidationError
 from sqlalchemy import and_, delete, func, or_, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import DraftConfig, draft_config
 from app.dictionary.base import DictionaryProvider, DictionaryUnavailable
@@ -77,30 +77,32 @@ def normalize_term(term: str) -> str:
     return " ".join(term.split())
 
 
-def find_domain(db: Session, name: str) -> Domain:
-    domain = db.scalar(select(Domain).where(func.lower(Domain.name) == name.strip().lower()))
+async def find_domain(db: AsyncSession, name: str) -> Domain:
+    domain = await db.scalar(select(Domain).where(func.lower(Domain.name) == name.strip().lower()))
     if domain is None:
         raise UnknownDomain
     return domain
 
 
-def find_duplicate(db: Session, user: User, term: str) -> Card | None:
+async def find_duplicate(db: AsyncSession, user: User, term: str) -> Card | None:
     visible = or_(and_(Card.owner_id.is_(None), Card.verified.is_(True)), Card.owner_id == user.id)
-    return db.scalar(select(Card).where(func.lower(Card.term) == term.lower(), visible).order_by(Card.owner_id.is_(None).desc()))
+    return await db.scalar(
+        select(Card).where(func.lower(Card.term) == term.lower(), visible).order_by(Card.owner_id.is_(None).desc())
+    )
 
 
-def llm_calls_left(db: Session, user: User, today: date, config: DraftConfig = draft_config) -> int:
-    used = db.scalar(select(LlmUsage.calls).where(LlmUsage.user_id == user.id, LlmUsage.day == today)) or 0
+async def llm_calls_left(db: AsyncSession, user: User, today: date, config: DraftConfig = draft_config) -> int:
+    used = await db.scalar(select(LlmUsage.calls).where(LlmUsage.user_id == user.id, LlmUsage.day == today)) or 0
     return max(0, config.daily_llm_limit - used)
 
 
-def register_llm_call(db: Session, user: User, today: date) -> None:
-    usage = db.get(LlmUsage, (user.id, today))
+async def register_llm_call(db: AsyncSession, user: User, today: date) -> None:
+    usage = await db.get(LlmUsage, (user.id, today))
     if usage is None:
         db.add(LlmUsage(user_id=user.id, day=today, calls=1))
     else:
         usage.calls += 1
-    db.commit()
+    await db.commit()
 
 
 def _clean_list(items, term: str | None, limit: int, require_term: bool) -> list[str]:
@@ -121,18 +123,18 @@ def _empty_fields() -> dict:
     return {field: ([] if field in LIST_FIELDS else None) for field in FIELDS}
 
 
-def _suggest(
-    db: Session, user: User, provider: LLMProvider, term: str, domain: str, known: dict,
+async def _suggest(
+    db: AsyncSession, user: User, provider: LLMProvider, term: str, domain: str, known: dict,
     today: date, config: DraftConfig, notices: list[str],
 ) -> DraftSuggestion | None:
     system, prompt = build_draft_prompt(term, domain, known)
     for _ in range(config.max_retries + 1):
-        if llm_calls_left(db, user, today, config) <= 0:
+        if await llm_calls_left(db, user, today, config) <= 0:
             notices.append(NOTICE_LIMIT)
             return None
-        register_llm_call(db, user, today)
+        await register_llm_call(db, user, today)
         try:
-            return parse_model(provider.complete(system, prompt), DraftSuggestion)
+            return parse_model(await provider.complete(system, prompt), DraftSuggestion)
         except InvalidResponse as exc:
             logger.info("draft suggestion for %s invalid: %s", term, exc)
         except LLMError as exc:
@@ -192,7 +194,7 @@ def missing_fields(data: dict) -> list[str]:
     return missing
 
 
-def draft_out(db: Session, draft: CardDraft, user: User, today: date, config: DraftConfig = draft_config) -> DraftOut:
+async def draft_out(db: AsyncSession, draft: CardDraft, user: User, today: date, config: DraftConfig = draft_config) -> DraftOut:
     data = {**_empty_fields(), **draft.data}
     return DraftOut(
         id=draft.id,
@@ -204,12 +206,12 @@ def draft_out(db: Session, draft: CardDraft, user: User, today: date, config: Dr
         general_definition=draft.general_definition,
         notices=list(draft.notices),
         missing=missing_fields(data),
-        llm_calls_left=llm_calls_left(db, user, today, config),
+        llm_calls_left=await llm_calls_left(db, user, today, config),
     )
 
 
-def create_draft(
-    db: Session,
+async def create_draft(
+    db: AsyncSession,
     user: User,
     term: str,
     domain_name: str,
@@ -219,17 +221,17 @@ def create_draft(
     config: DraftConfig = draft_config,
 ) -> CardDraft:
     term = normalize_term(term)
-    domain = find_domain(db, domain_name)
-    duplicate = find_duplicate(db, user, term)
+    domain = await find_domain(db, domain_name)
+    duplicate = await find_duplicate(db, user, term)
     if duplicate is not None:
         raise DuplicateTerm(duplicate)
 
-    existing = db.scalar(
+    existing = await db.scalar(
         select(CardDraft).where(CardDraft.owner_id == user.id, func.lower(CardDraft.term) == term.lower())
     )
     if existing is not None:
         return existing
-    open_drafts = db.scalar(select(func.count()).select_from(CardDraft).where(CardDraft.owner_id == user.id))
+    open_drafts = await db.scalar(select(func.count()).select_from(CardDraft).where(CardDraft.owner_id == user.id))
     if open_drafts >= config.max_open_drafts:
         raise TooManyDrafts
 
@@ -240,7 +242,7 @@ def create_draft(
         notices.append(NOTICE_PHRASE)
     elif dictionary is not None:
         try:
-            entry = dictionary.lookup(term)
+            entry = await dictionary.lookup(term)
         except DictionaryUnavailable as exc:
             logger.info("dictionary unavailable for %s: %s", term, exc)
             entry = None
@@ -265,17 +267,17 @@ def create_draft(
         notices.append(NOTICE_NO_LLM)
     else:
         known = {key: data[key] for key in ("transcription", "part_of_speech", "definition_en", "examples")}
-        suggestion = _suggest(db, user, provider, term, domain.name, known, today, config, notices)
+        suggestion = await _suggest(db, user, provider, term, domain.name, known, today, config, notices)
         if suggestion is not None:
             general_definition = _merge(data, sources, suggestion, term)
 
     data["audio_url"] = audio_url
     draft = CardDraft(
-        owner_id=user.id, term=term, domain_id=domain.id, data=data, sources=sources,
+        owner_id=user.id, term=term, domain_ref=domain, data=data, sources=sources,
         general_definition=general_definition, notices=notices,
     )
     db.add(draft)
-    db.commit()
+    await db.commit()
     return draft
 
 
@@ -286,7 +288,7 @@ def _clean_value(field: str, value):
     return value or None
 
 
-def update_draft(db: Session, draft: CardDraft, fields: DraftFields, domain_name: str | None) -> None:
+async def update_draft(db: AsyncSession, draft: CardDraft, fields: DraftFields, domain_name: str | None) -> None:
     data = dict(draft.data)
     sources = dict(draft.sources)
     for field in FIELDS:
@@ -300,15 +302,15 @@ def update_draft(db: Session, draft: CardDraft, fields: DraftFields, domain_name
     draft.data = data
     draft.sources = sources
     if domain_name:
-        draft.domain_id = find_domain(db, domain_name).id
-    db.commit()
+        draft.domain_ref = await find_domain(db, domain_name)
+    await db.commit()
 
 
 def _validation_errors(error: ValidationError) -> list[dict]:
     return [{"loc": ["body", *[str(part) for part in item["loc"]]], "msg": item["msg"]} for item in error.errors()]
 
 
-def confirm_draft(db: Session, user: User, draft: CardDraft) -> Card:
+async def confirm_draft(db: AsyncSession, user: User, draft: CardDraft) -> Card:
     data = {**_empty_fields(), **draft.data}
     payload = {field: data.get(field) for field in FIELDS}
     for field in TEXT_FIELDS:
@@ -319,27 +321,27 @@ def confirm_draft(db: Session, user: User, draft: CardDraft) -> Card:
     except ValidationError as exc:
         raise DraftIncomplete(_validation_errors(exc)) from exc
 
-    duplicate = find_duplicate(db, user, draft.term)
+    duplicate = await find_duplicate(db, user, draft.term)
     if duplicate is not None:
         raise DuplicateTerm(duplicate)
     card = Card(
-        **card_values(db, validated.model_dump()),
+        **await card_values(db, validated.model_dump()),
         verified=False, owner_id=user.id, confirmed_by_owner=True,
         audio_url=data.get("audio_url"), field_sources=dict(draft.sources),
     )
     db.add(card)
-    db.delete(draft)
+    await db.delete(draft)
     try:
-        db.commit()
+        await db.commit()
     except IntegrityError as exc:
-        db.rollback()
-        raise DuplicateTerm(find_duplicate(db, user, draft.term)) from exc
+        await db.rollback()
+        raise DuplicateTerm(await find_duplicate(db, user, draft.term)) from exc
     return card
 
 
-def update_personal_card(db: Session, card: Card, data: CardCreate) -> None:
+async def update_personal_card(db: AsyncSession, card: Card, data: CardCreate) -> None:
     sources = dict(card.field_sources or {})
-    new_values = card_values(db, data.model_dump())
+    new_values = await card_values(db, data.model_dump())
     for field in FIELDS:
         incoming = new_values.get(field)
         if incoming != getattr(card, field):
@@ -347,41 +349,41 @@ def update_personal_card(db: Session, card: Card, data: CardCreate) -> None:
     for field, value in new_values.items():
         setattr(card, field, value)
     card.field_sources = sources
-    db.commit()
+    await db.commit()
 
 
-def delete_personal_card(db: Session, card: Card) -> None:
-    db.execute(delete(ReviewHistory).where(ReviewHistory.card_id == card.id))
-    db.execute(delete(CardProgress).where(CardProgress.card_id == card.id))
-    db.execute(delete(TaskBank).where(TaskBank.card_id == card.id))
-    db.execute(delete(DeckCard).where(DeckCard.card_id == card.id))
-    db.delete(card)
-    db.commit()
+async def delete_personal_card(db: AsyncSession, card: Card) -> None:
+    await db.execute(delete(ReviewHistory).where(ReviewHistory.card_id == card.id))
+    await db.execute(delete(CardProgress).where(CardProgress.card_id == card.id))
+    await db.execute(delete(TaskBank).where(TaskBank.card_id == card.id))
+    await db.execute(delete(DeckCard).where(DeckCard.card_id == card.id))
+    await db.delete(card)
+    await db.commit()
 
 
-def shared_duplicate(db: Session, card: Card) -> Card | None:
-    return db.scalar(
+async def shared_duplicate(db: AsyncSession, card: Card) -> Card | None:
+    return await db.scalar(
         select(Card).where(func.lower(Card.term) == card.term.lower(), Card.owner_id.is_(None), Card.id != card.id)
     )
 
 
-def promote_card(db: Session, card: Card, deck_ids: list[int]) -> Card:
+async def promote_card(db: AsyncSession, card: Card, deck_ids: list[int]) -> Card:
     ids = set(deck_ids)
-    decks = db.scalars(select(Deck).where(Deck.id.in_(ids))).all()
+    decks = (await db.scalars(select(Deck).where(Deck.id.in_(ids)))).all()
     if len(decks) != len(ids):
         raise UnknownDecksForPromotion
-    if shared_duplicate(db, card) is not None:
+    if await shared_duplicate(db, card) is not None:
         raise PromotionBlocked
     card.owner_id = None
     card.confirmed_by_owner = False
     card.verified = True
     for deck in decks:
-        if db.get(DeckCard, (deck.id, card.id)) is None:
+        if await db.get(DeckCard, (deck.id, card.id)) is None:
             db.add(DeckCard(deck_id=deck.id, card_id=card.id))
     try:
-        db.commit()
+        await db.commit()
     except IntegrityError as exc:
-        db.rollback()
+        await db.rollback()
         raise PromotionBlocked from exc
     return card
 

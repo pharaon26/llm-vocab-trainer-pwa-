@@ -2,6 +2,7 @@ from datetime import date
 
 import pytest
 
+from sqlalchemy import select, update
 from app.config import LearningConfig
 from app.models import Card, CardProgress, ReviewHistory, User
 from app.seed import load_cards
@@ -9,25 +10,25 @@ from app.services.student import card_status
 
 
 @pytest.fixture
-def cards(db):
-    load_cards(db)
-    db.query(Card).update({Card.verified: True})
-    db.commit()
-    return {c.term: c for c in db.query(Card).all()}
+async def cards(db):
+    await load_cards(db)
+    (await db.execute(update(Card).values({Card.verified: True})))
+    await db.commit()
+    return {c.term: c for c in (await db.scalars(select(Card))).all()}
 
 
-def current_user(db, headers_name="student"):
-    return db.query(User).filter_by(name=headers_name).one()
+async def current_user(db, headers_name="student"):
+    return (await db.scalars(select(User).filter_by(name=headers_name))).one()
 
 
-def progress_row(db, user, card, **kwargs):
+async def progress_row(db, user, card, **kwargs):
     values = dict(interval=3, ease=2.5, repetitions=2, first_seen_on=date(2026, 1, 1), due_date=date(2026, 1, 4))
     values.update(kwargs)
     db.add(CardProgress(user_id=user.id, card_id=card.id, **values))
-    db.commit()
+    await db.commit()
 
 
-def history_row(db, user, card, correct, error=None, retry=False):
+async def history_row(db, user, card, correct, error=None, retry=False):
     db.add(
         ReviewHistory(
             user_id=user.id, card_id=card.id, task_type="definition_match", answer="x",
@@ -35,11 +36,11 @@ def history_row(db, user, card, correct, error=None, retry=False):
             answered_on=date(2026, 1, 1),
         )
     )
-    db.commit()
+    await db.commit()
 
 
-def test_progress_requires_login(client):
-    assert client.get("/me/progress").status_code == 401
+async def test_progress_requires_login(client):
+    assert (await client.get("/me/progress")).status_code == 401
 
 
 @pytest.mark.parametrize(
@@ -55,14 +56,14 @@ def test_status_new_without_progress():
     assert card_status(None) == "new"
 
 
-def test_all_verified_terms_are_listed_with_statuses(client, db, student_headers, cards):
-    user = current_user(db)
-    progress_row(db, user, cards["threat"], interval=30, repetitions=5, due_date=date(2026, 2, 1))
-    progress_row(db, user, cards["patch"], interval=3, repetitions=2, due_date=date(2026, 1, 4))
+async def test_all_verified_terms_are_listed_with_statuses(client, db, student_headers, cards):
+    user = await current_user(db)
+    await progress_row(db, user, cards["threat"], interval=30, repetitions=5, due_date=date(2026, 2, 1))
+    await progress_row(db, user, cards["patch"], interval=3, repetitions=2, due_date=date(2026, 1, 4))
     cards["backup"].verified = False
-    db.commit()
+    await db.commit()
 
-    data = client.get("/me/progress", headers=student_headers).json()
+    data = (await client.get("/me/progress", headers=student_headers)).json()
     by_term = {i["term"]: i for i in data["items"]}
     assert len(data["items"]) == 23
     assert "backup" not in by_term
@@ -75,33 +76,33 @@ def test_all_verified_terms_are_listed_with_statuses(client, db, student_headers
     assert data["summary"] == {"total": 23, "new": 21, "learning": 1, "learned": 1}
 
 
-def test_opened_terms_come_first_ordered_by_due_date(client, db, student_headers, cards):
-    user = current_user(db)
-    progress_row(db, user, cards["threat"], due_date=date(2026, 3, 1))
-    progress_row(db, user, cards["patch"], due_date=date(2026, 1, 5))
-    terms = [i["term"] for i in client.get("/me/progress", headers=student_headers).json()["items"]]
+async def test_opened_terms_come_first_ordered_by_due_date(client, db, student_headers, cards):
+    user = await current_user(db)
+    await progress_row(db, user, cards["threat"], due_date=date(2026, 3, 1))
+    await progress_row(db, user, cards["patch"], due_date=date(2026, 1, 5))
+    terms = [i["term"] for i in (await client.get("/me/progress", headers=student_headers)).json()["items"]]
     assert terms[:2] == ["patch", "threat"]
     assert terms[2:] == sorted(terms[2:])
 
 
-def test_error_history_counts_by_type_for_graded_answers_only(client, db, student_headers, cards):
-    user = current_user(db)
+async def test_error_history_counts_by_type_for_graded_answers_only(client, db, student_headers, cards):
+    user = await current_user(db)
     patch = cards["patch"]
-    progress_row(db, user, patch)
-    history_row(db, user, patch, False, "meaning")
-    history_row(db, user, patch, False, "meaning")
-    history_row(db, user, patch, False, "form")
-    history_row(db, user, patch, True)
-    history_row(db, user, patch, False, "usage", retry=True)
+    await progress_row(db, user, patch)
+    await history_row(db, user, patch, False, "meaning")
+    await history_row(db, user, patch, False, "meaning")
+    await history_row(db, user, patch, False, "form")
+    await history_row(db, user, patch, True)
+    await history_row(db, user, patch, False, "usage", retry=True)
 
-    item = next(i for i in client.get("/me/progress", headers=student_headers).json()["items"] if i["term"] == "patch")
+    item = next(i for i in (await client.get("/me/progress", headers=student_headers)).json()["items"] if i["term"] == "patch")
     assert item["errors"] == {"form": 1, "meaning": 2, "usage": 0, "collocation": 0}
 
 
-def test_progress_is_per_student(client, db, student_headers, cards):
+async def test_progress_is_per_student(client, db, student_headers, cards):
     from tests.conftest import login
 
-    progress_row(db, current_user(db), cards["patch"])
-    other = login(client, name="other")
-    data = client.get("/me/progress", headers=other).json()
+    await progress_row(db, await current_user(db), cards["patch"])
+    other = await login(client, name="other")
+    data = (await client.get("/me/progress", headers=other)).json()
     assert data["summary"]["learning"] == 0 and data["summary"]["new"] == 24

@@ -36,7 +36,7 @@ class GigaChatProvider(LLMProvider):
             timeout=timeout,
         )
 
-    def complete(self, system: str, user: str) -> str:
+    async def complete(self, system: str, user: str) -> str:
         payload = Chat(
             messages=[
                 Messages(role=MessagesRole.SYSTEM, content=system),
@@ -45,7 +45,7 @@ class GigaChatProvider(LLMProvider):
             temperature=self.temperature,
         )
         try:
-            response = self.client.chat(payload)
+            response = await self.client.achat(payload)
         except (GigaChatException, httpx.HTTPError) as exc:
             raise LLMError(f"GigaChat request failed: {type(exc).__name__}") from exc
         if not response.choices or not response.choices[0].message.content:

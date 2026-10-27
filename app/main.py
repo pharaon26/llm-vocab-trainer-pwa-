@@ -11,7 +11,7 @@ app = FastAPI(title="LLM Vocab Trainer")
 
 
 @app.exception_handler(DataError)
-def invalid_data(request: Request, exc: DataError):
+async def invalid_data(request: Request, exc: DataError):
     return JSONResponse({"detail": "Invalid characters or value in the request"}, status_code=422)
 
 

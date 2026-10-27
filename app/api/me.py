@@ -1,7 +1,7 @@
 from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import current_user, get_today
 from app.db import get_db
@@ -16,34 +16,34 @@ router = APIRouter(prefix="/me", tags=["me"])
 
 
 @router.get("/progress", response_model=ProgressOut)
-def progress(user: User = Depends(current_user), db: Session = Depends(get_db)):
-    return student_service.build_progress(db, user)
+async def progress(user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
+    return await student_service.build_progress(db, user)
 
 
 @router.get("/history", response_model=HistoryOut)
-def history(
+async def history(
     term: str | None = None,
     limit: int = Query(30, ge=1, le=100),
     offset: int = Query(0, ge=0),
     user: User = Depends(current_user),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
-    return student_service.build_history(db, user, term, limit, offset)
+    return await student_service.build_history(db, user, term, limit, offset)
 
 
 @router.get("/dictionary", response_model=list[DictionaryEntry])
-def dictionary(user: User = Depends(current_user), db: Session = Depends(get_db)):
-    return student_service.build_dictionary(db, user)
+async def dictionary(user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
+    return await student_service.build_dictionary(db, user)
 
 
 @router.get("/stats", response_model=StatsOut)
-def stats(
+async def stats(
     days: int = Query(14, ge=7, le=60),
     user: User = Depends(current_user),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     today: date = Depends(get_today),
 ):
-    return student_service.build_stats(db, user, today, days)
+    return await student_service.build_stats(db, user, today, days)
 
 
 def settings_out(user: User) -> SettingsOut:
@@ -55,26 +55,26 @@ def settings_out(user: User) -> SettingsOut:
 
 
 @router.get("/settings", response_model=SettingsOut)
-def read_settings(user: User = Depends(current_user)):
+async def read_settings(user: User = Depends(current_user)):
     return settings_out(user)
 
 
 @router.put("/settings", response_model=SettingsOut)
-def update_settings(data: SettingsIn, user: User = Depends(current_user), db: Session = Depends(get_db)):
+async def update_settings(data: SettingsIn, user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
     user.new_cards_per_day = data.new_cards_per_day
-    db.commit()
+    await db.commit()
     return settings_out(user)
 
 
 @router.get("/decks", response_model=list[DeckOut])
-def my_decks(user: User = Depends(current_user), db: Session = Depends(get_db)):
-    return decks_service.list_decks(db, user)
+async def my_decks(user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
+    return await decks_service.list_decks(db, user)
 
 
 @router.put("/decks", response_model=list[DeckOut])
-def choose_decks(data: DeckSelectionIn, user: User = Depends(current_user), db: Session = Depends(get_db)):
+async def choose_decks(data: DeckSelectionIn, user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
     try:
-        decks_service.select_decks(db, user, data.deck_ids)
+        await decks_service.select_decks(db, user, data.deck_ids)
     except decks_service.UnknownDecks:
         raise HTTPException(422, "Unknown deck id")
-    return decks_service.list_decks(db, user)
+    return await decks_service.list_decks(db, user)

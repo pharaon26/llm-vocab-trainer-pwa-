@@ -2,7 +2,7 @@ import secrets
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import current_user
 from app.config import scheduler_config, settings
@@ -21,8 +21,8 @@ def teacher_password_ok(password: str | None) -> bool:
 
 
 @router.post("/login", response_model=LoginOut)
-def login(data: LoginIn, db: Session = Depends(get_db)):
-    user = db.scalar(select(User).where(User.name == data.name))
+async def login(data: LoginIn, db: AsyncSession = Depends(get_db)):
+    user = await db.scalar(select(User).where(User.name == data.name))
 
     if data.role == Role.TEACHER:
         if not teacher_password_ok(data.password):
@@ -35,14 +35,14 @@ def login(data: LoginIn, db: Session = Depends(get_db)):
     if user is None:
         user = User(name=data.name, role=data.role.value, new_cards_per_day=scheduler_config.new_cards_per_day)
         db.add(user)
-        db.flush()
+        await db.flush()
 
     token = AuthToken(token=secrets.token_urlsafe(32), user_id=user.id)
     db.add(token)
-    db.commit()
+    await db.commit()
     return LoginOut(token=token.token, name=user.name, role=Role(user.role))
 
 
 @router.get("/me", response_model=LoginOut)
-def me(user: User = Depends(current_user)):
+async def me(user: User = Depends(current_user)):
     return LoginOut(token="", name=user.name, role=Role(user.role))

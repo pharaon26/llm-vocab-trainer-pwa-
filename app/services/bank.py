@@ -1,5 +1,5 @@
 from sqlalchemy import func, select
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.enums import TaskType
 from app.models import Card, TaskBank
@@ -15,20 +15,20 @@ def _scope(card_id: int, task_type: TaskType, source: str | None):
     return query.where(TaskBank.source == source)
 
 
-def count(db: Session, card_id: int, task_type: TaskType, source: str | None) -> int:
+async def count(db: AsyncSession, card_id: int, task_type: TaskType, source: str | None) -> int:
     subquery = _scope(card_id, task_type, source).subquery()
-    return db.scalar(select(func.count()).select_from(subquery))
+    return await db.scalar(select(func.count()).select_from(subquery))
 
 
-def pick(db: Session, card_id: int, task_type: TaskType, source: str | None) -> TaskBank | None:
+async def pick(db: AsyncSession, card_id: int, task_type: TaskType, source: str | None) -> TaskBank | None:
     query = _scope(card_id, task_type, source).order_by(TaskBank.times_used, TaskBank.id).limit(1)
-    return db.scalar(query)
+    return await db.scalar(query)
 
 
-def get_or_create(
-    db: Session, card: Card, task_type: TaskType, task: GeneratedTask, source: str
+async def get_or_create(
+    db: AsyncSession, card: Card, task_type: TaskType, task: GeneratedTask, source: str
 ) -> TaskBank | None:
-    existing = db.scalar(
+    existing = await db.scalar(
         select(TaskBank).where(
             TaskBank.card_id == card.id,
             TaskBank.task_type == task_type.value,
@@ -44,5 +44,5 @@ def get_or_create(
         options=task.options, correct_answer=task.correct_answer,
     )
     db.add(entry)
-    db.commit()
+    await db.commit()
     return entry

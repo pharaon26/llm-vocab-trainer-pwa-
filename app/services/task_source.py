@@ -1,7 +1,7 @@
 import logging
 import random
 
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import GenerationConfig, generation_config
 from app.enums import TaskType
@@ -17,7 +17,7 @@ from app.services.validation import validate
 logger = logging.getLogger(__name__)
 
 
-def generate_validated(
+async def generate_validated(
     provider: LLMProvider,
     card: Card,
     task_type: TaskType,
@@ -25,11 +25,11 @@ def generate_validated(
 ) -> GeneratedTask | None:
     for attempt in range(1, config.max_retries + 2):
         try:
-            task = generate_task(provider, card, task_type)
+            task = await generate_task(provider, card, task_type)
         except InvalidResponse as exc:
             logger.info("%s/%s attempt %s: invalid response (%s)", card.term, task_type.value, attempt, exc)
             continue
-        failures = validate(provider, card, task_type, task, config)
+        failures = await validate(provider, card, task_type, task, config)
         if not failures:
             return task
         logger.info("%s/%s attempt %s rejected: %s", card.term, task_type.value, attempt, failures)
@@ -46,8 +46,8 @@ def _from_bank(entry: TaskBank, rng: random.Random) -> TaskOut:
     )
 
 
-def get_task(
-    db: Session,
+async def get_task(
+    db: AsyncSession,
     provider: LLMProvider | None,
     card: Card,
     task_type: TaskType,
@@ -59,19 +59,19 @@ def get_task(
     if task_type in GENERATED_TYPES:
         source = provider.name if provider else None
         entry = None
-        if bank.count(db, card.id, task_type, source) >= config.bank_min_size:
-            entry = bank.pick(db, card.id, task_type, source)
+        if await bank.count(db, card.id, task_type, source) >= config.bank_min_size:
+            entry = await bank.pick(db, card.id, task_type, source)
         else:
             generated = None
             if provider is not None:
                 try:
-                    generated = generate_validated(provider, card, task_type, config)
+                    generated = await generate_validated(provider, card, task_type, config)
                 except LLMError as exc:
                     logger.warning("LLM unavailable, using bank: %s", exc)
             if generated is not None:
-                entry = bank.get_or_create(db, card, task_type, generated, provider.name)
+                entry = await bank.get_or_create(db, card, task_type, generated, provider.name)
             if entry is None:
-                entry = bank.pick(db, card.id, task_type, source)
+                entry = await bank.pick(db, card.id, task_type, source)
         if entry is not None:
             return _from_bank(entry, rng)
     return build_task(card, others, task_type, rng)
