@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.api import admin, auth, cards, catalog, health, me, personal, practice, session
+from app.api import admin, auth, cards, catalog, health, me, my_teachers, personal, practice, session, teacher
 from sqlalchemy.exc import DataError
 
 from app.config import BASE_DIR
@@ -26,4 +26,6 @@ app.include_router(practice.router)
 app.include_router(catalog.router)
 app.include_router(personal.router)
 app.include_router(admin.router)
+app.include_router(my_teachers.router)
+app.include_router(teacher.router)
 app.mount("/", StaticFiles(directory=BASE_DIR / "static", html=True), name="static")

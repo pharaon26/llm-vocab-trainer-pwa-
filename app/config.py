@@ -58,6 +58,17 @@ auth_config = AuthConfig()
 
 
 @dataclass(frozen=True)
+class LinkConfig:
+    max_attempts: int = 10
+    window_minutes: int = 60
+    max_group_name: int = 100
+    max_groups: int = 50
+
+
+link_config = LinkConfig()
+
+
+@dataclass(frozen=True)
 class ErrorRule:
     k: float
     delta: float
