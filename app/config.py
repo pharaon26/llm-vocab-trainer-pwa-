@@ -29,6 +29,8 @@ class Settings(BaseSettings):
     session_ttl_days: int = 30
     session_cookie_name: str = "session"
     cookie_secure: bool = True
+    login_ip_max_failures: int = 50
+    register_ip_max_per_hour: int = 10
     allowed_origins: Annotated[list[str], NoDecode] = ["http://localhost:8000", "http://127.0.0.1:8000"]
     trusted_proxies: Annotated[list[str], NoDecode] = []
     dictionary_audio_domains: Annotated[list[str], NoDecode] = ["api.dictionaryapi.dev", "ssl.gstatic.com"]
@@ -51,7 +53,9 @@ class AuthConfig:
     nickname_min_length: int = 3
     nickname_max_length: int = 32
     login_max_failures: int = 5
+    login_max_failures_per_pair: int = 5
     login_window_minutes: int = 15
+    register_window_minutes: int = 60
 
 
 auth_config = AuthConfig()

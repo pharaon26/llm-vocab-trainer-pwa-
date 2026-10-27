@@ -4,7 +4,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import AuthConfig, Settings, auth_config, settings
-from app.models import LoginAttempt, User, UserSession
+from app.models import LoginAttempt, RegistrationAttempt, User, UserSession
 from app.security import hash_session_id, new_session_id
 
 
@@ -21,28 +21,33 @@ def _now() -> datetime:
     return datetime.now(UTC)
 
 
-async def _blocked_for(db: AsyncSession, column, value: str, now: datetime, config: AuthConfig) -> int:
-    window = timedelta(minutes=config.login_window_minutes)
+async def _blocked_for(db: AsyncSession, model, conditions: list, limit: int, window: timedelta, now: datetime) -> int:
     times = list(
         await db.scalars(
-            select(LoginAttempt.created_at)
-            .where(column == value, LoginAttempt.created_at > now - window)
-            .order_by(LoginAttempt.created_at)
+            select(model.created_at).where(*conditions, model.created_at > now - window).order_by(model.created_at)
         )
     )
-    if len(times) < config.login_max_failures:
+    if len(times) < limit:
         return 0
-    release = times[len(times) - config.login_max_failures] + window
+    release = times[len(times) - limit] + window
     return max(1, int((release - now).total_seconds()) + 1)
 
 
 async def check_login_allowed(
-    db: AsyncSession, name: str, ip: str, now: datetime | None = None, config: AuthConfig = auth_config
+    db: AsyncSession, name: str, ip: str, now: datetime | None = None,
+    config: AuthConfig = auth_config, ip_limit: int | None = None,
 ) -> None:
+    """Три предела: по имени (с любого адреса), по паре имя + адрес и мягкий по адресу (общая сеть вуза не должна блокироваться целиком)."""
     now = now or _now()
+    key = attempt_key(name)
+    window = timedelta(minutes=config.login_window_minutes)
+    ip_limit = settings.login_ip_max_failures if ip_limit is None else ip_limit
     wait = max(
-        await _blocked_for(db, LoginAttempt.name, attempt_key(name), now, config),
-        await _blocked_for(db, LoginAttempt.ip, ip, now, config),
+        await _blocked_for(db, LoginAttempt, [LoginAttempt.name == key], config.login_max_failures, window, now),
+        await _blocked_for(
+            db, LoginAttempt, [LoginAttempt.name == key, LoginAttempt.ip == ip], config.login_max_failures_per_pair, window, now
+        ),
+        await _blocked_for(db, LoginAttempt, [LoginAttempt.ip == ip], ip_limit, window, now),
     )
     if wait:
         raise TooManyAttempts(wait)
@@ -52,6 +57,24 @@ async def record_failure(db: AsyncSession, name: str, ip: str, now: datetime | N
     now = now or _now()
     db.add(LoginAttempt(name=attempt_key(name), ip=ip, created_at=now))
     await db.execute(delete(LoginAttempt).where(LoginAttempt.created_at < now - timedelta(days=1)))
+    await db.commit()
+
+
+async def check_register_allowed(
+    db: AsyncSession, ip: str, now: datetime | None = None, config: AuthConfig = auth_config, limit: int | None = None
+) -> None:
+    now = now or _now()
+    limit = settings.register_ip_max_per_hour if limit is None else limit
+    window = timedelta(minutes=config.register_window_minutes)
+    wait = await _blocked_for(db, RegistrationAttempt, [RegistrationAttempt.ip == ip], limit, window, now)
+    if wait:
+        raise TooManyAttempts(wait)
+
+
+async def record_registration(db: AsyncSession, ip: str, now: datetime | None = None) -> None:
+    now = now or _now()
+    db.add(RegistrationAttempt(ip=ip, created_at=now))
+    await db.execute(delete(RegistrationAttempt).where(RegistrationAttempt.created_at < now - timedelta(days=1)))
     await db.commit()
 
 

@@ -40,6 +40,14 @@ def find_user(name: str):
 
 @router.post("/register", response_model=LoginOut, status_code=201)
 async def register(data: RegisterIn, request: Request, response: Response, db: AsyncSession = Depends(get_db)):
+    ip = client_ip(request)
+    try:
+        await auth_service.check_register_allowed(db, ip)
+    except auth_service.TooManyAttempts as exc:
+        raise HTTPException(
+            429, "Too many registrations from this address, try again later", headers={"Retry-After": str(exc.retry_after)}
+        )
+    await auth_service.record_registration(db, ip)
     if await db.scalar(select(User.id).where(func.lower(User.name) == data.name.lower())) is not None:
         raise HTTPException(409, "This nickname is already taken")
     user = User(

@@ -27,6 +27,14 @@ class UserSession(Base):
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
 
 
+class RegistrationAttempt(Base):
+    __tablename__ = "registration_attempts"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    ip: Mapped[str] = mapped_column(String(45), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), index=True)
+
+
 class LoginAttempt(Base):
     __tablename__ = "login_attempts"
 

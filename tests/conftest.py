@@ -78,6 +78,11 @@ def audio_domains(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def generous_registration_limit(monkeypatch):
+    monkeypatch.setattr(settings, "register_ip_max_per_hour", 1000)
+
+
+@pytest.fixture(autouse=True)
 def secure_cookies(monkeypatch):
     monkeypatch.setattr(settings, "cookie_secure", True)
 

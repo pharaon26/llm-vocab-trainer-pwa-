@@ -308,10 +308,103 @@ async def test_name_limit_is_case_insensitive_and_covers_unknown_names(client):
     assert (await attempt(client, "GHOST")).status_code == 429
 
 
-async def test_limit_per_ip_across_different_names(client):
-    for index in range(5):
-        await attempt(client, f"user{index}")
-    assert (await attempt(client, "someone-else")).status_code == 429
+async def test_one_address_is_limited_softly_across_different_names(client):
+    for index in range(settings.login_ip_max_failures - 1):
+        await attempt(client, f"user_{index}")
+    assert (await attempt(client, "someone_else")).status_code == 401
+    assert (await attempt(client, "yet_another")).status_code == 429
+
+
+async def test_shared_network_is_not_blocked_by_a_few_failures_of_others(client):
+    await register(client, "honest")
+    for index in range(20):
+        await attempt(client, f"typo_{index}")
+    assert (await attempt(client, "honest", PASSWORD)).status_code == 200
+
+
+async def test_address_limit_comes_from_settings(client, monkeypatch):
+    monkeypatch.setattr(settings, "login_ip_max_failures", 7)
+    for index in range(7):
+        await attempt(client, f"user_{index}")
+    assert (await attempt(client, "anyone")).status_code == 429
+
+
+async def test_name_and_address_pair_has_its_own_limit(db):
+    from dataclasses import replace
+
+    from app.config import auth_config
+    from app.services.auth import TooManyAttempts, check_login_allowed
+
+    config = replace(auth_config, login_max_failures=20)
+    db.add_all([LoginAttempt(name="victim", ip="198.51.100.1", created_at=datetime.now(UTC)) for _ in range(5)])
+    await db.commit()
+    with pytest.raises(TooManyAttempts):
+        await check_login_allowed(db, "victim", "198.51.100.1", config=config)
+    await check_login_allowed(db, "victim", "198.51.100.2", config=config)
+    await check_login_allowed(db, "other", "198.51.100.1", config=config)
+
+
+async def test_name_limit_counts_failures_from_all_addresses(db):
+    from app.services.auth import TooManyAttempts, check_login_allowed
+
+    now = datetime.now(UTC)
+    db.add_all([LoginAttempt(name="victim", ip=f"198.51.100.{i}", created_at=now) for i in range(5)])
+    await db.commit()
+    with pytest.raises(TooManyAttempts):
+        await check_login_allowed(db, "victim", "203.0.113.9")
+
+
+async def test_registrations_are_limited_per_address(client, monkeypatch):
+    monkeypatch.setattr(settings, "register_ip_max_per_hour", 3)
+    for index in range(3):
+        assert (await register(client, f"newbie_{index}")).status_code == 201
+    blocked = await register(client, "newbie_9")
+    assert blocked.status_code == 429
+    assert 0 < int(blocked.headers["retry-after"]) <= 3600 + 1
+
+
+async def test_failed_registration_attempts_count_too(client, monkeypatch):
+    monkeypatch.setattr(settings, "register_ip_max_per_hour", 3)
+    await register(client, "taken_name")
+    assert (await register(client, "taken_name")).status_code == 409
+    assert (await register(client, "TAKEN_NAME")).status_code == 409
+    assert (await register(client, "fresh_name")).status_code == 429
+
+
+async def test_invalid_registration_is_rejected_before_it_is_counted(client, monkeypatch):
+    monkeypatch.setattr(settings, "register_ip_max_per_hour", 2)
+    for _ in range(5):
+        assert (await register(client, "x")).status_code == 422
+    assert (await register(client, "valid_one")).status_code == 201
+
+
+async def test_registration_limit_window_expires(client, db, monkeypatch):
+    from app.models import RegistrationAttempt
+
+    monkeypatch.setattr(settings, "register_ip_max_per_hour", 2)
+    await register(client, "first_one")
+    await register(client, "second_one")
+    assert (await register(client, "third_one")).status_code == 429
+    await db.execute(update(RegistrationAttempt).values(created_at=datetime.now(UTC) - timedelta(minutes=61)))
+    await db.commit()
+    assert (await register(client, "third_one")).status_code == 201
+
+
+async def test_registration_limit_is_per_client_address_behind_a_trusted_proxy(client, monkeypatch):
+    monkeypatch.setattr(settings, "register_ip_max_per_hour", 1)
+    monkeypatch.setattr(settings, "trusted_proxies", ["127.0.0.1"])
+    one = {"X-Forwarded-For": "203.0.113.10"}
+    two = {"X-Forwarded-For": "203.0.113.11"}
+    assert (await register(client, "from_one", headers=one)).status_code == 201
+    assert (await register(client, "from_one_b", headers=one)).status_code == 429
+    assert (await register(client, "from_two", headers=two)).status_code == 201
+
+
+async def test_registration_attempts_are_stored_in_the_database(client, db):
+    from app.models import RegistrationAttempt
+
+    await register(client, "stored_one")
+    assert await db.scalar(select(RegistrationAttempt.ip)) == "127.0.0.1"
 
 
 async def test_block_expires_after_the_window(client, db):
@@ -344,7 +437,8 @@ async def test_attempts_are_stored_in_the_database(client, db):
     assert rows == [("anna", "127.0.0.1")] * 2
 
 
-async def test_forwarded_for_is_ignored_from_untrusted_peers(client):
+async def test_forwarded_for_is_ignored_from_untrusted_peers(client, monkeypatch):
+    monkeypatch.setattr(settings, "login_ip_max_failures", 5)
     for index in range(5):
         await client.post("/auth/login", headers={"X-Forwarded-For": f"203.0.113.{index}"}, json={"name": f"u{index}", "password": "x"})
     assert (await attempt(client, "other")).status_code == 429
@@ -352,6 +446,7 @@ async def test_forwarded_for_is_ignored_from_untrusted_peers(client):
 
 async def test_forwarded_for_is_used_behind_a_trusted_proxy(client, monkeypatch, db):
     monkeypatch.setattr(settings, "trusted_proxies", ["127.0.0.1"])
+    monkeypatch.setattr(settings, "login_ip_max_failures", 5)
     for index in range(5):
         await client.post("/auth/login", headers={"X-Forwarded-For": f"203.0.113.{index}"}, json={"name": f"u{index}", "password": "x"})
     assert (await attempt(client, "other")).status_code == 401
